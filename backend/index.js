@@ -5,6 +5,7 @@ import userRoutes from './routes/user.js';
 import user2Routes from './routes/user2.js';
 import menuRoutes from './routes/menu.js';
 import pedidoRoutes from './routes/pedido.js';
+import tipoProductoRoutes from './routes/tipo_producto.js';
 
 
 //cargas variables de entorno
@@ -30,6 +31,7 @@ app.use('/user', userRoutes);
 app.use('/user2', user2Routes);
 app.use('/menu', menuRoutes);
 app.use('/pedido', pedidoRoutes);
+app.use('/tipoProducto', tipoProductoRoutes);
 
 //configuramos el puerto
 const PORT = 3000;
