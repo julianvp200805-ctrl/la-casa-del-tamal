@@ -3,8 +3,8 @@ import {  } from "../controllers/tipos_producto.js";
 
 const router = express.Router();
 
-router.get("/", );
-router.get("/:id", );
-router.post("/", );
-router.put("/:id", );
-router.delete("/:id", );
+router.get("/obtener", );
+router.get("/obtenerId:id", );
+router.post("/crearProducto", );
+router.put("/actualizar:id", );
+router.delete("/eliminar:id", );
