@@ -1,10 +1,12 @@
 import express from "express";
-import {  } from "../controllers/tipos_producto.js";
+import { obtenerTodos, obtenerPorId, crear, editar, eliminar } from "../controllers/productos.js";
 
 const router = express.Router();
 
-router.get("/obtener", );
-router.get("/obtenerId:id", );
-router.post("/crearProducto", );
-router.put("/actualizar:id", );
-router.delete("/eliminar:id", );
+router.get("/obtener", obtenerTodos);
+router.get("/obtenerId/:id", obtenerPorId);
+router.post("/crearProducto", crear);
+router.put("/actualizar/:id", editar);
+router.delete("/eliminar:id", eliminar);
+
+export default router;

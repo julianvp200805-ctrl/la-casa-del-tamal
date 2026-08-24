@@ -1,22 +1,20 @@
- import { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto } from "../models/productos.js";
- import { obtenerTipo, ProductoPorId } from "../models/tipo_producto.js";
-
+ import { crearProducto, obtenerProductos, obtenerProductoPorId, obtenerTipo2, actualizarProducto, eliminarProducto } from "../models/productos.js";
 
 // crear producto
 export const crear = async (req, res) => {
     try {
 
         const {
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         } = req.body;
 
         // Validar datos
         if (
+            !id_producto ||
             !id_tipo ||
-            !nombre ||
             !fecha_ingreso ||
             !codigo_lote
         ) {
@@ -27,26 +25,23 @@ export const crear = async (req, res) => {
 
         // Buscar el tipo de producto
         const {
-            data: tipoProducto,
+            data: tiposProducto,
             error: errorTipo
-        } = await obtenerTipoProductoPorId(id_tipo);
+        } = await obtenerTipo2(id_tipo);
 
-        if (errorTipo || !tipoProducto) {
+        if (errorTipo || !tiposProducto) {
             return res.status(404).json({
                 error: 'El tipo de producto no existe'
             });
-        }
+        }   
 
         // Obtener duración
-        const duracion = tipoProducto.duracion_dias;
+        const duracion = tiposProducto.dias_vencimiento;
 
         // Crear producto
-        const {
-            data,
-            error
-        } = await crearProducto(
+        const { data, error } = await crearProducto(
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         );
@@ -116,7 +111,7 @@ export const obtenerTodos = async (req, res) => {
 
             fechaVencimiento.setDate(
                 fechaVencimiento.getDate() +
-                producto.tipo_producto.duracion_dias
+                producto.tipos_producto.duracion_dias
             );
 
             return {
@@ -145,10 +140,7 @@ export const obtenerPorId = async (req, res) => {
 
         const { id } = req.params;
 
-        const {
-            data,
-            error
-        } = await obtenerProductoPorId(id);
+        const { data, error } = await obtenerProductoPorId(id_producto);
 
         if (error || !data) {
             return res.status(404).json({
@@ -161,7 +153,7 @@ export const obtenerPorId = async (req, res) => {
 
         fechaVencimiento.setDate(
             fechaVencimiento.getDate() +
-            data.tipo_producto.duracion_dias
+            data.tipos_producto.duracion_dias
         );
 
         const fechaVencimientoTexto =
@@ -176,6 +168,130 @@ export const obtenerPorId = async (req, res) => {
         });
 
     } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+// editar producto
+export const editar = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const {
+            id_producto,
+            id_tipo,
+            fecha_ingreso,
+            codigo_lote
+        } = req.body;
+
+        // Validar datos
+        if (
+            !id_producto ||
+            !id_tipo ||
+            !fecha_ingreso ||
+            !codigo_lote
+        ) {
+            return res.status(400).json({
+                error: 'Todos los campos son obligatorios'
+            });
+        }
+
+        // Buscar el tipo de producto
+        const { data: tipos_Producto, error: errorTipo } = await obtenerProductoPorId(id_tipo);
+
+        if (errorTipo || !tipos_Producto) {
+            return res.status(404).json({
+                error: 'El tipo de producto no existe'
+            });
+        }
+
+        // Actualizar producto
+        const { data, error } = await actualizarProducto(
+            id_producto,
+            id_tipo,
+            fecha_ingreso,
+            codigo_lote
+        );
+
+        if (error) {
+            return res.status(500).json({
+                error: error.message
+            });
+        }
+
+        // Calcular fecha de vencimiento
+        const fechaVencimiento = new Date(fecha_ingreso);
+
+        fechaVencimiento.setDate(
+            fechaVencimiento.getDate() +
+            tipos_Producto.duracion_dias
+        );
+
+        const fechaVencimientoTexto =
+            fechaVencimiento
+                .toISOString()
+                .split('T')[0];
+
+        res.status(200).json({
+            mensaje: 'Producto actualizado correctamente',
+
+            producto: data[0],
+
+            duracion_dias:
+                tipos_Producto.duracion_dias,
+
+            fecha_vencimiento:
+                fechaVencimientoTexto,
+
+            aviso:
+                `El producto vence el ${fechaVencimientoTexto}`
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Error al actualizar producto:',
+            error
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+
+// eliminar producto
+export const eliminar = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        // Eliminar producto
+        const { data, error } =
+            await eliminarProducto(id_producto);
+
+        if (error) {
+            return res.status(500).json({
+                error: error.message
+            });
+        }
+
+        res.status(200).json({
+            mensaje: 'Producto eliminado correctamente',
+            producto: data
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Error al eliminar producto:',
+            error
+        );
 
         res.status(500).json({
             error: error.message

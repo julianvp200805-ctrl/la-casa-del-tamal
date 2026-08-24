@@ -1,7 +1,10 @@
 import { supabase } from '../config/supabase.js';
+
 export const crearPedido = async (pedidoData) => {
-    const { data, error } = await supabase
-    .from('pedidos').insert(pedidoData).select();
+  const { data, error } = await supabase
+    .from('pedidos')
+    .insert(pedidoData)
+    .select();
   return { data, error };
 };
 
@@ -16,13 +19,15 @@ export const obtenerPedidoConDetalles = async (id) => {
         menu:menu_id(id, nombre, imagen_url)
       )
     `)
-    .eq('id', id).single();
+    .eq('id', id)
+    .single();
   return { data, error };
 };
 
 export const obtenerPedidosPorUsuario = async (usuarioId) => {
   const { data, error } = await supabase
-    .from('pedidos').select('*')
+    .from('pedidos')
+    .select('*')
     .eq('usuario_id', usuarioId)
     .order('fecha_pedido', { ascending: false });
   return { data, error };
@@ -32,12 +37,15 @@ export const actualizarEstadoPedido = async (id, estado) => {
   const { data, error } = await supabase
     .from('pedidos')
     .update({ estado, actualizado_en: new Date() })
-    .eq('id', id).select();
+    .eq('id', id)
+    .select();
   return { data, error };
 };
 
 export const crearDetallePedido = async (detalleData) => {
   const { data, error } = await supabase
-    .from('detalle_pedido').insert(detalleData).select();
+    .from('detalle_pedido')
+    .insert(detalleData)
+    .select();
   return { data, error };
 };

@@ -4,16 +4,12 @@ const router = express.Router();
 
 //ruta para crear un producto
 router.post('/crear_tipo', crearTipo2);
-
 //ruta para obtener todos los productos
 router.get('/obtener_tipos', listarTipos);
-
 //ruta para obtener un producto por id
 router.get('/obtener_tipo/:id', obtenerTipo);
-
 //ruta para actualizar un producto
 router.put('/actualizar_tipo/:id', editarTipo);
-
 //ruta para eliminar un producto
 router.delete('/eliminar_tipo/:id', deleteTipo);
 

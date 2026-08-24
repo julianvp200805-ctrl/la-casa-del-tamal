@@ -10,11 +10,11 @@ export const obtenerTipos = async () => {
 };
 
 // Obtener producto por codigo de lote
-export const obtenerTipoLote = async (codigo_lote) => {
+export const obtenerTipoLote = async (id_tipo) => {
     return await supabase
         .from("tipos_producto")
         .select("*")
-        .eq("codigo_lote", codigo_lote)
+        .eq("id_tipo", id_tipo)
         .single();
         return { data, error };
 };

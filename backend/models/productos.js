@@ -2,16 +2,16 @@ import {supabase} from '../config/supabase.js';
 
 // crear producto
 export const crearProducto = async (
+    id_producto,
     id_tipo,
-    nombre,
     fecha_ingreso,
     codigo_lote
 ) => {
     const { data, error } = await supabase
-        .from('producto')
+        .from('productos')
         .insert({
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         })
@@ -23,12 +23,16 @@ export const crearProducto = async (
 // obtener todos los productos
 export const obtenerProductos = async () => {
     const { data, error } = await supabase
-        .from('producto')
+        .from('productos')
         .select(`
-            *,
-            tipo_producto (
+            id_producto,
+            id_tipo,
+            fecha_ingreso,
+            codigo_lote,
+            tipos_producto (
+                id_tipo,
                 nombre,
-                duracion_dias
+                dias_vencimiento
             )
         `);
 
@@ -38,12 +42,16 @@ export const obtenerProductos = async () => {
 // obtener producto por id
 export const obtenerProductoPorId = async (id_producto) => {
     const { data, error } = await supabase
-        .from('producto')
+        .from('productos')
         .select(`
-            *,
-            tipo_producto (
+            id_producto,
+            id_tipo,
+            fecha_ingreso,
+            codigo_lote,
+            tipos_producto (
+                id_tipo,
                 nombre,
-                duracion_dias
+                dias_vencimiento
             )
         `)
         .eq('id_producto', id_producto)
@@ -52,19 +60,27 @@ export const obtenerProductoPorId = async (id_producto) => {
     return { data, error };
 };
 
+//verificar que todos los producto existan
+export const obtenerTipo2 = async (id_tipo) => { 
+    return await supabase 
+    .from("tipos_producto") 
+    .select("id_tipo, nombre, dias_vencimiento") 
+    .eq("id_tipo", id_tipo) 
+    .single(); 
+};
+
 // Aactualizar producto
 export const actualizarProducto = async (
     id_producto,
     id_tipo,
-    nombre,
     fecha_ingreso,
     codigo_lote
 ) => {
     const { data, error } = await supabase
-        .from('producto')
+        .from('productos')
         .update({
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         })
@@ -77,9 +93,8 @@ export const actualizarProducto = async (
 // eliminar producto
 export const eliminarProducto = async (id_producto) => {
     const { data, error } = await supabase
-        .from('producto')
+        .from('productos')
         .delete()
         .eq('id_producto', id_producto);
-
     return { data, error };
 };
