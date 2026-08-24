@@ -3,8 +3,8 @@ import dotenv from 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
 //creacion de la conexion con supabase
-const supabaseUrl = process.env.supabase_url;
-const supabaseKey = process.env.supabase_key;
+const supabaseUrl = process.env.supabase_Url;
+const supabaseKey = process.env.supabase_Key;
 
 //variable de conexion
 if (!supabaseUrl || !supabaseKey){

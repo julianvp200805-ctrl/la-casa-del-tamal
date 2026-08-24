@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { conectaDB,supabase } from './config/supabase.js';
+import { conectaDB, supabase } from './config/supabase.js';
 import userRoutes from './routes/user.js';
 import user2Routes from './routes/user2.js';
 import menuRoutes from './routes/menu.js';
