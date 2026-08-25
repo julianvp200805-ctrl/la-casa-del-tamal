@@ -101,10 +101,6 @@ export const obtenerTodos = async (req, res) => {
             });
         }
 
-<<<<<<< HEAD
-         res.status(200).json({
-            productos: data
-=======
         const productos = data.map(producto => {
 
             const fechaVencimiento =
@@ -122,7 +118,6 @@ export const obtenerTodos = async (req, res) => {
                         .toISOString()
                         .split('T')[0]
             };
->>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
         });
 
     } catch (error) {
@@ -140,11 +135,7 @@ export const obtenerPorId = async (req, res) => {
 
         const { id } = req.params;
 
-<<<<<<< HEAD
-        const { data, error } = await obtenerProductoPorId(id);
-=======
         const { data, error } = await obtenerProductoPorId(id_producto);
->>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
 
         if (error || !data) {
             return res.status(404).json({
@@ -209,11 +200,7 @@ export const editar = async (req, res) => {
         // Calcular fecha de vencimiento
         fechaVencimiento.setDate(
             fechaVencimiento.getDate() +
-<<<<<<< HEAD
-            tipoProducto.dias_vencimiento 
-=======
             data.tipos_producto.duracion_dias
->>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
         );
 
         const fechaVencimientoTexto =
@@ -251,99 +238,7 @@ export const editar = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
-=======
-// editar producto
-export const editar = async (req, res) => {
-    try {
 
-        const { id } = req.params;
-
-        const {
-            id_producto,
-            id_tipo,
-            fecha_ingreso,
-            codigo_lote
-        } = req.body;
-
-        // Validar datos
-        if (
-            !id_producto ||
-            !id_tipo ||
-            !fecha_ingreso ||
-            !codigo_lote
-        ) {
-            return res.status(400).json({
-                error: 'Todos los campos son obligatorios'
-            });
-        }
-
-        // Buscar el tipo de producto
-        const { data: tipos_Producto, error: errorTipo } = await obtenerProductoPorId(id_tipo);
-
-        if (errorTipo || !tipos_Producto) {
-            return res.status(404).json({
-                error: 'El tipo de producto no existe'
-            });
-        }
-
-        // Actualizar producto
-        const { data, error } = await actualizarProducto(
-            id_producto,
-            id_tipo,
-            fecha_ingreso,
-            codigo_lote
-        );
-
-        if (error) {
-            return res.status(500).json({
-                error: error.message
-            });
-        }
-
-        // Calcular fecha de vencimiento
-        const fechaVencimiento = new Date(fecha_ingreso);
-
-        fechaVencimiento.setDate(
-            fechaVencimiento.getDate() +
-            tipos_Producto.duracion_dias
-        );
-
-        const fechaVencimientoTexto =
-            fechaVencimiento
-                .toISOString()
-                .split('T')[0];
-
-        res.status(200).json({
-            mensaje: 'Producto actualizado correctamente',
-
-            producto: data[0],
-
-            duracion_dias:
-                tipos_Producto.duracion_dias,
-
-            fecha_vencimiento:
-                fechaVencimientoTexto,
-
-            aviso:
-                `El producto vence el ${fechaVencimientoTexto}`
-        });
-
-    } catch (error) {
-
-        console.error(
-            'Error al actualizar producto:',
-            error
-        );
-
-        res.status(500).json({
-            error: error.message
-        });
-    }
-};
-
-
->>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
 // eliminar producto
 export const eliminar = async (req, res) => {
     try {
@@ -352,11 +247,7 @@ export const eliminar = async (req, res) => {
 
         // Eliminar producto
         const { data, error } =
-<<<<<<< HEAD
-            await eliminarProducto(id);
-=======
             await eliminarProducto(id_producto);
->>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
 
         if (error) {
             return res.status(500).json({
