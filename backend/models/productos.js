@@ -65,12 +65,20 @@ export const obtenerProductoPorId = async (id_producto) => {
 export const obtenerTipo2 = async (id_tipo) => { 
     return await supabase 
     .from("tipos_producto") 
+<<<<<<< HEAD
     .select("*") 
+=======
+    .select("id_tipo, nombre, dias_vencimiento") 
+>>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
     .eq("id_tipo", id_tipo) 
     .single(); 
 };
 
+<<<<<<< HEAD
 // Actualizar producto
+=======
+// Aactualizar producto
+>>>>>>> 74dce6cebc1b65e8b7f1bb05005ed48f01f79b17
 export const actualizarProducto = async (
     id_producto,
     id_tipo,
@@ -80,6 +88,7 @@ export const actualizarProducto = async (
     const { data, error } = await supabase
         .from('productos')
         .update({
+            id_producto,
             id_tipo,
             fecha_ingreso,
             codigo_lote
