@@ -1,22 +1,20 @@
- import { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto } from "../models/productos.js";
- import { obtenerTipo, ProductoPorId } from "../models/tipo_producto.js";
-
+ import { crearProducto, obtenerProductos, obtenerProductoPorId, obtenerTipo2, actualizarProducto, eliminarProducto } from "../models/productos.js";
 
 // crear producto
 export const crear = async (req, res) => {
     try {
 
         const {
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         } = req.body;
 
         // Validar datos
         if (
+            !id_producto ||
             !id_tipo ||
-            !nombre ||
             !fecha_ingreso ||
             !codigo_lote
         ) {
@@ -27,26 +25,23 @@ export const crear = async (req, res) => {
 
         // Buscar el tipo de producto
         const {
-            data: tipoProducto,
+            data: tiposProducto,
             error: errorTipo
-        } = await obtenerTipoProductoPorId(id_tipo);
+        } = await obtenerTipo2(id_tipo);
 
-        if (errorTipo || !tipoProducto) {
+        if (errorTipo || !tiposProducto) {
             return res.status(404).json({
                 error: 'El tipo de producto no existe'
             });
-        }
+        }   
 
         // Obtener duración
-        const duracion = tipoProducto.duracion_dias;
+        const duracion = tiposProducto.dias_vencimiento;
 
         // Crear producto
-        const {
-            data,
-            error
-        } = await crearProducto(
+        const { data, error } = await crearProducto(
+            id_producto,
             id_tipo,
-            nombre,
             fecha_ingreso,
             codigo_lote
         );
@@ -74,11 +69,8 @@ export const crear = async (req, res) => {
             mensaje: 'Producto guardado correctamente',
 
             producto: data[0],
-
             duracion_dias: duracion,
-
             fecha_vencimiento: fechaVencimientoTexto,
-
             aviso: `El producto vence el ${fechaVencimientoTexto}`
         });
 
@@ -109,26 +101,9 @@ export const obtenerTodos = async (req, res) => {
             });
         }
 
-        const productos = data.map(producto => {
-
-            const fechaVencimiento =
-                new Date(producto.fecha_ingreso);
-
-            fechaVencimiento.setDate(
-                fechaVencimiento.getDate() +
-                producto.tipo_producto.duracion_dias
-            );
-
-            return {
-                ...producto,
-                fecha_vencimiento:
-                    fechaVencimiento
-                        .toISOString()
-                        .split('T')[0]
-            };
+         res.status(200).json({
+            productos: data
         });
-
-        res.status(200).json(productos);
 
     } catch (error) {
 
@@ -145,10 +120,7 @@ export const obtenerPorId = async (req, res) => {
 
         const { id } = req.params;
 
-        const {
-            data,
-            error
-        } = await obtenerProductoPorId(id);
+        const { data, error } = await obtenerProductoPorId(id);
 
         if (error || !data) {
             return res.status(404).json({
@@ -156,26 +128,128 @@ export const obtenerPorId = async (req, res) => {
             });
         }
 
-        const fechaVencimiento =
-            new Date(data.fecha_ingreso);
+        res.status(200).json(data);
 
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+// Editar producto
+export const editar = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const {
+            id_tipo,
+            fecha_ingreso,
+            codigo_lote
+        } = req.body;
+
+        // Validar datos
+        if (
+            !id_tipo ||
+            !fecha_ingreso ||
+            !codigo_lote
+        ) {
+            return res.status(400).json({
+                error: "Todos los campos son obligatorios"
+            });
+        }
+
+        // Buscar el tipo de producto
+        const {
+            data: tipoProducto,
+            error: errorTipo
+        } = await obtenerTipo2(id_tipo); 
+
+        if (errorTipo || !tipoProducto) {
+            return res.status(404).json({
+                error: "El tipo de producto no existe"
+            });
+        }
+
+        // Validar fecha
+        const fechaVencimiento = new Date(fecha_ingreso);
+
+        if (isNaN(fechaVencimiento.getTime())) {
+            return res.status(400).json({
+                error: "La fecha de ingreso no es válida"
+            });
+        }
+
+        // Calcular fecha de vencimiento
         fechaVencimiento.setDate(
             fechaVencimiento.getDate() +
-            data.tipo_producto.duracion_dias
+            tipoProducto.dias_vencimiento 
         );
 
         const fechaVencimientoTexto =
             fechaVencimiento
                 .toISOString()
-                .split('T')[0];
+                .split("T")[0];
+
+        // Actualizar producto
+        const { data, error } =
+            await actualizarProducto(
+                id,
+                id_tipo,
+                fecha_ingreso,
+                codigo_lote
+            );
+
+        if (error) {
+            return res.status(500).json({
+                error: error.message
+            });
+        }
 
         res.status(200).json({
-            ...data,
-            fecha_vencimiento:
-                fechaVencimientoTexto
+            mensaje: "Producto actualizado correctamente",
+            producto: data[0],
+            fecha_vencimiento: fechaVencimientoTexto,
+            duracion_dias: tipoProducto.dias_vencimiento 
         });
 
     } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+// eliminar producto
+export const eliminar = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        // Eliminar producto
+        const { data, error } =
+            await eliminarProducto(id);
+
+        if (error) {
+            return res.status(500).json({
+                error: error.message
+            });
+        }
+
+        res.status(200).json({
+            mensaje: 'Producto eliminado correctamente',
+            producto: data
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Error al eliminar producto:',
+            error
+        );
 
         res.status(500).json({
             error: error.message

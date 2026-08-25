@@ -1,4 +1,4 @@
-import jws from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 // Verifica que exista un token válido (usuario autenticado)
 export const verificarToken = (req, res, next) => {
