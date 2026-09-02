@@ -100,7 +100,7 @@ Requiere tener previamente configurado el SDK de **Flutter**.
    ```
 2. Inicia la aplicación en el navegador web (o cambia al emulador que requieras):
    ```bash
-   flutter run -d chrome
+   flutter run 
    ```
 
 ---
