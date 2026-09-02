@@ -4,24 +4,28 @@
 
 ## 🚀 Estructura del Proyecto
 
-A continuación se detalla la organización de los directorios principales del proyecto:
+A continuación se detalla la organización de los directorios principales del frontend:
 
 ```text
 la-casa-del-tamal/
 ├── backend/                  # Servidor y API (Node.js)
-│   ├── src/                  # Código fuente del servidor
-│   ├── package.json          # Dependencias del backend
-│   └── .env.example          # Plantilla de variables de entorno
-├── frontend/                 # Aplicación cliente (Flutter)
-│   ├── lib/                  # Código fuente de Dart (pantallas, widgets, lógica)
-│   ├── pubspec.yaml          # Dependencias de Flutter
-│   └── assets/               # Imágenes, fuentes y recursos estáticos
-└── README.md                 # Documentación del proyecto
+└── frontend/                 # Aplicación cliente (Flutter)
+    ├── assets/
+    │   └── image/            # Recursos visuales (logo.png)
+    ├── lib/
+    │   ├── components/       # Componentes reutilizables de la interfaz
+    │   │   └── genert/       # Vistas de autenticación y gestión (inicio_sesion, recuperar_contrasena)
+    │   ├── core/             # Configuraciones globales y constantes del sistema
+    │   ├── models/           # Modelos de datos estructurados (gerent.dart)
+    │   ├── pantallas/        # Vistas principales de la aplicación (pantalla_principal.dart)
+    │   ├── services/         # Conexión con la API del backend (api_config, gerent_services)
+    │   └── main.dart         # Punto de entrada de la aplicación
+    └── pubspec.yaml          # Dependencias y recursos de Flutter
 ```
 
 ## 🛠️ Tecnologías Utilizadas
 
-* **Frontend:** Dart, Flutter (Web/Mobile)
+* **Frontend:** Dart, Flutter (Soporte para Android, iOS, Web, Windows, macOS, Linux)
 * **Backend:** JavaScript, Node.js, Express
 
 ## 📦 Instalación y Configuración
