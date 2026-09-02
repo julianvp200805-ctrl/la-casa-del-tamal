@@ -4,15 +4,25 @@
 
 ## 🚀 Estructura del Proyecto
 
-El repositorio está dividido en dos partes principales:
-* **backend/**: Contiene la lógica del servidor, APIs y gestión de base de datos en Node.js.
-* **frontend/**: Contiene la interfaz de usuario y la lógica de cliente construida con Flutter.
+A continuación se detalla la organización de los directorios principales del proyecto:
+
+```text
+la-casa-del-tamal/
+├── backend/                  # Servidor y API (Node.js)
+│   ├── src/                  # Código fuente del servidor
+│   ├── package.json          # Dependencias del backend
+│   └── .env.example          # Plantilla de variables de entorno
+├── frontend/                 # Aplicación cliente (Flutter)
+│   ├── lib/                  # Código fuente de Dart (pantallas, widgets, lógica)
+│   ├── pubspec.yaml          # Dependencias de Flutter
+│   └── assets/               # Imágenes, fuentes y recursos estáticos
+└── README.md                 # Documentación del proyecto
+```
 
 ## 🛠️ Tecnologías Utilizadas
 
 * **Frontend:** Dart, Flutter (Web/Mobile)
 * **Backend:** JavaScript, Node.js, Express
-* **Herramientas de Compilación:** C++, CMake (para dependencias nativas del sistema)
 
 ## 📦 Instalación y Configuración
 
