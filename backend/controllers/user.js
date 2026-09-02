@@ -88,9 +88,17 @@ export const login = async(req,res)=>{
         process.env.JWT_SECRET,
         {expiresIn: '1h'}
     );
+    // Devolvemos el token Y los datos del usuario (antes solo se devolvía
+    // el token, y el frontend no tenía forma de saber nombre/rol/id).
     return res.status(200).json({
         message: 'Login exitoso',
-        token
+        token,
+        usuario: {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            rol: usuario.rol
+        }
     });
     } catch (error){
         console.error('Error en login:', error);

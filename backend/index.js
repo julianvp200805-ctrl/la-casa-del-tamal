@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import { conectaDB, supabase } from './config/supabase.js';
 import userRoutes from './routes/user.js';
 import user2Routes from './routes/user2.js';
@@ -15,6 +16,10 @@ conectaDB();
 
 
 const app = express();
+
+// Habilita CORS para que Flutter Web (Chrome) pueda llamar al backend.
+// Sin esto, el navegador bloquea la petición y da "Failed to fetch".
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,8 +43,6 @@ app.use('/producto', productoRoutes);
 //configuramos el puerto
 const PORT = 3000;
 
-//Ponemos a escuchar el servidor
-app.listen(PORT,()=>{
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-    console.log(`http://localhost:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

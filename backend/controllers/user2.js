@@ -42,25 +42,36 @@ export const getobtenerUsuarioPorId = async (req, res) => {
 };
 
 //Actualizar un usuario
+// ANTES: actualizarUsuario(nombre, email, contrasena, rol) -> le faltaba
+// el "id" y no coincidía con la firma del modelo actualizarUsuario(id, campos).
 export const putActualizarUsuario = async (req, res) => {
     const {id} = req.params;
     const {nombre, email, contrasena, rol} = req.body;
-//Validacion de los datos
-    if (!nombre || !email || !contrasena || !rol) {
+    //Validacion de los datos
+    if (!nombre || !email || !rol) {
         return res.status(400).json({error: "Faltan datos obligatorios"});
     }
-try {
-    const {data, error} = await actualizarUsuario( nombre, email, contrasena, rol);
-    if (error) {
-        return res.status(500).json({error: "Error al actualizar el usuario"});
+    try {
+        // Armamos el objeto de campos a actualizar.
+        const campos = { nombre, email, rol };
+        // Solo si mandan una nueva contraseña la encriptamos y la incluimos
+        // (si no, no se debería sobreescribir con texto plano).
+        if (contrasena) {
+            const bcrypt = (await import('bcrypt')).default;
+            campos.contrasena = await bcrypt.hash(contrasena, 10);
+        }
+
+        const {data, error} = await actualizarUsuario(id, campos);
+        if (error) {
+            return res.status(500).json({error: "Error al actualizar el usuario"});
+        }
+        return res.status(200).json({
+            message: "Usuario actualizado correctamente",
+            usuario: data
+        });
+    } catch (error) {
+        return res.status(500).json({mensaje: "Error del servidor", error: error.message});
     }
-    return res.status(200).json({
-        message: "Usuario actualizado correctamente",
-        usuario: data
-    });
-} catch (error) {
-    return res.status(500).json({mensaje: "Error del servidor", error: error.message});
-}
 };
 //Eliminar un usuario
 export const deleteEliminarUsuario = async (req, res) => {
@@ -68,17 +79,17 @@ export const deleteEliminarUsuario = async (req, res) => {
     try{
         const {data, error }= await eliminarUsuario(id);
         if (error) {
-            return res.status(400).json({error: "Error al eliminar el usuario", error: error.message});
+            return res.status(400).json({error: "Error al eliminar el usuario"});
         }   
         //si el dato no tiene datos vacios
         if (!data||data.length === 0) {
-            return res.status(404).json({error: "Usuario no encontrado", error: error.message});
+            return res.status(404).json({error: "Usuario no encontrado"});
         }
         return res.status(200).json({
             message: "Usuario eliminado correctamente",
             usuario: data
         });
-}catch (error) {
-    return res.status(500).json({error: "Error del servidor", error: error.message});
+    }catch (error) {
+        return res.status(500).json({error: "Error del servidor", error: error.message});
     } 
 };

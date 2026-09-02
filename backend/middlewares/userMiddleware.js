@@ -9,7 +9,7 @@ export const verificarToken = (req, res, next) => {
         return res.status(401).json({ error: 'Token no proporcionado, por favor inicie sesion ' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.jwt_secret, (err, decoded) => {
         if (err) {
             return res.status(403).json({ error: 'Token inválido o expirado' });
         }

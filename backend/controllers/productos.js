@@ -1,4 +1,4 @@
- import { crearProducto, obtenerProductos, obtenerProductoPorId, obtenerTipo2, actualizarProducto, eliminarProducto } from "../models/productos.js";
+import { crearProducto, obtenerProductos, obtenerProductoPorId, obtenerTipo2, actualizarProducto, eliminarProducto } from "../models/productos.js";
 
 // crear producto
 export const crear = async (req, res) => {
@@ -89,6 +89,8 @@ export const crear = async (req, res) => {
 
 
 // obtener todos
+// ANTES: nunca llamaba a res.json(...), la petición se quedaba colgada
+// (el cliente jamás recibía respuesta ni error).
 export const obtenerTodos = async (req, res) => {
     try {
 
@@ -120,6 +122,8 @@ export const obtenerTodos = async (req, res) => {
             };
         });
 
+        return res.status(200).json(productos);
+
     } catch (error) {
 
         res.status(500).json({
@@ -130,12 +134,13 @@ export const obtenerTodos = async (req, res) => {
 
 
 // obtener por id
+// ANTES: usaba "id_producto" que no existía (el parámetro real es "id").
 export const obtenerPorId = async (req, res) => {
     try {
 
         const { id } = req.params;
 
-        const { data, error } = await obtenerProductoPorId(id_producto);
+        const { data, error } = await obtenerProductoPorId(id);
 
         if (error || !data) {
             return res.status(404).json({
@@ -154,6 +159,8 @@ export const obtenerPorId = async (req, res) => {
 };
 
 // Editar producto
+// ANTES: usaba "data.tipos_producto..." antes de declarar "data" (crash),
+// y llamaba a actualizarProducto con el orden equivocado.
 export const editar = async (req, res) => {
     try {
 
@@ -197,18 +204,7 @@ export const editar = async (req, res) => {
             });
         }
 
-        // Calcular fecha de vencimiento
-        fechaVencimiento.setDate(
-            fechaVencimiento.getDate() +
-            data.tipos_producto.duracion_dias
-        );
-
-        const fechaVencimientoTexto =
-            fechaVencimiento
-                .toISOString()
-                .split("T")[0];
-
-        // Actualizar producto
+        // Actualizar producto (primero, para tener "data" disponible)
         const { data, error } =
             await actualizarProducto(
                 id,
@@ -222,6 +218,17 @@ export const editar = async (req, res) => {
                 error: error.message
             });
         }
+
+        // Calcular fecha de vencimiento usando la duración del tipo
+        fechaVencimiento.setDate(
+            fechaVencimiento.getDate() +
+            tipoProducto.dias_vencimiento
+        );
+
+        const fechaVencimientoTexto =
+            fechaVencimiento
+                .toISOString()
+                .split("T")[0];
 
         res.status(200).json({
             mensaje: "Producto actualizado correctamente",
@@ -240,6 +247,7 @@ export const editar = async (req, res) => {
 
 
 // eliminar producto
+// ANTES: usaba "id_producto" que no existía.
 export const eliminar = async (req, res) => {
     try {
 
@@ -247,7 +255,7 @@ export const eliminar = async (req, res) => {
 
         // Eliminar producto
         const { data, error } =
-            await eliminarProducto(id_producto);
+            await eliminarProducto(id);
 
         if (error) {
             return res.status(500).json({

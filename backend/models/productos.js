@@ -17,7 +17,6 @@ export const crearProducto = async (
         })
         .select();
 
-
     return { data, error };
 };
 
@@ -61,16 +60,18 @@ export const obtenerProductoPorId = async (id_producto) => {
     return { data, error };
 };
 
-//verificar que todos los producto existan
-export const obtenerTipo2 = async (id_tipo) => { 
-    return await supabase 
-    .from("tipos_producto") 
-    .select("id_tipo, nombre, dias_vencimiento") 
-    .eq("id_tipo", id_tipo) 
-    .single(); 
+// verificar que el tipo de producto exista (usado antes de crear/editar)
+export const obtenerTipo2 = async (id_tipo) => {
+    const { data, error } = await supabase
+        .from('tipos_producto')
+        .select('id_tipo, nombre, dias_vencimiento')
+        .eq('id_tipo', id_tipo)
+        .single();
+
+    return { data, error };
 };
 
-// Aactualizar producto
+// actualizar producto
 export const actualizarProducto = async (
     id_producto,
     id_tipo,
@@ -80,7 +81,6 @@ export const actualizarProducto = async (
     const { data, error } = await supabase
         .from('productos')
         .update({
-            id_producto,
             id_tipo,
             fecha_ingreso,
             codigo_lote
@@ -97,5 +97,6 @@ export const eliminarProducto = async (id_producto) => {
         .from('productos')
         .delete()
         .eq('id_producto', id_producto);
+
     return { data, error };
 };
