@@ -8,7 +8,7 @@ import menuRoutes from './routes/menu.js';
 import pedidoRoutes from './routes/pedido.js';
 import tipoProductoRoutes from './routes/tipo_producto.js';
 import productoRoutes from './routes/productos.js';
-
+import chatRoutes from './routes/chatRoutes.js'; // Importa las rutas de chat
 
 //cargas variables de entorno
 dotenv.config();
@@ -39,7 +39,7 @@ app.use('/menu', menuRoutes);
 app.use('/pedido', pedidoRoutes);
 app.use('/tipoProducto', tipoProductoRoutes);
 app.use('/producto', productoRoutes);
-
+app.use("/api/chat", chatRoutes);
 //configuramos el puerto
 const PORT = 3000;
 
