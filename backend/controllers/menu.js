@@ -41,12 +41,28 @@ export const obtenerPorCat = async (req, res) => {
 export const crear = async (req, res) => {
   try {
     const { nombre, descripcion, precio, stock, imagen_url, categoria, sabor } = req.body;
-    if (!nombre || !precio || !imagen_url) {
-      return res.status(400).json({ error: 'nombre, precio e imagen_url requeridos' });
+
+    //// Cloudinary almacena la URL segura en req.file.path
+    const imagen = req.file ? req.file.path : req.body.imagen_url;
+
+    // Validar usando la variable 'imagen' que contiene la URL de Cloudinary
+    if (!nombre || !precio || !imagen) {
+      return res.status(400).json({
+        error: 'nombre, precio e imagen requeridos'
+      });
     }
+
+   // Se envía 'imagen' con el nombre de propiedad 'imagen_url' a la base de datos
     const { data, error } = await crearPlato({
-      nombre, descripcion, precio, stock, imagen_url, categoria, sabor
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      imagen_url: imagen,
+      categoria,
+      sabor
     });
+    
     if (error) {
       return res.status(500).json({ error: 'Error al crear' });
     }
