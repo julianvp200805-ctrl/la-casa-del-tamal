@@ -42,8 +42,6 @@ export const getobtenerUsuarioPorId = async (req, res) => {
 };
 
 //Actualizar un usuario
-// ANTES: actualizarUsuario(nombre, email, contrasena, rol) -> le faltaba
-// el "id" y no coincidía con la firma del modelo actualizarUsuario(id, campos).
 export const putActualizarUsuario = async (req, res) => {
     const {id} = req.params;
     const {nombre, email, contrasena, rol} = req.body;

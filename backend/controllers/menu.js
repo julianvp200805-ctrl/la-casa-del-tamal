@@ -1,5 +1,6 @@
 import { obtenerTodos, obtenerPorId, obtenerPorCategoria, crearPlato, actualizarPlato, eliminarPlato } from "../models/menu.js";
 
+//obtener todos los platillos 
 export const listarMenu = async (req, res) => {
   try {
     const { data, error } = await obtenerTodos();
@@ -11,7 +12,7 @@ export const listarMenu = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
-
+ //obtener uno por id 
 export const obtenerMenu = async (req, res) => {
   try {
     const { id } = req.params;
@@ -25,6 +26,7 @@ export const obtenerMenu = async (req, res) => {
   }
 };
 
+//obtener por categoria
 export const obtenerPorCat = async (req, res) => {
   try {
     const { categoria } = req.params;
@@ -38,6 +40,7 @@ export const obtenerPorCat = async (req, res) => {
   }
 };
 
+//crear un platillo
 export const crear = async (req, res) => {
   try {
     const { nombre, descripcion, precio, stock, imagen_url, categoria, sabor } = req.body;
@@ -56,6 +59,7 @@ export const crear = async (req, res) => {
   }
 };
 
+//editar un platillo del menu 
 export const editar = async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,6 +73,7 @@ export const editar = async (req, res) => {
   }
 };
 
+//eliminar un platillo del menú 
 export const eliminar = async (req, res) => {
   try {
     const { id } = req.params;

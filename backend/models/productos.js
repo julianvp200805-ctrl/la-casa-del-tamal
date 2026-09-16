@@ -38,7 +38,6 @@ export const obtenerProductos = async () => {
 
     return { data, error };
 };
-
 // obtener producto por id
 export const obtenerProductoPorId = async (id_producto) => {
     const { data, error } = await supabase
@@ -70,7 +69,6 @@ export const obtenerTipo2 = async (id_tipo) => {
 
     return { data, error };
 };
-
 // actualizar producto
 export const actualizarProducto = async (
     id_producto,
@@ -97,6 +95,5 @@ export const eliminarProducto = async (id_producto) => {
         .from('productos')
         .delete()
         .eq('id_producto', id_producto);
-
     return { data, error };
 };

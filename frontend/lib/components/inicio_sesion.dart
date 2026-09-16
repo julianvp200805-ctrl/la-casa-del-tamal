@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/colores.dart';
 import 'package:frontend/components/recuperar_contrasena.dart';
-import 'package:frontend/components/genert/gerent.dart';
+import 'package:frontend/components/gerent.dart';
 import 'package:frontend/services/gerent_services.dart';
 
 class InicioSesion extends StatefulWidget {
@@ -63,47 +64,32 @@ class _InicioSesionState extends State<InicioSesion> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFA8D5B5),
+      backgroundColor: AppEstilos.fondoClaro,
       body: SafeArea(
         child: Column(
           children: [
-            // Botón de volver + logo
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.black87),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
             // Logo (asset)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: Image.asset(
                 'assets/image/logo.png',
                 height: 130,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.house, size: 90, color: Colors.white),
               ),
             ),
-            const SizedBox(height: 10),
             // Contenedor verde inferior con el formulario
             Expanded(
               child: Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF4CAF50), Color(0xFF1B3A1E)],
-                  ),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  gradient: AppEstilos.degradadoHeader,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(60),
                     topRight: Radius.circular(60),
                   ),
+                  boxShadow: AppEstilos.sombraSuave,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -144,33 +130,39 @@ class _InicioSesionState extends State<InicioSesion> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _iniciarSesion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFCBBE1D),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 3,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: AppEstilos.sombraSuave,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.black87,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _iniciarSesion,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppEstilos.colorDorado,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.black87,
+                                  ),
+                                )
+                              : const Text(
+                                  'Iniciar Sesion',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'Iniciar Sesion',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
+                        ),
                       ),
                     ],
                   ),
@@ -190,8 +182,9 @@ class _InicioSesionState extends State<InicioSesion> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F1E9),
+        color: AppEstilos.colorInput,
         borderRadius: BorderRadius.circular(30),
+        boxShadow: AppEstilos.sombraSuave,
       ),
       child: TextField(
         controller: controller,
