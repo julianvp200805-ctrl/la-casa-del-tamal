@@ -49,3 +49,22 @@ export const crearDetallePedido = async (detalleData) => {
     .select();
   return { data, error };
 };
+
+export const obtenerPedidosPorRango = async (fechaInicioISO, fechaFinISO) => {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('id, usuario_id, total, estado, fecha_pedido')
+    .gte('fecha_pedido', fechaInicioISO)
+    .lte('fecha_pedido', fechaFinISO)
+    .order('fecha_pedido', { ascending: false });
+  return { data, error };
+};
+// ... tus otras funciones
+export const eliminarPedido = async (id) => {
+  const { data, error } = await supabase
+    .from("pedidos")
+    .delete()
+    .eq("id", id)
+    .select();
+  return { data, error };
+};

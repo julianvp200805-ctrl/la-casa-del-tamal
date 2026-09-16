@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerent_services.dart';
 import 'package:frontend/components/recuperar.dart';
 
@@ -24,15 +25,6 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
 
   final UserService _userService = UserService();
   bool _isLoading = false;
-
-  static const Color fondoPantalla = Color(0xFF96C69F);
-  static const Color headerGradienteInicio = Color(0xFF339A3A);
-  static const Color headerGradienteFin = Color(0xFF113514);
-  static const Color tarjetaGradienteInicio = Color(0xFF48A350);
-  static const Color tarjetaGradienteFin = Color(0xFF2E5432);
-  static const Color colorInput = Color(0xFFF2F2EB);
-  static const Color colorCasillaCodigo = Color(0xFFD9D9D9);
-  static const Color colorBoton = Color(0xFFC0B412);
 
   @override
   void initState() {
@@ -113,14 +105,15 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: fondoPantalla,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildEncabezado(),
-            const SizedBox(height: 14),
-            Expanded(child: _buildTarjetaFormulario()),
-          ],
+      body: AppFondo(
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildEncabezado(),
+              const SizedBox(height: 14),
+              Expanded(child: _buildTarjetaFormulario()),
+            ],
+          ),
         ),
       ),
     );
@@ -130,16 +123,13 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [headerGradienteInicio, headerGradienteFin],
-        ),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        gradient: AppEstilos.degradadoHeader,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(28),
           bottomRight: Radius.circular(28),
         ),
+        boxShadow: AppEstilos.sombraSuave,
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -176,9 +166,10 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [tarjetaGradienteInicio, tarjetaGradienteFin],
+          colors: [Color(0xFF48A350), Color(0xFF2E5432)],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppEstilos.radioTarjeta),
+        boxShadow: AppEstilos.sombraSuave,
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -228,7 +219,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
         hintText: 'Ingrese su email',
         hintStyle: const TextStyle(color: Color(0xFF9C9C94)),
         filled: true,
-        fillColor: colorInput,
+        fillColor: AppEstilos.colorInput,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
@@ -243,12 +234,16 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
     required String texto,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: AppEstilos.sombraSuave,
+      ),
       child: ElevatedButton(
         onPressed: _isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: colorBoton,
+          backgroundColor: AppEstilos.colorDorado,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -291,7 +286,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
               decoration: InputDecoration(
                 counterText: '',
                 filled: true,
-                fillColor: colorCasillaCodigo,
+                fillColor: const Color(0xFFD9D9D9),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,

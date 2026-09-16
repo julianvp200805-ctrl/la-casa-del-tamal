@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/inicio_sesion.dart';
+import 'package:frontend/pantallas/menu.dart';
 
 class LaCasaDelTamalApp extends StatelessWidget {
   const LaCasaDelTamalApp({super.key});
@@ -54,7 +55,6 @@ class HomeScreen extends StatelessWidget {
               ),
               const Spacer(flex: 3),
               _MenuButton(onTap: () {}),
-
               const Spacer(flex: 10),
               const Text(
                 'El sabor de casa en\ncada tamal.',
@@ -93,14 +93,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
 class _MenuButton extends StatelessWidget {
   final VoidCallback onTap;
   const _MenuButton({required this.onTap});
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onTap,
+      onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MenuPage()),
+                  );},
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.transparent,
         shadowColor: Colors.transparent,

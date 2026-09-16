@@ -33,21 +33,19 @@ export const crearTipo2 = async (req, res) => {
 // Editar
 export const editarTipo = async (req, res) => {
     const { id } = req.params;
-    const { nombre ,dias_vencimiento } = req.body;
-    const { data, error } = await actualizarTipo(id, {
+    const { nombre, dias_vencimiento } = req.body;
+    const { data, error } = await actualizarTipo({
         nombre,
         dias_vencimiento,
-    });
-
+    }, id);
     if (error) return res.status(500).json(error);
     res.json({
-        mensaje: "Tipo de producto actualizado correctamente"
-});
+        mensaje: "Tipo de producto actualizado correctamente",
+        data: data[0]
+    });
 };
-
 // Eliminar
 export const deleteTipo = async (req, res) => {
-
     const { id } = req.params;
     const { error } = await eliminarTipo(id);
     if (error) return res.status(500).json(error);

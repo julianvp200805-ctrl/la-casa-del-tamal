@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerent_services.dart';
 import 'package:frontend/components/inicio_sesion.dart';
 
@@ -26,13 +27,6 @@ class _NuevaContrasenaPageState extends State<NuevaContrasenaPage> {
 
   final UserService _userService = UserService();
   bool _isLoading = false;
-
-  static const Color fondo = Color(0xFF96C69F);
-  static const Color headerInicio = Color(0xFF339A3A);
-  static const Color headerFin = Color(0xFF113514);
-  static const Color colorInput = Color(0xFFF2F2EB);
-  static const Color colorBoton = Color(0xFF4E9F5D);
-  static const Color colorTitulo = Color(0xFF107E24);
 
   Future<void> _recuperar() async {
     if (_nuevaController.text.isEmpty || _confirmarController.text.isEmpty) {
@@ -78,61 +72,69 @@ class _NuevaContrasenaPageState extends State<NuevaContrasenaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: fondo,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildEncabezado(),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  children: [
-                    const Text(
-                      'RECUPERAR CONTRASEÑA',
-                      style: TextStyle(
-                        color: colorTitulo,
-                        fontSize: 16,
-                        fontFamily: 'serif',
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _campo(_nuevaController, 'Nueva contraseña'),
-                    const SizedBox(height: 16),
-                    _campo(_confirmarController, 'Confirmar contraseña'),
-                    const SizedBox(height: 28),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _recuperar,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorBoton,
-                        minimumSize: const Size(140, 44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+      body: AppFondo(
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildEncabezado(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'RECUPERAR CONTRASEÑA',
+                        style: TextStyle(
+                          color: Color(0xFF107E24),
+                          fontSize: 16,
+                          fontFamily: 'serif',
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1,
                         ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Recuperar',
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontFamily: 'serif',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                      const SizedBox(height: 24),
+                      _campo(_nuevaController, 'Nueva contraseña'),
+                      const SizedBox(height: 16),
+                      _campo(_confirmarController, 'Confirmar contraseña'),
+                      const SizedBox(height: 28),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: AppEstilos.sombraSuave,
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _recuperar,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppEstilos.botonVerde,
+                            minimumSize: const Size(140, 44),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                    ),
-                  ],
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text(
+                                  'Recuperar',
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontFamily: 'serif',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -142,16 +144,13 @@ class _NuevaContrasenaPageState extends State<NuevaContrasenaPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [headerInicio, headerFin],
-        ),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        gradient: AppEstilos.degradadoHeader,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(28),
           bottomRight: Radius.circular(28),
         ),
+        boxShadow: AppEstilos.sombraSuave,
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -186,7 +185,7 @@ class _NuevaContrasenaPageState extends State<NuevaContrasenaPage> {
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFF9C9C94)),
         filled: true,
-        fillColor: colorInput,
+        fillColor: AppEstilos.colorInput,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

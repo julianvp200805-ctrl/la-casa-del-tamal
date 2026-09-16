@@ -5,10 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_config.dart';
 
 class UserService {
-  // ---------------------------------------------------------------
-  // LOGIN
-  // POST /user/login  { email, contrasena } -> { message, token, usuario }
-  // ---------------------------------------------------------------
   Future<UserModel> login(String email, String contrasena) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/login');
 
@@ -48,10 +44,9 @@ class UserService {
     await prefs.clear();
   }
 
-  // ---------------------------------------------------------------
   // RECUPERAR CONTRASEÑA - paso 1: enviar código de 6 dígitos al correo
   // POST /user/forgot-password  { email }
-  // ---------------------------------------------------------------
+  
   Future<String> enviarCodigoRecuperacion(String email) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/forgot-password');
 
@@ -74,11 +69,10 @@ class UserService {
     }
   }
 
-  // ---------------------------------------------------------------
+ 
   // RECUPERAR CONTRASEÑA - único paso real del backend: verifica el
   // código Y cambia la contraseña en la misma petición.
   // POST /user/verify-code  { email, codigo, newPassword }
-  // ---------------------------------------------------------------
   Future<String> confirmarRecuperacion({
     required String email,
     required String codigo,

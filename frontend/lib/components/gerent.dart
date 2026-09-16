@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/core/colores.dart';
+import 'package:frontend/components/ventas_page.dart';
+import 'package:frontend/components/admin_menu.dart';
 
 /// Página principal del admin - Casa del Tamal
-/// Muestra el nombre del usuario logueado (leído del backend/login),
-/// el menú de opciones y un botón de chatbot (ícono del tamal).
+/// Muestra el nombre del usuario logueado, el menú de opciones y un
+/// botón de chatbot (ícono del tamal).
 class AdminHomePage extends StatefulWidget {
   static const String routeName = '/admin-home';
   final String logoAssetPath;
@@ -18,12 +21,6 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  // Colores del diseño
-  static const Color headerInicio = Color(0xFF339A3A);
-  static const Color headerFin = Color(0xFF113914);
-  static const Color colorBoton = Color(0xFF275423);
-  static const Color colorBordeBoton = Color(0xFF309237);
-
   String _nombreUsuario = 'admin';
 
   @override
@@ -32,8 +29,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
     _cargarNombreUsuario();
   }
 
-  // Conexión al backend: el nombre ya se guardó en el login
-  // (prefs.setString('user_name', ...) en LoginScreen), aquí solo se lee.
+  // El nombre ya se guardó en el login (gerent_services.dart), aquí solo
+  // se lee de SharedPreferences.
   Future<void> _cargarNombreUsuario() async {
     final prefs = await SharedPreferences.getInstance();
     final nombre = prefs.getString('user_name');
@@ -43,8 +40,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _abrirChatBot() {
-    // TODO: aquí se conecta con el endpoint real del chatbot, ej:
-    // POST /chatbot { mensaje } -> { respuesta }
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ChatBotPage()),
@@ -52,24 +47,31 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _irA(String pantalla) {
-    // TODO: reemplazar por Navigator.push a cada página real
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Ir a $pantalla')));
+    switch (pantalla) {
+      case 'Ventas':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VentasPage()),
+        );
+        break;
+      case 'Modificar menu':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminMenuPage()),
+        );
+        break;
+      default:
+        // TODO: reemplazar por Navigator.push a cada página real
+        // (Pedidos en proceso, Inventario, Modificar menu) cuando existan.
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Ir a $pantalla')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [headerInicio, headerFin],
-          ),
-        ),
+      body: AppFondo(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -77,13 +79,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
               children: [
                 _buildCabecera(),
                 const SizedBox(height: 24),
-                _buildBotonMenu('Ventas', () => _irA('Ventas')),
+                AppBotonMenu(texto: 'Ventas', onTap: () => _irA('Ventas')),
                 const SizedBox(height: 16),
-                _buildBotonMenu('Pedidos en proceso', () => _irA('Pedidos en proceso')),
+                AppBotonMenu(
+                  texto: 'Pedidos en proceso',
+                  onTap: () => _irA('Pedidos en proceso'),
+                ),
                 const SizedBox(height: 16),
-                _buildBotonMenu('Inventario', () => _irA('Inventario')),
+                AppBotonMenu(texto: 'Inventario', onTap: () => _irA('Inventario')),
                 const SizedBox(height: 16),
-                _buildBotonMenu('Modificar menu', () => _irA('Modificar menu')),
+                AppBotonMenu(
+                  texto: 'Modificar menu',
+                  onTap: () => _irA('Modificar menu'),
+                ),
                 const Spacer(),
                 Image.asset(
                   widget.logoAssetPath,
@@ -124,29 +132,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
           child: Icon(Icons.person, color: Colors.white),
         ),
       ],
-    );
-  }
-
-  Widget _buildBotonMenu(String texto, VoidCallback onTap) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colorBoton,
-          side: const BorderSide(color: colorBordeBoton, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-        child: Text(
-          texto,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontFamily: 'serif',
-          ),
-        ),
-      ),
     );
   }
 }
