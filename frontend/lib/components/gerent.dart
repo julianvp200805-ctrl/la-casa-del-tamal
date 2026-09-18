@@ -3,10 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/components/ventas_page.dart';
 import 'package:frontend/components/admin_menu.dart';
+import 'package:frontend/services/chat_service.dart';
 
 /// Página principal del admin - Casa del Tamal
-/// Muestra el nombre del usuario logueado, el menú de opciones y un
-/// botón de chatbot (ícono del tamal).
 class AdminHomePage extends StatefulWidget {
   static const String routeName = '/admin-home';
   final String logoAssetPath;
@@ -29,8 +28,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     _cargarNombreUsuario();
   }
 
-  // El nombre ya se guardó en el login (gerent_services.dart), aquí solo
-  // se lee de SharedPreferences.
   Future<void> _cargarNombreUsuario() async {
     final prefs = await SharedPreferences.getInstance();
     final nombre = prefs.getString('user_name');
@@ -61,8 +58,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         );
         break;
       default:
-        // TODO: reemplazar por Navigator.push a cada página real
-        // (Pedidos en proceso, Inventario, Modificar menu) cuando existan.
+        // TODO: conectar Pedidos en proceso e Inventario cuando existan
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Ir a $pantalla')));
     }
@@ -136,8 +132,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 }
 
-/// Página simple de chatbot, conectada al backend.
-/// Reemplaza la URL/endpoint por el real cuando lo tengas.
+/// Chatbot "Tamalín" conectado al backend real (POST /api/chat).
 class ChatBotPage extends StatefulWidget {
   const ChatBotPage({super.key});
 
@@ -147,81 +142,181 @@ class ChatBotPage extends StatefulWidget {
 
 class _ChatBotPageState extends State<ChatBotPage> {
   final TextEditingController _mensajeController = TextEditingController();
-  final List<Map<String, String>> _mensajes = []; // {texto, de: 'usuario'/'bot'}
+  final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
+
+  final List<Map<String, String>> _mensajes = []; // {texto, de}
   bool _cargando = false;
+
+  // El backend devuelve un sesionId; lo guardamos para que toda la
+  // conversación quede agrupada en la misma sesión.
+  String? _sesionId;
+
+  @override
+  void dispose() {
+    _mensajeController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _bajarScroll() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   Future<void> _enviarMensaje() async {
     final texto = _mensajeController.text.trim();
-    if (texto.isEmpty) return;
+    if (texto.isEmpty || _cargando) return;
 
     setState(() {
       _mensajes.add({'texto': texto, 'de': 'usuario'});
       _cargando = true;
     });
     _mensajeController.clear();
+    _bajarScroll();
 
     try {
-      // TODO: reemplazar por la llamada real al backend del chatbot
-      // final respuesta = await ChatService().enviarMensaje(texto);
-      await Future.delayed(const Duration(seconds: 1));
-      final respuesta = 'Respuesta de ejemplo del chatbot';
-      setState(() => _mensajes.add({'texto': respuesta, 'de': 'bot'}));
+      final resultado = await _chatService.enviarMensaje(
+        mensaje: texto,
+        sesionId: _sesionId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _sesionId = resultado.sesionId;
+        _mensajes.add({'texto': resultado.respuesta, 'de': 'bot'});
+      });
     } catch (e) {
-      setState(() => _mensajes.add({'texto': 'Error: $e', 'de': 'bot'}));
+      if (!mounted) return;
+      setState(() {
+        _mensajes.add({
+          'texto': 'No pude responder: ${e.toString()}',
+          'de': 'bot',
+        });
+      });
     } finally {
-      if (mounted) setState(() => _cargando = false);
+      if (mounted) {
+        setState(() => _cargando = false);
+        _bajarScroll();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Asistente Casa del Tamal')),
+      backgroundColor: AppEstilos.fondoClaro,
+      appBar: AppBar(
+        title: const Text('Tamalín — Asistente'),
+        backgroundColor: AppEstilos.headerInicio,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _mensajes.length,
-              itemBuilder: (context, index) {
-                final msg = _mensajes[index];
-                final esUsuario = msg['de'] == 'usuario';
-                return Align(
-                  alignment:
-                      esUsuario ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: esUsuario ? Colors.green.shade200 : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
+            child: _mensajes.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        'Pregúntame sobre el menú,\nlas ventas o cómo mejorar el negocio.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ),
-                    child: Text(msg['texto'] ?? ''),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _mensajes.length,
+                    itemBuilder: (context, index) {
+                      final msg = _mensajes[index];
+                      final esUsuario = msg['de'] == 'usuario';
+                      return Align(
+                        alignment: esUsuario
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth:
+                                MediaQuery.of(context).size.width * 0.78,
+                          ),
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: esUsuario
+                                ? AppEstilos.botonVerde
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: AppEstilos.sombraSuave,
+                          ),
+                          child: Text(
+                            msg['texto'] ?? '',
+                            style: TextStyle(
+                              color:
+                                  esUsuario ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
-          if (_cargando) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _mensajeController,
-                    decoration: const InputDecoration(
-                      hintText: 'Escribe tu pregunta...',
-                      border: OutlineInputBorder(),
+          if (_cargando)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'Tamalín está escribiendo...',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _mensajeController,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _enviarMensaje(),
+                      decoration: InputDecoration(
+                        hintText: 'Escribe tu pregunta...',
+                        filled: true,
+                        fillColor: AppEstilos.colorInput,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _enviarMensaje,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    backgroundColor: AppEstilos.botonVerde,
+                    child: IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: _cargando ? null : _enviarMensaje,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

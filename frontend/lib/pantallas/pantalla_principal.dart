@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/inicio_sesion.dart';
 import 'package:frontend/pantallas/menu.dart';
-
-class LaCasaDelTamalApp extends StatelessWidget {
-  const LaCasaDelTamalApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'La Casa del Tamal',
-      home: const HomeScreen(),
-    );
-  }
-}
+// NOTA: se elimino la clase LaCasaDelTamalApp que devolvia un MaterialApp.
+// El unico MaterialApp de la app vive ahora en main.dart. Tener dos causa
+// dos Navigator anidados y hace que SnackBars y "volver atras" fallen.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               const Spacer(flex: 3),
-              _MenuButton(onTap: () {}),
+              const _MenuButton(),
               const Spacer(flex: 10),
               const Text(
                 'El sabor de casa en\ncada tamal.',
@@ -66,13 +58,12 @@ class HomeScreen extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
-
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => InicioSesion()),
+                    MaterialPageRoute(builder: (context) => const InicioSesion()),
                   );
                 },
                 child: const Text(
@@ -84,7 +75,6 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -93,20 +83,25 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+
 class _MenuButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _MenuButton({required this.onTap});
+  // CORREGIDO: antes recibia un "onTap" obligatorio que nunca se usaba
+  // (se le pasaba un callback vacio y el boton navegaba por su cuenta).
+  const _MenuButton();
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MenuPage()),
-                  );},
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MenuPage()),
+        );
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.transparent,
         shadowColor: Colors.transparent,
+        elevation: 0,
         side: const BorderSide(color: Colors.white, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),

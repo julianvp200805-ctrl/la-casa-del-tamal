@@ -85,11 +85,10 @@ export const login = async(req,res)=>{
             email: usuario.email,
             rol: usuario.rol,
         },
-        process.env.JWT_SECRET,
+        process.env.jwt_secret,
         {expiresIn: '1h'}
     );
-    // Devolvemos el token Y los datos del usuario (antes solo se devolvía
-    // el token, y el frontend no tenía forma de saber nombre/rol/id).
+    // Devolvemos el token Y los datos del usuario
     return res.status(200).json({
         message: 'Login exitoso',
         token,

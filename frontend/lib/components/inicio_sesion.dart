@@ -129,7 +129,7 @@ class _InicioSesionState extends State<InicioSesion> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),

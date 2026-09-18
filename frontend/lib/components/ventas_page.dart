@@ -7,7 +7,6 @@ class VentasPage extends StatelessWidget {
   static const String routeName = '/ventas';
 
   const VentasPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
