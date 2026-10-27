@@ -2,7 +2,7 @@ import express from 'express';
 import { registro, login } from '../controllers/auth.js';
 import { forgotPassword, verifyCode } from '../controllers/recuperar.js';
 import { verificarCodigoRegistro } from '../controllers/codigosRegistro.js';
-import { limitarIntentos } from '../middlewares/limitarIntentos.js';
+import { limitarIntentos } from '../middlewares/limitarintentos.js';
 
 const router = express.Router();
 
