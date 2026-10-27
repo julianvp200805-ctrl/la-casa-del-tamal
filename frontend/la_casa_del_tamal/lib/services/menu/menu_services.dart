@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'package:frontend/services/api_response.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -33,11 +33,11 @@ class MenuService {
   // GET /menu/menu (público, no requiere token)
   Future<List<MenuItem>> obtenerMenu() async {
     try {
-      final response = await http.get(Uri.parse('${ApiConfig.rootUrl}/menu/menu'), headers: ApiConfig.headers);
+      final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/menu/menu'), headers: ApiConfig.headers);
       if (response.statusCode == 200) {
-        return (jsonDecode(response.body) as List).map((e) => MenuItem.fromJson(e)).toList();
+        return (decodeApiResponse(response) as List).map((e) => MenuItem.fromJson(e)).toList();
       }
-      throw Exception(jsonDecode(response.body)['error'] ?? 'No se pudo cargar el menú');
+      throw Exception(decodeApiResponse(response)['error'] ?? 'No se pudo cargar el menú');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
@@ -54,7 +54,7 @@ class MenuService {
   // archivo en el campo "imagen" y guarda en la BD la URL que devuelve Cloudinary.
   Future<void> _enviar(String metodo, String ruta, Map<String, String> campos, XFile? foto, String falla) async {
     try {
-      final req = http.MultipartRequest(metodo, Uri.parse('${ApiConfig.rootUrl}$ruta'))
+      final req = http.MultipartRequest(metodo, Uri.parse('${ApiConfig.baseUrl}$ruta'))
         ..headers['Authorization'] = 'Bearer ${await _token()}'
         ..fields.addAll(campos);
       if (foto != null) {
@@ -64,7 +64,7 @@ class MenuService {
       if (response.statusCode >= 200 && response.statusCode < 300) return;
       String? msg;
       try {
-        msg = jsonDecode(response.body)['error']?.toString();
+        msg = decodeApiResponse(response)['error']?.toString();
       } catch (_) {}
       throw Exception(msg ?? falla);
     } catch (e) {
@@ -85,8 +85,8 @@ class MenuService {
   // DELETE /menu/menu/:id (admin)
   Future<String> eliminarPlato(String id) async {
     try {
-      final response = await http.delete(Uri.parse('${ApiConfig.rootUrl}/menu/menu/$id'), headers: ApiConfig.headersConToken(await _token()));
-      final data = jsonDecode(response.body);
+      final response = await http.delete(Uri.parse('${ApiConfig.baseUrl}/menu/menu/$id'), headers: ApiConfig.headersConToken(await _token()));
+      final data = decodeApiResponse(response);
       if (response.statusCode == 200) return data['message'] ?? 'Plato eliminado';
       throw Exception(data['error'] ?? 'No se pudo eliminar el plato');
     } catch (e) {

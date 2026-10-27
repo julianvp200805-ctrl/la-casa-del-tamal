@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:frontend/components/ventas/venta_item_card.dart';
+import 'package:frontend/services/api_response.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 import 'package:http/http.dart' as http;
@@ -33,7 +34,7 @@ class PedidoService {
   // GET /pedido/reporte?tipo=diaria|semanal|mensual
   Future<ReporteVentas> obtenerReporteVentas(String tipo) async {
     final token = await _token();
-    final url = Uri.parse('${ApiConfig.rootUrl}/pedido/reporte?tipo=$tipo');
+    final url = Uri.parse('${ApiConfig.baseUrl}/pedido/reporte?tipo=$tipo');
     return _pedir(url, token);
   }
 
@@ -42,7 +43,7 @@ class PedidoService {
   Future<ReporteVentas> obtenerReporteRango(DateTime desde, DateTime hasta) async {
     final token = await _token();
     final url = Uri.parse(
-      '${ApiConfig.rootUrl}/pedido/reporte-rango?desde=${desde.toUtc().toIso8601String()}&hasta=${hasta.toUtc().toIso8601String()}',
+      '${ApiConfig.baseUrl}/pedido/reporte-rango?desde=${desde.toUtc().toIso8601String()}&hasta=${hasta.toUtc().toIso8601String()}',
     );
     return _pedir(url, token);
   }
@@ -50,10 +51,10 @@ class PedidoService {
   // GET /pedido/en-proceso -> pedidos abiertos con sus productos
   Future<List<PedidoProceso>> obtenerPedidosEnProceso() async {
     final token = await _token();
-    final url = Uri.parse('${ApiConfig.rootUrl}/pedido/en-proceso');
+    final url = Uri.parse('${ApiConfig.baseUrl}/pedido/en-proceso');
     try {
       final response = await http.get(url, headers: ApiConfig.headersConToken(token));
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
       if (response.statusCode == 200) {
         return ((data['pedidos'] as List?) ?? []).map((e) => PedidoProceso.fromJson(e)).toList();
       }
@@ -66,11 +67,11 @@ class PedidoService {
   // PATCH /pedido/:id/estado  { estado }
   Future<void> cambiarEstado(String id, String estado) async {
     final token = await _token();
-    final url = Uri.parse('${ApiConfig.rootUrl}/pedido/$id/estado');
+    final url = Uri.parse('${ApiConfig.baseUrl}/pedido/$id/estado');
     try {
       final response = await http.patch(url, headers: ApiConfig.headersConToken(token), body: jsonEncode({'estado': estado}));
       if (response.statusCode == 200) return;
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
       throw Exception(data['error'] ?? 'No se pudo cambiar el estado');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
@@ -80,7 +81,7 @@ class PedidoService {
   Future<ReporteVentas> _pedir(Uri url, String token) async {
     try {
       final response = await http.get(url, headers: ApiConfig.headersConToken(token));
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
       if (response.statusCode == 200) return ReporteVentas.fromJson(data);
       throw Exception(data['error'] ?? 'No se pudo obtener el reporte');
     } catch (e) {

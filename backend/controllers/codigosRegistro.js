@@ -3,6 +3,7 @@ import { supabase } from '../config/supabase.js';
 // 1) POST /auth/verificar-codigo-registro
 // body: { codigo }
 export const verificarCodigoRegistro = async (req, res) => {
+    
     try {
         const codigo = String(req.body?.codigo ?? '').trim();
 

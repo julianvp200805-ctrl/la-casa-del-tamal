@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:frontend/services/api_response.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 import 'package:http/http.dart' as http;
@@ -19,7 +20,7 @@ class MeseroService {
   dynamic _resolver(http.Response r, String defecto) {
     dynamic data;
     try {
-      data = jsonDecode(r.body);
+      data = decodeApiResponse(r);
     } catch (_) {
       data = null;
     }
@@ -44,7 +45,7 @@ class MeseroService {
             if (e.value > 0) {'menu_id': e.key, 'cantidad': e.value},
         ];
         final r = await http.post(
-          Uri.parse('${ApiConfig.rootUrl}/pedido/mesero'),
+          Uri.parse('${ApiConfig.baseUrl}/pedido/mesero'),
           headers: await _headers(),
           body: jsonEncode({'mesa': mesa, 'items': items}),
         );
@@ -53,14 +54,14 @@ class MeseroService {
 
   // GET /pedido/mesero/abiertos -> mis pedidos que aún no entrego
   Future<List<PedidoProceso>> obtenerAbiertos() => _seguro(() async {
-        final r = await http.get(Uri.parse('${ApiConfig.rootUrl}/pedido/mesero/abiertos'), headers: await _headers());
+        final r = await http.get(Uri.parse('${ApiConfig.baseUrl}/pedido/mesero/abiertos'), headers: await _headers());
         final data = _resolver(r, 'No se pudieron cargar tus pedidos');
         return ((data['pedidos'] as List?) ?? []).map((e) => PedidoProceso.fromJson(e)).toList();
       });
 
   // PATCH /pedido/:id/entregar (solo si la cocina lo dejó "listo")
   Future<void> entregar(String id) => _seguro(() async {
-        final r = await http.patch(Uri.parse('${ApiConfig.rootUrl}/pedido/$id/entregar'), headers: await _headers());
+        final r = await http.patch(Uri.parse('${ApiConfig.baseUrl}/pedido/$id/entregar'), headers: await _headers());
         _resolver(r, 'No se pudo marcar como entregado');
       });
 }

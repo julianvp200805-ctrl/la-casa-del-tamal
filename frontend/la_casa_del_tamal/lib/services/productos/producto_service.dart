@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:frontend/components/productos/producto.dart';
+import 'package:frontend/services/api_response.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +19,7 @@ class ProductoService {
   dynamic _resolver(http.Response r, String defecto) {
     dynamic data;
     try {
-      data = jsonDecode(r.body);
+      data = decodeApiResponse(r);
     } catch (_) {
       data = null;
     }
@@ -37,14 +38,14 @@ class ProductoService {
 
   // GET /producto/obtener
   Future<List<Producto>> obtenerProductos() => _seguro(() async {
-        final r = await http.get(Uri.parse('${ApiConfig.rootUrl}/producto/obtener'), headers: await _headers());
+        final r = await http.get(Uri.parse('${ApiConfig.baseUrl}/producto/obtener'), headers: await _headers());
         final data = _resolver(r, 'No se pudieron cargar los productos');
         return (data as List).map((e) => Producto.fromJson(e)).toList();
       });
 
   // GET /tipoProducto/obtener_tipos
   Future<List<TipoProducto>> obtenerTipos() => _seguro(() async {
-        final r = await http.get(Uri.parse('${ApiConfig.rootUrl}/tipoProducto/obtener_tipos'), headers: await _headers());
+        final r = await http.get(Uri.parse('${ApiConfig.baseUrl}/tipoProducto/obtener_tipos'), headers: await _headers());
         final data = _resolver(r, 'No se pudieron cargar los tipos de producto');
         return (data as List).map((e) => TipoProducto.fromJson(e)).toList();
       });
@@ -52,7 +53,7 @@ class ProductoService {
   // POST /producto/crearProducto (el backend calcula el vencimiento)
   Future<void> crearProducto({required Object idTipo, required String fechaIngreso, required String lote}) => _seguro(() async {
         final r = await http.post(
-          Uri.parse('${ApiConfig.rootUrl}/producto/crearProducto'),
+          Uri.parse('${ApiConfig.baseUrl}/producto/crearProducto'),
           headers: await _headers(),
           body: jsonEncode({'id_tipo': idTipo, 'fecha_ingreso': fechaIngreso, 'codigo_lote': lote}),
         );
@@ -62,7 +63,7 @@ class ProductoService {
   // POST /tipoProducto/crear_tipo
   Future<TipoProducto> crearTipo({required String nombre, required int dias}) => _seguro(() async {
         final r = await http.post(
-          Uri.parse('${ApiConfig.rootUrl}/tipoProducto/crear_tipo'),
+          Uri.parse('${ApiConfig.baseUrl}/tipoProducto/crear_tipo'),
           headers: await _headers(),
           body: jsonEncode({'nombre': nombre, 'dias_vencimiento': dias}),
         );
@@ -72,7 +73,7 @@ class ProductoService {
 
   // DELETE /producto/eliminar/:id (descartar un producto vencido)
   Future<void> eliminarProducto(Object id) => _seguro(() async {
-        final r = await http.delete(Uri.parse('${ApiConfig.rootUrl}/producto/eliminar/$id'), headers: await _headers());
+        final r = await http.delete(Uri.parse('${ApiConfig.baseUrl}/producto/eliminar/$id'), headers: await _headers());
         _resolver(r, 'No se pudo descartar el producto');
       });
 }

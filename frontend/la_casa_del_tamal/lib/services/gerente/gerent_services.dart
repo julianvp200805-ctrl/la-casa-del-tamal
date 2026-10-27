@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:frontend/models/gerent.dart';
+import 'package:frontend/services/api_response.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class UserService {
   Future<UserModel> login(String email, String contrasena) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/login');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
 
     try {
       final response = await http.post(
@@ -15,7 +16,7 @@ class UserService {
         body: jsonEncode({'email': email, 'contrasena': contrasena}),
       );
 
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
 
       if (response.statusCode == 200) {
         final String token = data['token'] ?? '';
@@ -48,7 +49,7 @@ class UserService {
   // POST /user/forgot-password  { email }
   
   Future<String> enviarCodigoRecuperacion(String email) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/forgot-password');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password');
 
     try {
       final response = await http.post(
@@ -57,7 +58,7 @@ class UserService {
         body: jsonEncode({'email': email}),
       );
 
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
 
       if (response.statusCode == 200) {
         return data['message'] ?? 'Código enviado';
@@ -78,7 +79,7 @@ class UserService {
     required String codigo,
     required String nuevaContrasena,
   }) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/verify-code');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/verify-code');
 
     try {
       final response = await http.post(
@@ -91,7 +92,7 @@ class UserService {
         }),
       );
 
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = decodeApiResponse(response);
 
       if (response.statusCode == 200) {
         return data['message'] ?? 'Contraseña actualizada';
