@@ -5,6 +5,7 @@ import {
     obtenerPorEmail,
     obtenerPorDocumento
 } from '../models/user.js';
+// LÍNEA CONFIRMADA: Importación exacta coincidiendo con backend/models/codigosRegistro.js
 import { reclamarCodigo, liberarCodigo, registrarUsoCodigo } from '../models/codigosRegistro.js';
 import { obtenerSecretoJwt } from '../config/jwt.js';
 

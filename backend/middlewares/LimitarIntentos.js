@@ -2,8 +2,10 @@
 // Frena la fuerza bruta sobre login, códigos de registro y recuperación.
 // Si algún día despliegas detrás de un proxy, activa app.set('trust proxy', 1)
 // para que req.ip sea la IP real del cliente.
+
+// CORRECCIÓN: Se cambia a minúscula 'limitarIntentos' para coincidir exactamente con el import de tus rutas
 export const limitarIntentos = ({
-    ventanaMs = 15 * 60 * 1000,
+    ventanaMs = 15 * 60 * 1000, // 15 minutos
     max = 10,
     clave = (req) => req.ip,
     mensaje = 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.'
