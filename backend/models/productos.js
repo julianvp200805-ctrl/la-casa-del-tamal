@@ -1,20 +1,18 @@
 import {supabase} from '../config/supabase.js';
 
-// crear producto
+// crear producto (id_producto es opcional: si no llega, la BD lo genera)
 export const crearProducto = async (
     id_producto,
     id_tipo,
     fecha_ingreso,
     codigo_lote
 ) => {
+    const fila = { id_tipo, fecha_ingreso, codigo_lote };
+    if (id_producto) fila.id_producto = id_producto;
+
     const { data, error } = await supabase
         .from('productos')
-        .insert({
-            id_producto,
-            id_tipo,
-            fecha_ingreso,
-            codigo_lote
-        })
+        .insert(fila)
         .select();
 
     return { data, error };

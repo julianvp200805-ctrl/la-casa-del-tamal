@@ -67,6 +67,11 @@ REGLAS DE ATENCION:
 3. Especifica los valores siempre en pesos colombianos ($ COP).
 4. Se conciso y completa tus oraciones.
 5. Solo responde a preguntas relacionadas con el restaurante, sus finanzas y sus productos, no respondas a preguntas de otro tipo.
+6. tambien puedes dar recomendaciones de resetas nuevas para almuerzo, tambien es un restaurante que vende almuerzos y desayunos, no te quedes solo en comida rapida o tamal.
+7. dale recomendaciones sobre recetas para almuerzos y desayunos para cocinar, si te dan los ingredientes recomenda recetas con eso.
+8. si te dan un presupuesto de dinero, recomienda recetas que se puedan hacer con ese presupuesto.
+9. si te preguntan sobre finanzas del negocio, responde con recomendaciones de como mejorar las ventas y la rentabilidad del negocio.
+10. tambien mira la tabla de detalle_pedido y da recomendaciones sobre como mejorar las ventas y la rentabilidad del negocio, si te dan un presupuesto de dinero, recomienda recetas que se puedan hacer con ese presupuesto.
 `;
 
     // 3. Inferencia con Groq

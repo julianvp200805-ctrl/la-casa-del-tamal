@@ -60,7 +60,7 @@ export const crear = async (req, res) => {
       nombre,
       descripcion,
       precio,
-      stock,
+      stock: stock === '' ? undefined : stock,
       imagen_url: imagen,
       categoria,
       sabor
@@ -75,11 +75,24 @@ export const crear = async (req, res) => {
   }
 };
 
-//editar un platillo del menu 
+//editar un platillo del menu
+// Acepta JSON o multipart (con foto nueva). Si llega una imagen, Cloudinary
+// deja su URL en req.file.path y esa URL reemplaza a la anterior.
 export const editar = async (req, res) => {
   try {
     const { id } = req.params;
-    const { data, error } = await actualizarPlato(id, req.body);
+    const campos = {};
+    for (const [clave, valor] of Object.entries(req.body || {})) {
+      if (valor === undefined || clave === 'imagen') continue;
+      // precio y stock vacíos no se mandan (la BD no puede convertir "" a número)
+      if ((clave === 'precio' || clave === 'stock') && valor === '') continue;
+      campos[clave] = valor;
+    }
+    if (req.file) campos.imagen_url = req.file.path;
+    if (Object.keys(campos).length === 0) {
+      return res.status(400).json({ error: 'No hay datos para actualizar' });
+    }
+    const { data, error } = await actualizarPlato(id, campos);
     if (error) {
       return res.status(500).json({ error: 'Error al actualizar' });
     }

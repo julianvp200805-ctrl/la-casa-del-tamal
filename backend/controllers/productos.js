@@ -17,7 +17,6 @@ export const crear = async (req, res) => {
         } = req.body;
         // Validar datos
         if (
-            !id_producto ||
             !id_tipo ||
             !fecha_ingreso ||
             !codigo_lote
@@ -123,7 +122,7 @@ export const obtenerTodos = async (req, res) => {
 
             fechaVencimiento.setDate(
                 fechaVencimiento.getDate() +
-                producto.tipos_producto.dias_vencimiento
+                (producto.tipos_producto?.dias_vencimiento ?? 0)
             );
 
             return {

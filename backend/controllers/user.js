@@ -1,108 +1,84 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { crearUsuario, obtenerPorEmail } from '../models/user.js';
+import { obtenerUsuarios, obtenerUsuarioPorId, actualizarUsuario, eliminarUsuario } from "../models/user.js";
 
-//registro
-export const registro = async (req, res)=> {
+const ROLES_VALIDOS = ['admin', 'mesero', 'cocina', 'usuario'];
+
+//obtener todos los usuarios 
+export const getUsuarios = async (req, res) => {
     try {
-        const {nombre, email, contrasena}= req.body;
-        //validamos los datos
-        if (!nombre || !email || !contrasena) {
-            return res.status (400).json({
-                error: 'faltan usuarios'
-            });
-        }
-        //verificamos el email si ya existe
-        const {data:usuarioExiste}= await obtenerPorEmail(email);
-        if (usuarioExiste) {
-            return res.status(400).json({
-                error: 'el email ya existe'
-            });
-        }
-        //encriptar la contraseña
-        const hashedContrasena = await bcrypt.hash(contrasena, 10);
-        //rol por defecto
-        const rolPorDefecto = 'usuario';
-        //guardar en la base de datos
-        const {data, error} = await crearUsuario (
-            nombre, 
-            email,
-            hashedContrasena,
-            rolPorDefecto
-        );
+        const { data, error } = await obtenerUsuarios();
         if (error) {
-            return res.status(500).json({
-                error: error.message
-            });
+            return res.status(500).json({ error: 'Error al obtener los usuarios' });
         }
-        return res.status(201).json({
-            message: 'Usuario registrado con éxito',
-            usuario: {
-                id: data[0].id,
-                nombre: data[0].nombre,
-                email: data[0].email,
-                rol: data[0].rol
-            }
-        });
+        return res.status(200).json({ usuarios: data });
     } catch (error) {
-        console.error('Error en registrado:', error);
-        return res.status(500).json({
-            error: error.message
-        });
+        console.error('Error al obtener los usuarios:', error);
+        return res.status(500).json({ error: 'Error al obtener los usuarios' });
     }
 };
 
-//crear el login
-export const login = async(req,res)=>{
+// usuario por id
+export const getobtenerUsuarioPorId = async (req, res) => {
     try {
-       const {email, contrasena}  = req.body;
-       //validar que los campos esten llenos 
-       if (!email || ! contrasena){
-        return res.status(400).json({
-            error: 'Todos los campos son requeridos : email y contraseña'
-        });
-       }
-       //validamos si existe el correo 
-
-       const {data: usuario} = await obtenerPorEmail(email)
-       if(!usuario){
-        return res.status(400).json({
-            error: 'el email no esta registrado'
-       });
-    }
-    //verificar la contraseña
-    const contrasenaValida = await bcrypt.compare(contrasena, usuario.contrasena);
-    if (!contrasenaValida){
-        return res.status(400).json({
-            error: 'contraseña incorrecta'
-        });
-    }
-    //generar el token JWT
-    const token = jwt.sign(
-        {
-            id: usuario.id,
-            nombre: usuario.nombre,
-            email: usuario.email,
-            rol: usuario.rol,
-        },
-        process.env.jwt_secret,
-        {expiresIn: '1h'}
-    );
-    // Devolvemos el token Y los datos del usuario
-    return res.status(200).json({
-        message: 'Login exitoso',
-        token,
-        usuario: {
-            id: usuario.id,
-            nombre: usuario.nombre,
-            email: usuario.email,
-            rol: usuario.rol
+        const { id } = req.params;
+        const { data, error } = await obtenerUsuarioPorId(id);
+        if (error || !data) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
         }
-    });
-    } catch (error){
-        console.error('Error en login:', error);
-        return res.status(500).json({
-            error: error.message
-        });
+        return res.status(200).json({ usuario: data });
+    } catch (error) {
+        console.error('Error al obtener el usuario:', error);
+        return res.status(500).json({ error: 'Error al obtener el usuario' });
+    }
+};
+
+//Actualizar un usuario (aquí el admin puede cambiar el rol de alguien)
+export const putActualizarUsuario = async (req, res) => {
+    const { id } = req.params;
+    const { nombre, email, contrasena, rol } = req.body;
+    if (!nombre || !email || !rol) {
+        return res.status(400).json({ error: "Faltan datos obligatorios" });
+    }
+    if (!ROLES_VALIDOS.includes(rol)) {
+        return res.status(400).json({ error: `Rol no válido. Usa: ${ROLES_VALIDOS.join(', ')}` });
+    }
+    try {
+        const campos = { nombre, email, rol };
+        // Solo si mandan una nueva contraseña se encripta y se incluye
+        if (contrasena) {
+            if (String(contrasena).length < 8) {
+                return res.status(400).json({ error: 'La contraseña debe tener mínimo 8 caracteres' });
+            }
+            campos.contrasena = await bcrypt.hash(contrasena, 10);
+        }
+
+        const { data, error } = await actualizarUsuario(id, campos);
+        if (error) {
+            return res.status(500).json({ error: "Error al actualizar el usuario" });
+        }
+        return res.status(200).json({ message: "Usuario actualizado correctamente", usuario: data });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+//Eliminar un usuario
+export const deleteEliminarUsuario = async (req, res) => {
+    const { id } = req.params;
+    // El admin no puede borrar su propia cuenta por accidente
+    if (String(id) === String(req.usuario?.id)) {
+        return res.status(400).json({ error: "No puedes eliminar tu propia cuenta" });
+    }
+    try {
+        const { data, error } = await eliminarUsuario(id);
+        if (error) {
+            return res.status(400).json({ error: "Error al eliminar el usuario" });
+        }
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+        return res.status(200).json({ message: "Usuario eliminado correctamente", usuario: data });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
     }
 };

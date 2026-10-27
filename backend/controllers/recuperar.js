@@ -66,6 +66,10 @@ export const verifyCode= async(req, res)=>{
         if (!usuario) {
             return res.status(404).json({error: 'Usuario no encontrado'});
         }
+
+
+
+        
         //Verificamos si el código es válido
         const {data: codigoValido} = await obtenerCodigoValido(usuario.id, codigo);
         if (!codigoValido) {

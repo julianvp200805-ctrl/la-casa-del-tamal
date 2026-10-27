@@ -2,8 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { conectaDB, supabase } from './config/supabase.js';
+import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
-import user2Routes from './routes/user2.js';
 import menuRoutes from './routes/menu.js';
 import pedidoRoutes from './routes/pedido.js';
 import tipoProductoRoutes from './routes/tipo_producto.js';
@@ -33,8 +33,8 @@ app.get('/',(req,res)=>{
     });
 });
 //importamos las rutas
+app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
-app.use('/user2', user2Routes);
 app.use('/menu', menuRoutes);
 app.use('/pedido', pedidoRoutes);
 app.use('/tipoProducto', tipoProductoRoutes);

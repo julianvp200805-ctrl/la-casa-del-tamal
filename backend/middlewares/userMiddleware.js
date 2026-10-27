@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { obtenerSecretoJwt } from '../config/jwt.js';
 
 // Verifica que exista un token válido (usuario autenticado)
 export const verificarToken = (req, res, next) => {
@@ -9,7 +10,7 @@ export const verificarToken = (req, res, next) => {
         return res.status(401).json({ error: 'Token no proporcionado, por favor inicie sesion ' });
     }
 
-    jwt.verify(token, process.env.jwt_secret, (err, decoded) => {
+    jwt.verify(token, obtenerSecretoJwt(), (err, decoded) => {
         if (err) {
             return res.status(403).json({ error: 'Token inválido o expirado' });
         }
@@ -19,14 +20,17 @@ export const verificarToken = (req, res, next) => {
     });
 };
 
-// Solo deja pasar si el usuario tiene rol admin (panel administrador)
+// Solo deja pasar si el usuario tiene rol admin
 export const verificarAdmin = (req, res, next) => {
     if (req.usuario?.rol !== 'admin') {
         return res.status(403).json({ error: 'No tienes permisos de administrador' });
     }
     next();
-
-
-
-    
+};
+// Deja pasar solo a los roles indicados. Ej: verificarRol('admin', 'cocina')
+export const verificarRol = (...roles) => (req, res, next) => {
+    if (!roles.includes(req.usuario?.rol)) {
+        return res.status(403).json({ error: 'No tienes permisos para esta acción' });
+    }
+    next();
 };

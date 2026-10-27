@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
-import 'package:frontend/pantallas/pantalla_principal.dart';
+import 'package:frontend/pantallas/principal/pantalla_cargas.dart';
 
 void main() {
   runApp(const MainApp());
@@ -11,13 +11,21 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // CORREGIDO: antes habia un MaterialApp aqui con
+    // "home: Scaffold(body: LaCasaDelTamalApp())", y LaCasaDelTamalApp
+    // devolvia OTRO MaterialApp adentro. Eso anida dos apps (dos Navigator,
+    // dos temas) y rompe cosas como los SnackBar y el boton de volver.
+    // Ahora solo hay UN MaterialApp y la pantalla inicial es HomeScreen.
     return MaterialApp(
       title: 'La Casa del Tamal',
       debugShowCheckedModeBanner: false,
       theme: _tema,
-      home: const HomeScreen(),
+      home: const PantallaSplash(),
     );
   }
+
+  // Tema global: los botones, inputs y tarjetas salen ya estilizados en
+  // toda la app sin tener que configurarlos pantalla por pantalla.
   ThemeData get _tema {
     final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
