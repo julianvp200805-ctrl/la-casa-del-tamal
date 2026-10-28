@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class MenuItem {
   final String id;
   final String nombre;
@@ -50,8 +49,6 @@ class MenuService {
     return token;
   }
 
-  // Envía el plato como multipart: el backend (multer + Cloudinary) recibe el
-  // archivo en el campo "imagen" y guarda en la BD la URL que devuelve Cloudinary.
   Future<void> _enviar(String metodo, String ruta, Map<String, String> campos, XFile? foto, String falla) async {
     try {
       final req = http.MultipartRequest(metodo, Uri.parse('${ApiConfig.baseUrl}$ruta'))
@@ -72,14 +69,49 @@ class MenuService {
     }
   }
 
-  // POST /menu/crear_menu (admin). La foto es obligatoria.
-  Future<void> crearPlato({required String nombre, required String descripcion, required int precio, required XFile foto}) {
-    return _enviar('POST', '/menu/crear_menu', {'nombre': nombre, 'descripcion': descripcion, 'precio': '$precio'}, foto, 'No se pudo crear el plato');
+  // POST /menu/crear_menu (admin) con parámetro de categoría incluido
+  Future<void> crearPlato({
+    required String nombre, 
+    required String descripcion, 
+    required int precio, 
+    required String categoria, 
+    required XFile foto
+  }) {
+    return _enviar(
+      'POST', 
+      '/menu/crear_menu', 
+      {
+        'nombre': nombre, 
+        'descripcion': descripcion, 
+        'precio': '$precio',
+        'categoria': categoria.toLowerCase().trim()
+      }, 
+      foto, 
+      'No se pudo crear el plato'
+    );
   }
 
-  // PUT /menu/menu/:id (admin). Sin foto nueva se conserva la anterior.
-  Future<void> actualizarPlato({required String id, required String nombre, required String descripcion, required int precio, XFile? foto}) {
-    return _enviar('PUT', '/menu/menu/$id', {'nombre': nombre, 'descripcion': descripcion, 'precio': '$precio'}, foto, 'No se pudo actualizar el plato');
+  // PUT /menu/menu/:id (admin) con parámetro de categoría incluido
+  Future<void> actualizarPlato({
+    required String id, 
+    required String nombre, 
+    required String descripcion, 
+    required int precio, 
+    required String categoria, 
+    XFile? foto
+  }) {
+    return _enviar(
+      'PUT', 
+      '/menu/menu/$id', 
+      {
+        'nombre': nombre, 
+        'descripcion': descripcion, 
+        'precio': '$precio',
+        'categoria': categoria.toLowerCase().trim()
+      }, 
+      foto, 
+      'No se pudo actualizar el plato'
+    );
   }
 
   // DELETE /menu/menu/:id (admin)

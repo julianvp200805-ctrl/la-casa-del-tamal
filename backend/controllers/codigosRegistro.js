@@ -1,109 +1,92 @@
-import { supabase } from '../config/supabase.js';
+import { 
+  crearCodigoAcceso, 
+  buscarCodigoAccesoValido, 
+  buscarTodosLosCodigos, 
+  eliminarCodigoNoUsado 
+} from '../models/codigosRegistro.js';
 
-// 1) POST /auth/verificar-codigo-registro
-// body: { codigo }
-export const verificarCodigoRegistro = async (req, res) => {
-    
-    try {
-        const codigo = String(req.body?.codigo ?? '').trim();
-
-        if (!/^\d{6}$/.test(codigo)) {
-            return res.status(400).json({ error: 'El código de registro debe tener 6 números' });
-        }
-
-        const { data, error } = await supabase
-            .from('codigos_registro')
-            .select('id, usado, expirado_en')
-            .eq('codigo', codigo)
-            .single();
-
-        if (error || !data) {
-            return res.status(404).json({ error: 'El código ingresado no existe' });
-        }
-
-        if (data.usado) {
-            return res.status(400).json({ error: 'Este código ya ha sido utilizado' });
-        }
-
-        const haExpirado = new Date(data.expirado_en) <= new Date();
-        if (haExpirado) {
-            return res.status(400).json({ error: 'Este código ya ha vencido' });
-        }
-
-        return res.status(200).json({ 
-            message: 'Código válido y disponible para el registro',
-            valido: true 
-        });
-
-    } catch (error) {
-        console.error('Error al verificar código:', error);
-        return res.status(500).json({ error: error.message });
-    }
-};
-
-// 2) POST /codigos/generar (Acción de Admin)
-// body: { diasValidez }
 export const generarCodigoRegistro = async (req, res) => {
-    try {
-        // Genera un número aleatorio de 6 dígitos acolchado con ceros
-        const numeroAleatorio = Math.floor(100000 + Math.random() * 900000);
-        const nuevoCodigo = String(numeroAleatorio);
-        
-        const dias = parseInt(req.body?.diasValidez ?? 1, 10);
-        const fechaExpiracion = new Date();
-        fechaExpiracion.setDate(fechaExpiracion.getDate() + dias);
-
-        const { data, error } = await supabase
-            .from('codigos_registro')
-            .insert([{ 
-                codigo: nuevoCodigo, 
-                usado: false, 
-                expirado_en: fechaExpiracion.toISOString() 
-            }])
-            .select()
-            .single();
-
-        if (error) return res.status(500).json({ error: `No se pudo crear el código: ${error.message}` });
-
-        return res.status(201).json({ message: 'Código generado con éxito', data });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+  try {
+    const { rol } = req.body;
+    if (!rol || !['mesero', 'cocina'].includes(rol.toLowerCase())) {
+      return res.status(400).json({ error: 'El rol debe ser mesero o cocina' });
     }
+
+    const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const gen = (cant) => Array.from({ length: cant }, () => caracteres[Math.floor(Math.random() * caracteres.length)]).join('');
+    const codigoFormateado = `TAM-${gen(4)}-${gen(2)}`;
+
+    const expira_en = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    const { data, error } = await crearCodigoAcceso({
+      codigo: codigoFormateado,
+      rol: rol.toLowerCase().trim(),
+      expira_en
+    });
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      message: 'Código generado exitosamente',
+      codigo: data.codigo,
+      rol: data.rol_asignado,
+      expira_en: data.expira_en
+    });
+
+  } catch (error) {
+    console.error('Error al generar código:', error);
+    return res.status(500).json({ error: 'Error interno al procesar la solicitud' });
+  }
 };
 
-// 3) GET /codigos
+export const verificarCodigoRegistro = async (req, res) => {
+  try {
+    const { codigo } = req.body;
+    if (!codigo) {
+      return res.status(400).json({ error: 'El código es requerido' });
+    }
+
+    const { data: codigoValido, error } = await buscarCodigoAccesoValido(codigo);
+    
+    if (error || !codigoValido) {
+      return res.status(400).json({ error: 'El código de registro no es válido, ya fue usado o ha expirado' });
+    }
+
+    return res.status(200).json({
+      valid: true,
+      message: 'Código válido',
+      rol_asignado: codigoValido.rol_asignado
+    });
+
+  } catch (error) {
+    console.error('Error al verificar código:', error);
+    return res.status(500).json({ error: 'Error interno al validar el código' });
+  }
+};
+
 export const listarCodigosRegistro = async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('codigos_registro')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) return res.status(500).json({ error: error.message });
-
-        return res.status(200).json(data);
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
+  try {
+    const { data, error } = await buscarTodosLosCodigos();
+    if (error) throw error;
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error('Error al listar códigos:', error);
+    return res.status(500).json({ error: 'Error interno al obtener los códigos' });
+  }
 };
 
-// 4) DELETE o POST /codigos/revocar/:id
 export const revocarCodigoRegistro = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Lo revocamos forzando que expire inmediatamente
-        const { data, error } = await supabase
-            .from('codigos_registro')
-            .update({ expirado_en: new Date().toISOString() })
-            .eq('id', id)
-            .select()
-            .single();
-
-        if (error) return res.status(500).json({ error: error.message });
-
-        return res.status(200).json({ message: 'Código revocado con éxito', data });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+  try {
+    const { id } = req.params;
+    const { data, error } = await eliminarCodigoNoUsado(id);
+    
+    if (error || !data || data.length === 0) {
+      return res.status(400).json({ error: 'No se pudo revocar el código. Es posible que ya haya sido utilizado.' });
     }
+
+    return res.status(200).json({ message: 'Código revocado y eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al revocar código:', error);
+    return res.status(500).json({ error: 'Error interno al revocar el código' });
+  }
 };

@@ -92,4 +92,6 @@ class PedidoProceso {
     if (d == null) return '';
     return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   }
+
+  Object? get descripcion => null;
 }

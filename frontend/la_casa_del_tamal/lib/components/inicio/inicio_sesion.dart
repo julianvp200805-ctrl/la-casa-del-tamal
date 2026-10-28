@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/gerente/gerent.dart';
+import 'package:frontend/components/inicio/registro_page.dart'; 
 import 'package:frontend/components/mesero/mesero_home_page.dart';
+import 'package:frontend/components/cocina/cocina_home_page.dart'; 
 import 'package:frontend/components/recuperar/boton_verde.dart';
 import 'package:frontend/components/recuperar/recuperar_contrasena.dart';
 import 'package:frontend/core/colores.dart';
@@ -33,8 +35,7 @@ class _InicioSesionState extends State<InicioSesion> {
     final contrasena = _passwordController.text.trim();
 
     if (email.isEmpty || contrasena.isEmpty) {
-      _mensaje('Ingresa tu correo y contraseña', esError: true);
-      return;
+      return _mensaje('Ingresa tu correo y contraseña', esError: true);
     }
 
     setState(() => _isLoading = true);
@@ -42,11 +43,13 @@ class _InicioSesionState extends State<InicioSesion> {
       final usuario = await _userService.login(email, contrasena);
       if (!mounted) return;
 
-      // Cada rol entra a su panel; otros roles no tienen acceso a la app.
-      final rol = (usuario.rol ?? '').toLowerCase();
+      final rol = (usuario.rol ?? '').toLowerCase().trim();
+      
       final Widget? destino = rol == 'admin'
           ? const AdminHomePage()
-          : (rol == 'mesero' ? const MeseroHomePage() : null);
+          : (rol == 'mesero' 
+              ? const MeseroHomePage() 
+              : (rol == 'cocina' ? const CocinaHomePage() : null));
 
       if (destino == null) {
         await _userService.cerrarSesion();
@@ -54,14 +57,12 @@ class _InicioSesionState extends State<InicioSesion> {
         _mensaje('Tu cuenta no tiene acceso a esta aplicación', esError: true);
         return;
       }
+      
       _mensaje('¡Bienvenido, ${usuario.nombre}!');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => destino),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => destino));
     } catch (e) {
       _mensaje(e.toString(), esError: true);
-    } finally {
+    } finally { // <--- CORREGIDO AQUÍ (Antes decía final)
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -88,35 +89,14 @@ class _InicioSesionState extends State<InicioSesion> {
             children: [
               const EncabezadoInicio(),
               const SizedBox(height: 28),
-              CampoInicio(
-                controller: _emailController,
-                hint: 'Correo electrónico',
-                icono: Icons.mail_outline,
-              ),
+              CampoInicio(controller: _emailController, hint: 'Correo electrónico', icono: Icons.mail_outline),
               const SizedBox(height: 20),
-              CampoInicio(
-                controller: _passwordController,
-                hint: 'Contraseña',
-                icono: Icons.lock_outline,
-                esPassword: true,
-              ),
+              CampoInicio(controller: _passwordController, hint: 'Contraseña', icono: Icons.lock_outline, esPassword: true),
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RecuperarContrasenaPage(),
-                    ),
-                  ),
-                  child: const Text(
-                    '¿Olvidaste tu contraseña?',
-                    style: TextStyle(
-                      color: AppEstilos.verdeBoton,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecuperarContrasenaPage())),
+                  child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: AppEstilos.verdeBoton, fontWeight: FontWeight.w600, fontSize: 15)),
                 ),
               ),
               const SizedBox(height: 36),
@@ -125,6 +105,31 @@ class _InicioSesionState extends State<InicioSesion> {
                 onPressed: _iniciarSesion,
                 cargando: _isLoading,
                 colorDeshabilitado: AppEstilos.verdeBoton.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 24),
+              const Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.white24, thickness: 1, endIndent: 10)),
+                  Text('¿Aun no tienes cuenta?', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                  Expanded(child: Divider(color: Colors.white24, thickness: 1, indent: 10)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistroPage())),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppEstilos.colorDorado, width: 1.5),
+                    backgroundColor: AppEstilos.colorDorado.withValues(alpha: 0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Registrarse',
+                    style: TextStyle(color: AppEstilos.colorDorado, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             ],
           ),

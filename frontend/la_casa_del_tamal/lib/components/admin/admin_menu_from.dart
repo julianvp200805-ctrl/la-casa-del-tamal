@@ -5,9 +5,6 @@ import 'package:frontend/services/menu/menu_services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/core/colores.dart';
 
-
-/// Hoja para agregar o editar un plato. La foto se elige de la galería y el
-/// backend la sube a Cloudinary (campo multipart "imagen").
 class AdminMenuForm extends StatefulWidget {
   final MenuItem? plato;
   final MenuService menuService;
@@ -22,11 +19,31 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
   late final _nombre = TextEditingController(text: widget.plato?.nombre ?? '');
   late final _precio = TextEditingController(text: widget.plato != null ? widget.plato!.precio.toStringAsFixed(0) : '');
   late final _descripcion = TextEditingController(text: widget.plato?.descripcion ?? '');
+  
+  String _categoria = 'almuerzo';
   XFile? _foto;
   Uint8List? _vistaPrevia;
   bool _guardando = false;
 
+  final List<String> _categoriasList = const [
+    'desayuno',
+    'almuerzo',
+    'comida rapida',
+    'bebidas'
+  ];
+
   bool get _esEdicion => widget.plato != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_esEdicion && widget.plato!.categoria != null && widget.plato!.categoria!.isNotEmpty) {
+      final catLimpia = widget.plato!.categoria!.toLowerCase().trim();
+      if (_categoriasList.contains(catLimpia)) {
+        _categoria = catLimpia;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -49,7 +66,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
 
   Future<void> _guardar() async {
     final nombre = _nombre.text.trim();
-    final digitos = _precio.text.replaceAll(RegExp(r'[^0-9]'), ''); // "8.000" -> 8000
+    final digitos = _precio.text.replaceAll(RegExp(r'[^0-9]'), '');
     final precio = int.tryParse(digitos);
     if (nombre.isEmpty || precio == null) return _mensaje('El nombre y el precio son obligatorios', esError: true);
     if (!_esEdicion && _foto == null) return _mensaje('Sube una foto del plato', esError: true);
@@ -58,9 +75,9 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
     try {
       final desc = _descripcion.text.trim();
       if (_esEdicion) {
-        await widget.menuService.actualizarPlato(id: widget.plato!.id, nombre: nombre, descripcion: desc, precio: precio, foto: _foto);
+        await widget.menuService.actualizarPlato(id: widget.plato!.id, nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, foto: _foto);
       } else {
-        await widget.menuService.crearPlato(nombre: nombre, descripcion: desc, precio: precio, foto: _foto!);
+        await widget.menuService.crearPlato(nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, foto: _foto!);
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -93,6 +110,20 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
           CampoHoja(controller: _nombre, hint: 'nombre'),
           CampoHoja(controller: _precio, hint: 'precio', teclado: TextInputType.number),
           CampoHoja(controller: _descripcion, hint: 'descripción', lineas: 2),
+          CajaHoja(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _categoria,
+                isExpanded: true,
+                isDense: true,
+                dropdownColor: AppEstilos.inputOscuro,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                items: _categoriasList.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                onChanged: _guardando ? null : (v) => setState(() => _categoria = v!),
+              ),
+            ),
+          ),
           CajaHoja(
             onTap: _guardando ? null : _elegirFoto,
             child: Row(
