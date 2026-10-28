@@ -1,6 +1,5 @@
 import { crearCodigoRecuperacion, obtenerCodigoValido, marcarCodigoComoUsado } from "../models/recuperar.js";
 import { obtenerPorEmail, actualizarUsuario } from "../models/user.js";
-// Importamos tu servicio de correo basado en nodemailer que acabas de corregir
 import { enviarCorreoBrevo } from "../config/brevo.js"; 
 import bcrypt from "bcrypt";
 
@@ -12,52 +11,59 @@ export const forgotPassword = async (req, res) => {
             return res.status(400).json({ error: 'El correo electrónico es requerido' });
         }
 
-        // Verificar si el usuario existe en tu base de datos de Supabase
         const { data: usuario, error: errorUsuario } = await obtenerPorEmail(email);
         if (errorUsuario || !usuario) {
             return res.status(400).json({ error: 'Usuario no encontrado' });
         }
 
-        // Generamos el código de recuperación de 6 dígitos numéricos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Guardar el código en la tabla recovery_codes de Supabase
         const { error: errorCodigo } = await crearCodigoRecuperacion(usuario.id, codigo);
         if (errorCodigo) {
-            return res.status(500).json({ error: 'Error al generar el código de recuperación' });
+            return res.status(500).json({ error: 'Error al generar el código de recuperación en Supabase' });
         }
 
-        // Plantilla HTML del correo electrónico
         const htmlRecuperacion = `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+        <div style="font-family: sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
             <div style="text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 20px; margin-bottom: 25px;">
-                <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 700;">La Casa del Tamal</h2>
+                <h2 style="color: #2c3e50; margin: 0;">La Casa del Tamal</h2>
                 <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">Sistema de Gestión Interna</p>
             </div>
-            <h3 style="color: #333333; font-size: 18px; margin-top: 0;">Solicitud de recuperación de contraseña</h3>
-            <p style="color: #555555; font-size: 15px; line-height: 1.6;">Hola <strong>${usuario.nombre || 'Usuario'}</strong>,</p>
-            <p style="color: #555555; font-size: 15px; line-height: 1.6;">Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código de verificación de 6 dígitos de seguridad:</p>
+            <h3>Solicitud de recuperación de contraseña</h3>
+            <p>Hola <strong>${usuario.nombre || 'Usuario'}</strong>,</p>
+            <p>Utiliza el siguiente código de verificación de 6 dígitos de seguridad:</p>
             <div style="text-align: center; margin: 30px 0;">
-                <div style="display: inline-block; background-color: #f4faf2; border: 2px dashed #39a900; border-radius: 8px; padding: 15px 40px; letter-spacing: 6px;">
-                    <span style="color: #39a900; font-size: 36px; font-weight: bold; font-family: monospace;">${codigo}</span>
+                <div style="display: inline-block; background-color: #f4faf2; border: 2px dashed #39a900; padding: 15px 40px; letter-spacing: 6px;">
+                    <span style="color: #39a900; font-size: 36px; font-weight: bold;">${codigo}</span>
                 </div>
             </div>
             <p style="color: #666666; font-size: 13px;">Este código tiene un tiempo de validez limitado de 15 minutos.</p>
         </div>
         `;
 
-        // Llamamos a tu función que ahora utiliza Nodemailer y tu clave de Gmail de forma segura
-        await enviarCorreoBrevo({
-            para: email,
-            nombre: usuario.nombre,
-            asunto: `Código de recuperación: ${codigo}`,
-            html: htmlRecuperacion
+        // SOLUCIÓN TOLERANTE A FALLAS: Envolvemos el envío en un bloque independiente.
+        // Si el transporte SMTP tiene un retraso o rechazo en Render, el endpoint NO se cae
+        // y le retorna el éxito a Flutter porque la fila en Supabase ya está guardada de forma real.
+        try {
+            await enviarCorreoBrevo({
+                para: email,
+                nombre: usuario.nombre,
+                asunto: `Código de recuperación: ${codigo}`,
+                html: htmlRecuperacion
+            });
+        } catch (correoError) {
+            console.error('Advertencia de correo (Nodemailer):', correoError.message);
+            // El proceso continúa sin crashear el servidor
+        }
+
+        return res.status(200).json({ 
+            message: 'Proceso de recuperación iniciado con éxito',
+            info: 'Verifica tu bandeja de entrada o solicita asistencia del administrador'
         });
 
-        return res.status(200).json({ message: 'Código de recuperación enviado al correo con éxito' });
     } catch (error) {
         console.error('Error en forgotPassword:', error);
-        return res.status(500).json({ error: 'Error al enviar código de recuperación' });
+        return res.status(500).json({ error: 'Error interno en la solicitud de restablecimiento' });
     }
 };
 
@@ -88,23 +94,25 @@ export const verifyCode = async (req, res) => {
         await marcarCodigoComoUsado(codigoValido.id);
 
         const htmlConfirmacion = `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+        <div style="font-family: sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
             <div style="text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 20px; margin-bottom: 25px;">
-                <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 700;">La Casa del Tamal</h2>
+                <h2 style="color: #2c3e50; margin: 0;">La Casa del Tamal</h2>
                 <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">Confirmación de Seguridad</p>
             </div>
-            <h3 style="color: #2c3e50; font-size: 18px; text-align: center;">¡Contraseña modificada exitosamente!</h3>
+            <h3 style="text-align: center;">¡Contraseña modificada exitosamente!</h3>
             <p>Hola <strong>${usuario.nombre || 'Usuario'}</strong>,</p>
-            <p>Te informamos que las credenciales de tu cuenta han sido actualizadas con éxito. A partir de ahora podrás iniciar sesión con tu nueva contraseña.</p>
+            <p>Te informamos que las credenciales de tu cuenta han sido actualizadas con éxito.</p>
         </div>
         `;
 
-        await enviarCorreoBrevo({
-            para: email,
-            nombre: usuario.nombre,
-            asunto: 'Notificación: Cambio de contraseña exitoso',
-            html: htmlConfirmacion
-        });
+        try {
+            await enviarCorreoBrevo({
+                para: email,
+                nombre: usuario.nombre,
+                asunto: 'Notificación: Cambio de contraseña exitoso',
+                html: htmlConfirmacion
+            });
+        } catch (_) {}
 
         return res.status(200).json({ message: 'Contraseña cambiada exitosamente' });
     } catch (error) {
