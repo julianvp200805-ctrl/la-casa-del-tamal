@@ -1,35 +1,34 @@
-import * as brevo from '@getbrevo/brevo';
+import nodemailer from 'nodemailer';
 
-const remitente = () => process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+const remitente = () => process.env.EMAIL_USER;
 
-export const brevoConfigurado = () => Boolean(process.env.BREVO_API_KEY && remitente());
+export const brevoConfigurado = () => Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 
 export const enviarCorreoBrevo = async ({ para, nombre, asunto, html }) => {
   if (!brevoConfigurado()) {
-    throw new Error('Brevo no está configurado (falta BREVO_API_KEY o el correo remitente)');
+    throw new Error('El servicio de correo no está configurado (falta EMAIL_USER o EMAIL_PASS)');
   }
 
-  // CORRECCIÓN DE LA SDK: Inicialización de credenciales usando el cliente global de Brevo
-  const defaultClient = brevo.ApiClient.instance;
-  const apiKey = defaultClient.authentications['api-key'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
+  // Transporte SMTP nativo de Google utilizando tu contraseña de aplicación
+  const transportador = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-  // Instanciación de la API de correos transaccionales y el objeto de envío
-  const apiInstance = new brevo.TransactionalEmailsApi();
-  const sendSmtpEmail = new brevo.SendSmtpEmail();
-
-  // Mapeo de parámetros y propiedades nativas
-  sendSmtpEmail.subject = asunto;
-  sendSmtpEmail.htmlContent = html;
-  sendSmtpEmail.sender = { 
-    name: process.env.EMAIL_FROM_NAME || 'La Casa del Tamal', 
-    email: remitente() 
+  const opcionesCorreo = {
+    from: `"${process.env.EMAIL_FROM_NAME || 'La Casa del Tamal'}" <${remitente()}>`,
+    to: para,
+    subject: asunto,
+    html: html,
   };
-  sendSmtpEmail.to = [{ 
-    email: para, 
-    name: nombre || para 
-  }];
 
-  // Ejecución del envío transaccional en producción
-  await apiInstance.sendTransacEmail(sendSmtpEmail);
+  try {
+    await transportador.sendMail(opcionesCorreo);
+  } catch (error) {
+    console.error('Error en el transporte de Gmail:', error);
+    throw new Error('No se pudo despachar el correo electrónico de seguridad: ' + error.message);
+  }
 };
