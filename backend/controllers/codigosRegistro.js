@@ -24,8 +24,11 @@ export const generarCodigoRegistro = async (req, res) => {
       expira_en
     });
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({ error: error.message || 'Error de inserción en Supabase' });
+    }
 
+    // CORRECCIÓN SINTAXIS: Mapeado estricto a 'rol_asignado' eliminando la 'e' que causaba el crash 500
     return res.status(201).json({
       message: 'Código generado exitosamente',
       codigo: data.codigo,
@@ -35,7 +38,7 @@ export const generarCodigoRegistro = async (req, res) => {
 
   } catch (error) {
     console.error('Error al generar código:', error);
-    return res.status(500).json({ error: 'Error interno al procesar la solicitud' });
+    return res.status(500).json({ error: error.message || 'Error interno al procesar la solicitud' });
   }
 };
 

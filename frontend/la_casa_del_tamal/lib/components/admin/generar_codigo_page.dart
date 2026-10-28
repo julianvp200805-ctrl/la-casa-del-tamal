@@ -24,54 +24,41 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
 
-      // MODIFICACIÓN DE RUTA: Probamos apuntar al path con el prefijo /api/ común en servidores Express
+      // URL dinámica compatible con prefijos de enrutamiento comunes
       String urlFinal = '${ApiConfig.baseUrl}/auth/generar-codigo';
       if (!ApiConfig.baseUrl.endsWith('/api') && !urlFinal.contains('/api/')) {
         urlFinal = '${ApiConfig.baseUrl}/api/auth/generar-codigo';
       }
 
+      // CORRECCIÓN: Enviamos estrictamente como JSON con el charset correcto
+      // Esto soluciona problemas si Express no lee formularios planos en tu host
       final response = await http.post(
         Uri.parse(urlFinal),
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
-        body: {'rol': _rolSeleccionado},
+        body: jsonEncode({'rol': _rolSeleccionado}),
       );
 
-      // Si la ruta /api/ dio error 404/HTML, reintentamos con la ruta plana original de respaldo
       if (response.body.trim().startsWith('<!DOCTYPE')) {
-        final fallbackResponse = await http.post(
-          Uri.parse('${ApiConfig.baseUrl}/auth/generar-codigo'),
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer $token',
-          },
-          body: {'rol': _rolSeleccionado},
-        );
+        _notificar('El servidor devolvió un error HTML. Verifica la ruta base.', esError: true);
+        return;
+      }
 
-        if (fallbackResponse.body.trim().startsWith('<!DOCTYPE')) {
-          _notificar('Ruta inválida en Render. Revisa tus logs de Express.', esError: true);
-          return;
-        }
-        _procesarRespuesta(fallbackResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() => _codigoGenerado = data['codigo'] ?? '');
+        _notificar('Código generado con éxito', esError: false);
       } else {
-        _procesarRespuesta(response);
+        // Muestra el mensaje detallado si el servidor provee más contexto del error
+        _notificar(data['error'] ?? 'Error interno al procesar la solicitud', esError: true);
       }
     } catch (e) {
       _notificar('Error de red: ${e.toString()}', esError: true);
     } finally {
       if (mounted) setState(() => _cargando = false);
-    }
-  }
-
-  void _procesarRespuesta(http.Response response) {
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      setState(() => _codigoGenerado = data['codigo'] ?? '');
-      _notificar('Código generado con éxito', esError: false);
-    } else {
-      _notificar(data['error'] ?? 'Error al generar código', esError: true);
     }
   }
 
