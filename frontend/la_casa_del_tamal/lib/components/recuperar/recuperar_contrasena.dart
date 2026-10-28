@@ -1,100 +1,109 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/recuperar/boton_verde.dart';
-import 'package:frontend/components/recuperar/encabezado_recuperar.dart';
-import 'package:frontend/components/recuperar/otp_input.dart';
-import 'package:frontend/components/recuperar/recuperar.dart';
 import 'package:frontend/core/colores.dart';
-import 'package:frontend/pantallas/principal/campo_correo.dart';
-import 'package:frontend/services/gerente/gerent_services.dart';
+import 'package:frontend/pantallas/menu/campo_inicio.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:frontend/services/config/api_config.dart';
 
 class RecuperarContrasenaPage extends StatefulWidget {
-  static const String routeName = '/recuperar-contrasena';
-  final String logoAssetPath;
-
-  const RecuperarContrasenaPage({
-    super.key,
-    this.logoAssetPath = 'assets/image/logo.png',
-  });
+  const RecuperarContrasenaPage({super.key});
 
   @override
-  State<RecuperarContrasenaPage> createState() =>
-      _RecuperarContrasenaPageState();
+  State<RecuperarContrasenaPage> createState() => _RecuperarContrasenaPageState();
 }
 
 class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
-  final _correoController = TextEditingController();
-  static const _cantidadDigitos = 6;
-  late final _codigoControllers = List.generate(
-    _cantidadDigitos,
-    (_) => TextEditingController(),
-  );
-  late final _codigoFocusNodes = List.generate(
-    _cantidadDigitos,
-    (_) => FocusNode(),
-  );
-  final UserService _userService = UserService();
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _codigoCtrl = TextEditingController();
+  final _nuevaPassCtrl = TextEditingController();
+  final _focusCodigo = FocusNode();
+
+  bool _cargandoCodigo = false;
+  bool _cargandoVerificacion = false;
+  bool _codigoEnviadoExitosamente = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusCodigo.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
-    _correoController.dispose();
-    for (final c in _codigoControllers) {
-      c.dispose();
-    }
-    for (final f in _codigoFocusNodes) {
-      f.dispose();
-    }
+    _emailCtrl.dispose();
+    _codigoCtrl.dispose();
+    _nuevaPassCtrl.dispose();
+    _focusCodigo.dispose();
     super.dispose();
   }
 
-  Future<void> _enviarCorreo() async {
-    final email = _correoController.text.trim();
-    if (email.isEmpty) {
-      _mensaje('Por favor ingresa tu email', esError: true);
-      return;
-    }
+  // LOGICA 1: Llama al endpoint de Brevo para disparar el correo transaccional
+  Future<void> _solicitarCodigoBrevo() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) return _msg('Ingresa tu correo electrónico', true);
 
-    setState(() => _isLoading = true);
+    setState(() => _cargandoCodigo = true);
     try {
-      _mensaje(await _userService.enviarCodigoRecuperacion(email));
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'email': email}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() => _codigoEnviadoExitosamente = true);
+        _msg('Código enviado con éxito a tu correo', false);
+      } else {
+        _msg(data['error'] ?? 'El correo no coincide con ningún empleado', true);
+      }
     } catch (e) {
-      _mensaje(e.toString(), esError: true);
+      _msg('Error: Clave de Brevo o remitente inválido en el servidor.', true);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _cargandoCodigo = false);
     }
   }
 
-  void _irANuevaContrasena() {
-    final email = _correoController.text.trim();
-    final codigo = _codigoControllers.map((c) => c.text).join();
+  // LOGICA 2: Valida los 6 dígitos numéricos recibidos por email y asienta la nueva contraseña
+  Future<void> _procesarRestablecimiento() async {
+    final codigo = _codigoCtrl.text.trim();
+    final pass = _nuevaPassCtrl.text;
 
-    if (email.isEmpty) {
-      _mensaje('Ingresa tu correo primero', esError: true);
-      return;
-    }
-    if (codigo.length < _cantidadDigitos) {
-      _mensaje('Ingresa el código completo', esError: true);
-      return;
-    }
+    if (codigo.length < 6) return _msg('Ingresa el código de 6 dígitos', true);
+    if (pass.length < 8) return _msg('La contraseña debe tener mínimo 8 caracteres', true);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NuevaContrasenaPage(
-          email: email,
-          codigo: codigo,
-          logoAssetPath: widget.logoAssetPath,
-        ),
-      ),
-    );
+    setState(() => _cargandoVerificacion = true);
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/auth/verify-code'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'email': _emailCtrl.text.trim(),
+          'codigo': codigo,
+          'newPassword': pass,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _msg('Contraseña restablecida correctamente', false);
+        if (mounted) Navigator.pop(context);
+      } else {
+        _msg(data['error'] ?? 'Código inválido o expirado', true);
+      }
+    } catch (e) {
+      _msg('Error de conexión con el servidor', true);
+    } finally {
+      if (mounted) setState(() => _cargandoVerificacion = false);
+    }
   }
 
-  void _mensaje(String texto, {bool esError = false}) {
+  void _msg(String txt, bool err) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto),
-        backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
-      ),
+      SnackBar(content: Text(txt), backgroundColor: err ? Colors.red.shade700 : Colors.green.shade700, behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -104,43 +113,87 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
       backgroundColor: AppEstilos.fondoOscuro,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const EncabezadoRecuperar(),
-              const SizedBox(height: 24),
-              CampoCorreo(controller: _correoController),
-              const SizedBox(height: 16),
-              BotonVerde.compacto(
-                texto: 'Enviar codigo',
-                onPressed: _enviarCorreo,
-                cargando: _isLoading,
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Ingresar codigo',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+                const Text('Recupera tu contraseña', style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Te enviaremos un código, ingrésalo para que puedas establecer una contraseña nueva.', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                const SizedBox(height: 24),
+                CampoInicio(controller: _emailCtrl, hint: 'Correo electrónico', icono: Icons.mail_outline),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity, height: 50,
+                  child: ElevatedButton(
+                    onPressed: _cargandoCodigo ? null : _solicitarCodigoBrevo,
+                    style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    child: _cargandoCodigo ? const CircularProgressIndicator(color: Colors.black) : const Text('Enviar código', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              OtpInput(
-                controllers: _codigoControllers,
-                focusNodes: _codigoFocusNodes,
-                oscuro: true,
-              ),
-              const SizedBox(height: 28),
-              BotonVerde.compacto(
-                texto: 'Verificar',
-                onPressed: _irANuevaContrasena,
-                cargando: _isLoading,
-              ),
-            ],
+                const SizedBox(height: 28),
+                const Text('Ingresar código', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(height: 10),
+                _buildGrillaNumericaDeSeisDigitos(),
+                const SizedBox(height: 20),
+                const Text('Nueva contraseña', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(height: 10),
+                CampoInicio(controller: _nuevaPassCtrl, hint: 'Nueva contraseña', icono: Icons.lock_outline, esPassword: true),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity, height: 50,
+                  child: ElevatedButton(
+                    onPressed: (_cargandoVerificacion || !_codigoEnviadoExitosamente) ? null : _procesarRestablecimiento,
+                    style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    child: _cargandoVerificacion ? const CircularProgressIndicator(color: Colors.black) : const Text('Verificar', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildGrillaNumericaDeSeisDigitos() {
+    final len = _codigoCtrl.text.length;
+    final str = _codigoCtrl.text.padRight(6, ' ');
+    return Stack(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(6, (i) {
+            final char = str[i].trim();
+            final esCasillaEnfocada = _focusCodigo.hasFocus && (len == i || (len == 6 && i == 5));
+            return Container(
+              width: MediaQuery.of(context).size.width * 0.12,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppEstilos.inputOscuro,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: esCasillaEnfocada ? AppEstilos.verdeBoton : (char.isNotEmpty ? AppEstilos.verdeBoton.withOpacity(0.5) : AppEstilos.bordeOscuro), width: esCasillaEnfocada ? 1.5 : 1),
+              ),
+              child: Text(char, style: const TextStyle(color: AppEstilos.colorDorado, fontSize: 16, fontWeight: FontWeight.bold)),
+            );
+          }),
+        ),
+        TextField(
+          controller: _codigoCtrl,
+          focusNode: _focusCodigo,
+          maxLength: 6,
+          enabled: _codigoEnviadoExitosamente,
+          keyboardType: TextInputType.number,
+          style: const TextStyle(color: Colors.transparent),
+          cursorColor: Colors.transparent,
+          decoration: const InputDecoration(counterText: '', border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, filled: true, fillColor: Colors.transparent),
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
     );
   }
 }
