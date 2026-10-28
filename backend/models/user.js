@@ -23,15 +23,15 @@ export const crearUsuarioEmpleado = async (campos) => {
     return { data, error };
 };
 
-// Usa select('*') porque el login necesita el hash para compararlo.
+// CORRECCIÓN: Usa .ilike para ignorar mayúsculas/minúsculas y .limit(1) para evitar que .single() crashee si no hay coincidencia exacta
 export const obtenerPorEmail = async (email) => {
     const { data, error } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('email', email)
-        .single();
+        .ilike('email', email.trim())
+        .limit(1);
 
-    return { data, error };
+    return { data: (data && data.length > 0) ? data[0] : null, error };
 };
 
 export const obtenerPorDocumento = async (tipo, numero) => {
@@ -74,7 +74,7 @@ export const actualizarUsuario = async (id, campos) => {
     return { data, error };
 };
 
-//eliminar un usuario
+// eliminar un usuario
 export const eliminarUsuario = async (id) => {
     const { data, error } = await supabase
         .from('usuarios')
