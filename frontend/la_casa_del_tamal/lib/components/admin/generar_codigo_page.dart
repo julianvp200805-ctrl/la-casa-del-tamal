@@ -24,14 +24,9 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
 
-      // URL dinámica compatible con prefijos de enrutamiento comunes
-      String urlFinal = '${ApiConfig.baseUrl}/auth/generar-codigo';
-      if (!ApiConfig.baseUrl.endsWith('/api') && !urlFinal.contains('/api/')) {
-        urlFinal = '${ApiConfig.baseUrl}/api/auth/generar-codigo';
-      }
+      // RUTA FIJA UNIFICADA: Apunta exactamente al router plano sin anteponer /api
+      final String urlFinal = '${ApiConfig.baseUrl}/auth/generar-codigo';
 
-      // CORRECCIÓN: Enviamos estrictamente como JSON con el charset correcto
-      // Esto soluciona problemas si Express no lee formularios planos en tu host
       final response = await http.post(
         Uri.parse(urlFinal),
         headers: {
@@ -41,8 +36,9 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
         body: jsonEncode({'rol': _rolSeleccionado}),
       );
 
+      // Si aún así tu hosting o Render devuelve un HTML de error, capturamos el estatus
       if (response.body.trim().startsWith('<!DOCTYPE')) {
-        _notificar('El servidor devolvió un error HTML. Verifica la ruta base.', esError: true);
+        _notificar('Error ${response.statusCode}: Endpoint no encontrado en esta URL base.', esError: true);
         return;
       }
 
@@ -52,8 +48,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
         setState(() => _codigoGenerado = data['codigo'] ?? '');
         _notificar('Código generado con éxito', esError: false);
       } else {
-        // Muestra el mensaje detallado si el servidor provee más contexto del error
-        _notificar(data['error'] ?? 'Error interno al procesar la solicitud', esError: true);
+        _notificar(data['error'] ?? 'Error al procesar la solicitud', esError: true);
       }
     } catch (e) {
       _notificar('Error de red: ${e.toString()}', esError: true);
