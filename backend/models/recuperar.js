@@ -2,42 +2,61 @@ import { supabase } from '../config/supabase.js';
 
 // Crear codigo de recuperación 
 export const crearCodigoRecuperacion = async (usuarioId, codigo) => {
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // expira en 15 min
+    // Calculamos los 15 minutos de expiración
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); 
+
     const { data, error } = await supabase
         .from('recovery_codes')
-        .insert({
-            usuario_id: usuarioId,
-            codigo: codigo,
-            expires_at: expiresAt.toISOString()
-            // Quitamos 'usado: false' si en Supabase ya tiene un valor default, de lo contrario se asume false
-        })
-        .select()
-        .single(); // Añadimos .single() para que devuelva el objeto directo que tu controlador espera
+        .insert([
+            {
+                usuario_id: usuarioId,
+                codigo: codigo,
+                expires_at: expiresAt.toISOString(),
+                usado: false // Forzamos explícitamente el estado inicial
+            }
+        ])
+        .select();
 
-    return { data, error };
+    // Tu controlador espera { data: usuario, error: errorCodigo }
+    // Retornamos el primer elemento del array generado si no hay errores
+    return { 
+        data: data && data.length > 0 ? data[0] : null, 
+        error 
+    };
 };
 
 // Obtener codigo no utilizado por usuario
 export const obtenerCodigoValido = async (usuarioId, codigo) => {
+    // Usamos new Date() directamente para que Supabase gestione la conversión nativa de zona horaria
+    const ahora = new Date();
+
     const { data, error } = await supabase
         .from('recovery_codes')
         .select('*')
         .eq('usuario_id', usuarioId)
         .eq('codigo', codigo)
         .eq('usado', false)
-        .gt('expires_at', new Date().toISOString())
-        .limit(1); // Cambiamos .single() por .limit(1) para evitar que falle si no encuentra registros en la BD
+        .gt('expires_at', ahora.toISOString())
+        .order('creado_en', { ascending: false }) // Trae siempre el código más reciente primero
+        .limit(1);
 
-    return { data: data?.[0] || null, error };
+    // Evitamos caídas del servidor: si no hay filas, data es null/vacío y retorna de forma segura
+    return { 
+        data: data && data.length > 0 ? data[0] : null, 
+        error 
+    };
 };
 
 // Marcar codigo como usado
 export const marcarCodigoComoUsado = async (codigoId) => {
-  const { data, error } = await supabase
-    .from('recovery_codes')
-    .update({ usado: true })
-    .eq('id', codigoId)
-    .select(); // Añadimos .select() para que tu controlador pueda leer el estado actualizado si lo necesita
+    const { data, error } = await supabase
+        .from('recovery_codes')
+        .update({ usado: true })
+        .eq('id', codigoId)
+        .select();
 
-  return { data, error };
+    return { 
+        data: data && data.length > 0 ? data[0] : null, 
+        error 
+    };
 };

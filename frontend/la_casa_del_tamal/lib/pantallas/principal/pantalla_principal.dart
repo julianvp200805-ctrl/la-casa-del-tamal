@@ -13,16 +13,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final MenuService _menuService = MenuService();
-  String _categoriaActiva = 'almuerzo';
+  String _categoriaActiva = 'Almuerzo';
   List<MenuItem> _platosBackend = [];
   bool _cargando = true;
   String? _errorMsg;
 
   final List<String> _categorias = const [
-    'desayuno',
-    'almuerzo',
-    'comida rapida',
-    'bebidas'
+    'Desayuno',
+    'Almuerzo',
+    'Comida Rápida',
+    'Bebidas'
   ];
 
   @override
