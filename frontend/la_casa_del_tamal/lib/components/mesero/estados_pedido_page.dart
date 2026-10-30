@@ -2,18 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/chat/aviso_listos.dart';
 import 'package:frontend/components/mesero/mesero_top_bar.dart';
-import 'package:frontend/components/ventas/venta_titulo_row.dart';
+import 'package:frontend/components/mesero/pedido_controles.dart';
+import 'package:frontend/components/mesero/pedido_estado_card.dart';
+import 'package:frontend/core/app_states.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/mesero/mesero.dart';
-import 'package:frontend/services/pedido/pedido_card.dart';
-import 'package:frontend/services/pedido/pedido_detalle_sheet.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
-/// Estados de los pedidos del mesero. Se refresca solo cada 15 segundos para
-/// que vea en cuanto la cocina deja un pedido "listo" y pueda recogerlo.
+/// Se refresca solo cada 15 segundos para ver cuándo la cocina deja un pedido "listo".
 class EstadosPedidosPage extends StatefulWidget {
   static const String routeName = '/estados-pedidos';
-
   const EstadosPedidosPage({super.key});
 
   @override
@@ -40,16 +38,10 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
     super.dispose();
   }
 
-  // Los listos primero (hay que recogerlos), luego en proceso, luego pendientes.
   int _prioridad(String e) => e == 'listo' ? 0 : (e == 'en_proceso' ? 1 : 2);
 
   Future<void> _cargar({bool silencioso = false}) async {
-    if (!silencioso) {
-      setState(() {
-        _cargando = _pedidos.isEmpty;
-        _error = null;
-      });
-    }
+    if (!silencioso) setState(() { _cargando = _pedidos.isEmpty; _error = null; });
     try {
       final lista = await _service.obtenerAbiertos();
       final ordenada = lista.asMap().entries.toList()
@@ -57,21 +49,10 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
           final c = _prioridad(a.value.estado).compareTo(_prioridad(b.value.estado));
           return c != 0 ? c : a.key.compareTo(b.key);
         });
-
       if (!mounted) return;
-
-      setState(() {
-        _pedidos = ordenada.map((e) => e.value).toList();
-        _error = null;
-        _cargando = false;
-      });
+      setState(() { _pedidos = ordenada.map((e) => e.value).toList(); _error = null; _cargando = false; });
     } catch (e) {
-      if (mounted && !silencioso) {
-        setState(() {
-          _error = e.toString();
-          _cargando = false;
-        });
-      }
+      if (mounted && !silencioso) setState(() { _error = e.toString(); _cargando = false; });
     }
   }
 
@@ -86,38 +67,27 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
     }
   }
 
-  void _mensaje(String texto, {bool esError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto),
-        backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
-      ),
-    );
-  }
+  void _mensaje(String t, {bool esError = false}) => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(t), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700));
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppEstilos.fondoOscuro,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const MeseroTopBar(),
-            const VentaTituloRow(titulo: 'Estados de los pedidos'),
-            Expanded(child: _contenido()),
-          ],
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: AppEstilos.fondoOscuro,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const MeseroTopBar(),
+              const TituloMesero(texto: 'Estados\nde los pedidos', centrado: true),
+              Expanded(child: _contenido()),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 
   Widget _contenido() {
     if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.meseroOliva));
     if (_error != null) return AppErrorState(mensaje: _error!, onReintentar: _cargar);
-
-    // SOLUCIÓN: Se eliminó el '?' de p?.estado ya que 'p' no puede ser nulo
     final listos = _pedidos.where((p) => p.estado == 'listo').length;
-
     return RefreshIndicator(
       onRefresh: _cargar,
       child: ListView(
@@ -129,11 +99,7 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
               padding: EdgeInsets.only(top: 60),
               child: AppEmptyState(mensaje: 'No tienes pedidos en proceso'),
             ),
-          for (final p in _pedidos)
-            PedidoCard(
-              pedido: p,
-              onDetalle: () => mostrarDetallePedido(context, p, onEntregar: () => _entregar(p)),
-            ),
+          for (final p in _pedidos) PedidoEstadoCard(pedido: p, onEntregar: () => _entregar(p)),
         ],
       ),
     );
