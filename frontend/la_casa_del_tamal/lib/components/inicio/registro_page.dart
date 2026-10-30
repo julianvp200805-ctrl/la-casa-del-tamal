@@ -22,7 +22,7 @@ class _RegistroPageState extends State<RegistroPage> {
   final _focusCodigo = FocusNode();
 
   String _tipoDoc = 'C.C.', _rol = 'Mesero';
-  bool _cargando = false, _oculto = true;
+  bool _cargando = false;
   bool _has8Char = false, _hasUpper = false, _hasNumber = false;
 
   @override
@@ -56,32 +56,51 @@ class _RegistroPageState extends State<RegistroPage> {
   Future<void> _registrarse() async {
     final codigo = _codigoCtrl.text.trim().toUpperCase();
     if (codigo.length < 11) return _msg('Código interno incompleto', true);
-    if (!_has8Char || !_hasUpper || !_hasNumber)
+    if (!_has8Char || !_hasUpper || !_hasNumber) {
       return _msg('La contraseña no cumple los requisitos', true);
+    }
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _cargando = true);
     try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/auth/registro');
+      
+      // Limpieza estricta de espacios y caracteres invisibles o de retroceso (\u0008)
+      final correoLimpio = _correoCtrl.text
+          .trim()
+          .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+
+      final bodyData = {
+        'nombre': _nombreCtrl.text.trim(),
+        'tipo_documento': _tipoDoc,
+        'numero_documento': _docCtrl.text.trim(),
+        'correo': correoLimpio,
+        'fecha_nacimiento': _fechaCtrl.text.trim(),
+        'rol': _rol.toLowerCase(),
+        'contrasena': _passCtrl.text,
+        'codigo_interno': codigo,
+      };
+
       final res = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/registro'),
+        url,
         headers: ApiConfig.headers,
-        body: jsonEncode({
-          'nombre': _nombreCtrl.text.trim(),
-          'tipo_documento': _tipoDoc,
-          'numero_documento': _docCtrl.text.trim(),
-          'correo': _correoCtrl.text.trim(),
-          'fecha_nacimiento': _fechaCtrl.text.trim(),
-          'rol': _rol.toLowerCase(),
-          'contrasena': _passCtrl.text,
-          'codigo_interno': codigo,
-        }),
+        body: jsonEncode(bodyData),
       );
+
       if (!mounted) return;
+
       if (res.statusCode == 200 || res.statusCode == 201) {
         _msg('Cuenta registrada con éxito', false);
         Navigator.pop(context);
       } else {
-        throw Exception(jsonDecode(res.body)['error'] ?? 'Error al registrar');
+        String errorMessage = 'Error al registrar';
+        try {
+          final decoded = jsonDecode(res.body);
+          errorMessage = decoded['error'] ?? decoded['message'] ?? res.body;
+        } catch (_) {
+          errorMessage = res.body;
+        }
+        throw Exception(errorMessage);
       }
     } catch (e) {
       _msg(e.toString().replaceAll('Exception: ', ''), true);
@@ -131,6 +150,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   controller: _nombreCtrl,
                   hint: 'Nombre y apellidos',
                   icono: Icons.person_outline,
+                  validator: (val) => val == null || val.isEmpty ? 'Ingrese su nombre' : null,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -153,6 +173,7 @@ class _RegistroPageState extends State<RegistroPage> {
                             controller: _docCtrl,
                             hint: 'Número',
                             icono: Icons.badge_outlined,
+                            validator: (val) => val == null || val.isEmpty ? 'Ingrese documento' : null,
                           ),
                         ],
                       ),
@@ -165,6 +186,11 @@ class _RegistroPageState extends State<RegistroPage> {
                   controller: _correoCtrl,
                   hint: 'Correo electrónico',
                   icono: Icons.mail_outline,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) return 'Ingrese el correo';
+                    if (!val.contains('@') || !val.contains('.')) return 'Correo no válido';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 _lbl('Fecha de nacimiento'),
@@ -172,13 +198,20 @@ class _RegistroPageState extends State<RegistroPage> {
                   controller: _fechaCtrl,
                   hint: 'dd/mm/aa',
                   icono: Icons.calendar_today_outlined,
+                  validator: (val) => val == null || val.isEmpty ? 'Ingrese fecha' : null,
                 ),
                 const SizedBox(height: 12),
                 _lbl('Rol'),
                 _buildDropRol(),
                 const SizedBox(height: 12),
                 _lbl('Contraseña'),
-                _buildCampoContrasenaLocal(),
+                CampoInicio(
+                  controller: _passCtrl,
+                  hint: 'Mínimo 8 caracteres',
+                  icono: Icons.lock_outline,
+                  esPassword: true,
+                  validator: (val) => !_has8Char || !_hasUpper || !_hasNumber ? 'Contraseña inválida' : null,
+                ),
                 const SizedBox(height: 10),
                 _buildRequisitos(),
                 const SizedBox(height: 16),
@@ -244,11 +277,9 @@ class _RegistroPageState extends State<RegistroPage> {
     dropdownColor: AppEstilos.inputOscuro,
     style: const TextStyle(color: Colors.white, fontSize: 15),
     decoration: _dropDeco(Icons.assignment_ind_outlined),
-    items: [
-      'C.C.',
-      'C.E.',
-      'P.P.',
-    ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+    items: ['C.C.', 'C.E.', 'P.P.']
+        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+        .toList(),
     onChanged: (v) => setState(() => _tipoDoc = v!),
   );
 
@@ -257,52 +288,11 @@ class _RegistroPageState extends State<RegistroPage> {
     dropdownColor: AppEstilos.inputOscuro,
     style: const TextStyle(color: Colors.white, fontSize: 15),
     decoration: _dropDeco(Icons.people_outline),
-    items: [
-      'Mesero',
-      'Cocina',
-    ].map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+    items: ['Mesero', 'Cocina']
+        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+        .toList(),
     onChanged: (v) => setState(() => _rol = v!),
   );
-
-  Widget _buildCampoContrasenaLocal() {
-    return TextFormField(
-      controller: _passCtrl,
-      obscureText: _oculto,
-      style: const TextStyle(color: Colors.white, fontSize: 16),
-      decoration: InputDecoration(
-        hintText: 'Mínimo 8 caracteres',
-        hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
-        prefixIcon: const Icon(
-          Icons.lock_outline,
-          color: AppEstilos.verdeBoton,
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _oculto ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: Colors.white54,
-          ),
-          onPressed: () => setState(() => _oculto = !_oculto),
-        ),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.07),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(
-            color: AppEstilos.verdeBoton,
-            width: 1.5,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildRequisitos() {
     Widget item(String txt, bool ok) => Padding(
@@ -341,10 +331,11 @@ class _RegistroPageState extends State<RegistroPage> {
     return Stack(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MediaQuery.of(context).size.width > 600
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.spaceBetween,
           children: List.generate(11, (i) {
             final char = str[i].trim(), esGuion = i == 3 || i == 8;
-            // Ilumina la casilla actual si el foco global está activo
             final esCasillaEnfocada =
                 _focusCodigo.hasFocus && (len == i || (len == 11 && i == 10));
             return Container(
@@ -358,8 +349,8 @@ class _RegistroPageState extends State<RegistroPage> {
                   color: esCasillaEnfocada && !esGuion
                       ? AppEstilos.verdeBoton
                       : (char.isNotEmpty && !esGuion
-                            ? AppEstilos.verdeBoton.withOpacity(0.5)
-                            : AppEstilos.bordeOscuro),
+                          ? AppEstilos.verdeBoton.withOpacity(0.5)
+                          : AppEstilos.bordeOscuro),
                   width: esCasillaEnfocada ? 1.5 : 1,
                 ),
               ),
@@ -393,8 +384,9 @@ class _RegistroPageState extends State<RegistroPage> {
             String limpia = val.replaceAll('-', '');
             String formateada = '';
             for (int i = 0; i < limpia.length; i++) {
-              if (formateada.length == 3 || formateada.length == 8)
+              if (formateada.length == 3 || formateada.length == 8) {
                 formateada += '-';
+              }
               formateada += limpia[i];
             }
             if (formateada != val) {

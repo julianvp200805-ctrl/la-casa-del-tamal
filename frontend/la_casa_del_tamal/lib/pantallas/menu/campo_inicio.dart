@@ -8,6 +8,7 @@ class CampoInicio extends StatefulWidget {
   final String hint;
   final IconData icono;
   final bool esPassword;
+  final String? Function(String?)? validator; // ✅ Sintaxis correcta y opcional
 
   const CampoInicio({
     super.key,
@@ -15,6 +16,7 @@ class CampoInicio extends StatefulWidget {
     required this.hint,
     required this.icono,
     this.esPassword = false,
+    this.validator, // ✅ Agregado correctamente al constructor
   });
 
   @override
@@ -28,6 +30,7 @@ class _CampoInicioState extends State<CampoInicio> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
+      validator: widget.validator, // ✅ Asignado al TextFormField
       keyboardType: widget.esPassword
           ? TextInputType.text
           : TextInputType.emailAddress,
@@ -61,6 +64,14 @@ class _CampoInicioState extends State<CampoInicio> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(color: AppEstilos.verdeBoton, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
         ),
       ),
     );
