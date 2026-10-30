@@ -15,7 +15,7 @@ class _RegistroPageState extends State<RegistroPage> {
   final _formKey = GlobalKey<FormState>();
   final _nombreCtrl = TextEditingController();
   final _docCtrl = TextEditingController();
-  final _correoCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _fechaCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _codigoCtrl = TextEditingController();
@@ -45,7 +45,7 @@ class _RegistroPageState extends State<RegistroPage> {
   void dispose() {
     _nombreCtrl.dispose();
     _docCtrl.dispose();
-    _correoCtrl.dispose();
+    _emailCtrl.dispose();
     _fechaCtrl.dispose();
     _passCtrl.dispose();
     _codigoCtrl.dispose();
@@ -66,7 +66,7 @@ class _RegistroPageState extends State<RegistroPage> {
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/registro');
       
       // Limpieza estricta de espacios y caracteres invisibles o de retroceso (\u0008)
-      final correoLimpio = _correoCtrl.text
+      final emailLimpio = _emailCtrl.text
           .trim()
           .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
 
@@ -74,7 +74,7 @@ class _RegistroPageState extends State<RegistroPage> {
         'nombre': _nombreCtrl.text.trim(),
         'tipo_documento': _tipoDoc,
         'numero_documento': _docCtrl.text.trim(),
-        'correo': correoLimpio,
+        'correo': emailLimpio,
         'fecha_nacimiento': _fechaCtrl.text.trim(),
         'rol': _rol.toLowerCase(),
         'contrasena': _passCtrl.text,
@@ -183,7 +183,7 @@ class _RegistroPageState extends State<RegistroPage> {
                 const SizedBox(height: 12),
                 _lbl('Correo'),
                 CampoInicio(
-                  controller: _correoCtrl,
+                  controller: _emailCtrl,
                   hint: 'Correo electrónico',
                   icono: Icons.mail_outline,
                   validator: (val) {
