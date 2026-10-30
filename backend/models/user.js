@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase.js';
 
-// Columnas que se pueden mostrar. La contraseña (hash) NUNCA sale en estas consultas.
-const PUBLICAS = 'id, nombre, email, rol';
+// Columnas públicas permitidas en las respuestas (incluyendo los nuevos campos de empleado)
+const PUBLICAS = 'id, nombre, email, rol, tipo_documento, numero_documento, fecha_nacimiento';
 
 export const crearUsuario = async (nombre, email, contrasena, rol) => {
     const { data, error } = await supabase
