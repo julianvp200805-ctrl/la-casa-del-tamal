@@ -1,6 +1,6 @@
 import { crearCodigoRecuperacion, obtenerCodigoValido, marcarCodigoComoUsado } from "../models/recuperar.js";
 import { obtenerPorEmail, actualizarUsuario } from "../models/user.js";
-import { enviarCorreoBrevo } from "../config/brevo.js"; 
+import { enviarCorreoResend } from "../config/resend.js"; // <-- Importamos Resend
 import bcrypt from "bcrypt";
 
 // POST /auth/forgot-password
@@ -41,20 +41,13 @@ export const forgotPassword = async (req, res) => {
         </div>
         `;
 
-        // SOLUCIÓN TOLERANTE A FALLAS: Envolvemos el envío en un bloque independiente.
-        // Si el transporte SMTP tiene un retraso o rechazo en Render, el endpoint NO se cae
-        // y le retorna el éxito a Flutter porque la fila en Supabase ya está guardada de forma real.
-        try {
-            await enviarCorreoBrevo({
-                para: email,
-                nombre: usuario.nombre,
-                asunto: `Código de recuperación: ${codigo}`,
-                html: htmlRecuperacion
-            });
-        } catch (correoError) {
-            console.error('Advertencia de correo (Nodemailer):', correoError.message);
-            // El proceso continúa sin crashear el servidor
-        }
+        // Despacho vía Resend (sin silenciar errores)
+        await enviarCorreoResend({
+            para: email,
+            nombre: usuario.nombre,
+            asunto: `Código de recuperación: ${codigo}`,
+            html: htmlRecuperacion
+        });
 
         return res.status(200).json({ 
             message: 'Proceso de recuperación iniciado con éxito',
@@ -62,8 +55,10 @@ export const forgotPassword = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error en forgotPassword:', error);
-        return res.status(500).json({ error: 'Error interno en la solicitud de restablecimiento' });
+        console.error('Error en forgotPassword:', error.message);
+        return res.status(500).json({ 
+            error: error.message || 'Error interno en la solicitud de restablecimiento' 
+        });
     }
 };
 
@@ -106,13 +101,15 @@ export const verifyCode = async (req, res) => {
         `;
 
         try {
-            await enviarCorreoBrevo({
+            await enviarCorreoResend({
                 para: email,
                 nombre: usuario.nombre,
                 asunto: 'Notificación: Cambio de contraseña exitoso',
                 html: htmlConfirmacion
             });
-        } catch (_) {}
+        } catch (_) {
+            // El correo de confirmación final puede fallar silenciosamente sin impedir el cambio de contraseña
+        }
 
         return res.status(200).json({ message: 'Contraseña cambiada exitosamente' });
     } catch (error) {
