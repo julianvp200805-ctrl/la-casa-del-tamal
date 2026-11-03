@@ -15,9 +15,9 @@ class VentasDiariasPage extends StatefulWidget {
 
 class _VentasDiariasPageState extends State<VentasDiariasPage> {
   final PedidoService _pedidoService = PedidoService();
-  late Future<ReporteVentas> _futuro = _pedidoService.obtenerReporteVentas('diaria');
+  late Future<ReporteVentas> _futuro = _pedidoService.obtenerReporteHoy();
 
-  void _recargar() => setState(() => _futuro = _pedidoService.obtenerReporteVentas('diaria'));
+  void _recargar() => setState(() => _futuro = _pedidoService.obtenerReporteHoy());
 
   @override
   Widget build(BuildContext context) {

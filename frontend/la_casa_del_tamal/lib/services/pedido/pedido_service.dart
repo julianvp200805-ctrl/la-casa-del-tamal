@@ -31,15 +31,17 @@ class PedidoService {
     return token;
   }
 
-  // GET /pedido/reporte?tipo=diaria|semanal|mensual
-  Future<ReporteVentas> obtenerReporteVentas(String tipo) async {
-    final token = await _token();
-    final url = Uri.parse('${ApiConfig.baseUrl}/pedido/reporte?tipo=$tipo');
-    return _pedir(url, token);
+  // GET /pedido/reporte-rango?desde=&hasta= — única fuente de los reportes.
+  // El rango lo calcula el teléfono: si lo calculara el servidor, el día se
+  // cortaría a las 19:00 de Colombia (medianoche UTC en Render).
+  Future<ReporteVentas> obtenerReporteHoy() {
+    final hoy = DateTime.now();
+    return obtenerReporteRango(
+      DateTime(hoy.year, hoy.month, hoy.day),
+      DateTime(hoy.year, hoy.month, hoy.day, 23, 59, 59),
+    );
   }
 
-  // NUEVO: GET /pedido/reporte-rango?desde=&hasta= (para un día de la
-  // semana o una semana del mes específicos).
   Future<ReporteVentas> obtenerReporteRango(DateTime desde, DateTime hasta) async {
     final token = await _token();
     final url = Uri.parse(

@@ -159,6 +159,9 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
     );
   }
 
+  // El mockup pide "Código para el Mesero"; en español el artículo cambia con el rol.
+  String get _rolConArticulo => _rolSeleccionado == 'cocina' ? 'la Cocina' : 'el Mesero';
+
   Widget _buildCardCodigo() {
     return Container(
       width: double.infinity,
@@ -173,7 +176,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Código para rol ${_rolSeleccionado.toUpperCase()}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              Text('Código para $_rolConArticulo', style: const TextStyle(color: Colors.white60, fontSize: 12)),
               GestureDetector(
                 onTap: _copiarAlPortapapeles,
                 child: const Text('Copiar', style: TextStyle(color: AppEstilos.colorDorado, fontSize: 12, fontWeight: FontWeight.bold)),

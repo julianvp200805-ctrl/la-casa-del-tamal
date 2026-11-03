@@ -26,7 +26,7 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage> {
   final PedidoService _pedidoService = PedidoService();
   String _nombreUsuario = 'admin';
-  late Future<ReporteVentas> _hoy = _pedidoService.obtenerReporteVentas('diaria');
+  late Future<ReporteVentas> _hoy = _pedidoService.obtenerReporteHoy();
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   // Al volver de otra pantalla se refresca el total de hoy.
   Future<void> _abrir(Widget pagina) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => pagina));
-    if (mounted) setState(() => _hoy = _pedidoService.obtenerReporteVentas('diaria'));
+    if (mounted) setState(() => _hoy = _pedidoService.obtenerReporteHoy());
   }
 
   @override
@@ -70,7 +70,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ],
               ),
               const SizedBox(height: 18),
-              _TotalHoy(futuro: _hoy, onReintentar: () => setState(() => _hoy = _pedidoService.obtenerReporteVentas('diaria'))),
+              _TotalHoy(futuro: _hoy, onReintentar: () => setState(() => _hoy = _pedidoService.obtenerReporteHoy())),
               const SizedBox(height: 18),
               GridView.count(
                 crossAxisCount: 2,
@@ -80,10 +80,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 crossAxisSpacing: 14,
                 childAspectRatio: 1.0,
                 children: [
-                  MenuTile(icono: _icono(Icons.show_chart, AppEstilos.verdeBoton, fondo: const Color(0xFFE0E0E0)), texto: 'Ventas', onTap: () => _abrir(const VentasPage())),
-                  MenuTile(icono: _icono(Icons.restaurant, Colors.black87, fondo: const Color(0xFFE0E0E0)), texto: 'Pedidos en\nproceso', onTap: () => _abrir(const PedidosProcesoPage())),
                   MenuTile(icono: _icono(Icons.inventory_2, const Color(0xFFD08A4E)), texto: 'Inventario', onTap: () => _abrir(const InventarioPage())),
                   MenuTile(icono: _icono(Icons.edit, const Color(0xFFF0842C)), texto: 'Modificar menu', onTap: () => _abrir(const AdminMenuPage())),
+                  MenuTile(icono: _icono(Icons.restaurant, Colors.black87, fondo: const Color(0xFFE0E0E0)), texto: 'Pedidos en\nproceso', onTap: () => _abrir(const PedidosProcesoPage())),
+                  MenuTile(icono: _icono(Icons.show_chart, AppEstilos.verdeBoton, fondo: const Color(0xFFE0E0E0)), texto: 'Ventas', onTap: () => _abrir(const VentasPage())),
                 ],
               ),
             ],

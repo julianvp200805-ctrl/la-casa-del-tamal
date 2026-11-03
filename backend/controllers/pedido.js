@@ -90,7 +90,7 @@ export const pedidosCocinaAbiertos = async (req, res) => {
 };
 
 // Agrupa las líneas de detalle_pedido por nombre de producto, sumando
-// cantidad y subtotal. Usado tanto por reporteVentas como por reporteRango.
+// cantidad y subtotal. Es el desglose "10 chorizo / 15 tamales" del reporte.
 function agruparItems(itemsRaw) {
   const mapa = {};
   (itemsRaw || []).forEach(item => {
@@ -102,61 +102,17 @@ function agruparItems(itemsRaw) {
   return Object.values(mapa);
 }
 
-// Reporte de ventas para el admin (rangos fijos: diaria/semanal/mensual).
-export const reporteVentas = async (req, res) => {
-  try {
-    const { tipo } = req.query;
-    if (!['diaria', 'semanal', 'mensual'].includes(tipo)) {
-      return res.status(400).json({ error: "El parametro 'tipo' debe ser: diaria, semanal o mensual" });
-    }
-
-    const ahora = new Date();
-    let fechaInicio;
-    if (tipo === 'diaria') {
-      fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    } else if (tipo === 'semanal') {
-      fechaInicio = new Date(ahora);
-      fechaInicio.setDate(ahora.getDate() - 7);
-    } else {
-      fechaInicio = new Date(ahora);
-      fechaInicio.setDate(ahora.getDate() - 30);
-    }
-
-    const desdeISO = fechaInicio.toISOString();
-    const hastaISO = ahora.toISOString();
-
-    const { data, error } = await obtenerPedidosPorRango(desdeISO, hastaISO);
-    if (error) return res.status(500).json({ error: 'Error al obtener el reporte de ventas' });
-
-    // CORREGIDO: el filtro estaba al revés (excluía 'entregado', que son
-    // justo las ventas ya completadas, y contaba todo lo demás incluyendo
-    // pedidos cancelados). Ahora se excluye solo 'cancelado'.
-    const pedidosValidos = data.filter(p => p.estado !== 'cancelado');
-    const totalVentas = pedidosValidos.reduce((acc, p) => acc + Number(p.total || 0), 0);
-
-    const { data: itemsRaw, error: errorItems } = await obtenerItemsPorRango(desdeISO, hastaISO);
-    if (errorItems) return res.status(500).json({ error: 'Error al obtener el detalle de ventas' });
-
-    return res.status(200).json({
-      tipo,
-      desde: desdeISO,
-      hasta: hastaISO,
-      cantidadPedidos: pedidosValidos.length,
-      totalVentas,
-      itemsAgrupados: agruparItems(itemsRaw)
-    });
-  } catch (error) {
-    console.error('Error en reporteVentas:', error);
-    return res.status(500).json({ error: error.message });
-  }
-};
-
-// NUEVO: reporte para un rango de fechas explícito (un día de la semana,
-// una semana del mes, etc). GET /pedido/reporte-rango?desde=&hasta=
+// Reporte de ventas para un rango de fechas explícito (un día de la semana,
+// una semana del mes, el día de hoy). El cliente manda las fechas ya
+// convertidas a UTC, así el día se corta en la hora del restaurante y no en
+// la medianoche UTC del servidor. GET /pedido/reporte-rango?desde=&hasta=
 export const reporteRango = async (req, res) => {
   try {
     const { desde, hasta } = req.query;
     if (!desde || !hasta) return res.status(400).json({ error: "'desde' y 'hasta' son requeridos (ISO 8601)" });
+    if (Number.isNaN(Date.parse(desde)) || Number.isNaN(Date.parse(hasta))) {
+      return res.status(400).json({ error: "'desde' y 'hasta' deben ser fechas ISO 8601 válidas" });
+    }
 
     const { data, error } = await obtenerPedidosPorRango(desde, hasta);
     if (error) return res.status(500).json({ error: 'Error al obtener el reporte' });
