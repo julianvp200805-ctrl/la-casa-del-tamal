@@ -49,7 +49,7 @@ export const reclamarCodigo = async (codigo) => {
     .eq('codigo', codigo)
     .eq('usado', false)
     .gt('expira_en', ahoraISO())
-    .select('id');
+    .select('*');
   return { data: data?.[0] ?? null, error };
 };
 

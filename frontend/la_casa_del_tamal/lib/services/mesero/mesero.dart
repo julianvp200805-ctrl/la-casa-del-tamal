@@ -59,6 +59,23 @@ class MeseroService {
         return ((data['pedidos'] as List?) ?? []).map((e) => PedidoProceso.fromJson(e)).toList();
       });
 
+  // GET /pedido/cocina/abiertos -> TODOS los pedidos abiertos (bandeja de cocina)
+  Future<List<PedidoProceso>> obtenerAbiertosCocina() => _seguro(() async {
+        final r = await http.get(Uri.parse('${ApiConfig.baseUrl}/pedido/cocina/abiertos'), headers: await _headers());
+        final data = _resolver(r, 'No se pudieron cargar los pedidos de cocina');
+        return ((data['pedidos'] as List?) ?? []).map((e) => PedidoProceso.fromJson(e)).toList();
+      });
+
+  // PATCH /pedido/:id/estado { estado } -> cocina: pendiente->en_proceso->listo
+  Future<void> cambiarEstado(String id, String estado) => _seguro(() async {
+        final r = await http.patch(
+          Uri.parse('${ApiConfig.baseUrl}/pedido/$id/estado'),
+          headers: await _headers(),
+          body: jsonEncode({'estado': estado}),
+        );
+        _resolver(r, 'No se pudo actualizar el estado');
+      });
+
   // PATCH /pedido/:id/entregar (solo si la cocina lo dejó "listo")
   Future<void> entregar(String id) => _seguro(() async {
         final r = await http.patch(Uri.parse('${ApiConfig.baseUrl}/pedido/$id/entregar'), headers: await _headers());

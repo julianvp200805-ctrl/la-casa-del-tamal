@@ -14,8 +14,16 @@ export const obtenerPedidoConDetalles = async (id) => {
   return { data, error };
 };
 
-export const obtenerPedidosPorUsuario = async (usuarioId) => {
-  const { data, error } = await supabase.from('pedidos').select('*').eq('usuario_id', usuarioId).order('fecha_pedido', { ascending: false });
+// Pedidos abiertos (ni entregados ni cancelados) de un mesero concreto,
+// con sus productos. Es la lista "mis pedidos" de la pantalla de estados.
+export const obtenerPedidosAbiertosPorUsuario = async (usuarioId) => {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('*, detalles:detalle_pedido(cantidad, precio_unitario, subtotal, menu:menu_id(nombre))')
+    .eq('usuario_id', usuarioId)
+    .or('estado.is.null,estado.not.in.(entregado,cancelado)')
+    .order('fecha_pedido', { ascending: true })
+    .limit(100);
   return { data, error };
 };
 
@@ -72,10 +80,5 @@ export const obtenerItemsPorRango = async (fechaInicioISO, fechaFinISO) => {
     .select('cantidad, subtotal, menu:menu_id(nombre)')
     .in('pedido_id', idsValidos);
 
-  return { data, error };
-};
-
-export const eliminarPedido = async (id) => {
-  const { data, error } = await supabase.from('pedidos').delete().eq('id', id).select();
   return { data, error };
 };

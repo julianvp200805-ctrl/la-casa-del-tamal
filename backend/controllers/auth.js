@@ -14,6 +14,9 @@ import { obtenerSecretoJwt } from '../config/jwt.js';
 const ROLES_EMPLEADO = ['cocina', 'mesero'];
 const TIPOS_DOCUMENTO = ['C.C.', 'C.E.', 'T.I.', 'Pasaporte'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Formato de los códigos que genera el admin (controllers/codigosRegistro.js):
+// TAM-XXXX-XX con el alfabeto sin I, O, 0 y 1.
+const CODIGO_RE = /^TAM-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{2}$/;
 
 // Hash falso para tardar lo mismo cuando el correo no existe
 const HASH_FALSO = bcrypt.hashSync('hash-de-relleno', 10);
@@ -26,8 +29,9 @@ const fechaValida = (texto) => {
 
 // POST /auth/registro
 // body: { nombre, tipo_documento, numero_documento, email, fecha_nacimiento,
-//         rol, contrasena, codigo }
+//         contrasena, codigo }
 // Sin un código de registro vigente (generado por el admin) nadie se registra.
+// El rol NO lo elige el empleado: lo impone el código (rol_asignado).
 export const registro = async (req, res) => {
     let codigoId = null;
     try {
@@ -37,24 +41,28 @@ export const registro = async (req, res) => {
         const numero_documento = String(b.numero_documento ?? '').trim();
         const email = String(b.email ?? '').trim().toLowerCase();
         const fecha_nacimiento = String(b.fecha_nacimiento ?? '').trim();
-        const rol = String(b.rol ?? '').trim().toLowerCase();
         const contrasena = String(b.contrasena ?? '');
-        const codigo = String(b.codigo ?? '').trim();
+        const codigo = String(b.codigo ?? '').trim().toUpperCase();
 
         if (nombre.length < 3 || nombre.length > 100) return res.status(400).json({ error: 'Escribe tu nombre completo' });
         if (!TIPOS_DOCUMENTO.includes(tipo_documento)) return res.status(400).json({ error: 'Tipo de documento no válido' });
         if (!/^[A-Za-z0-9]{5,20}$/.test(numero_documento)) return res.status(400).json({ error: 'Número de documento no válido' });
         if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Correo no válido' });
-        if (!fechaValida(fecha_nacimiento)) return res.status(400).json({ error: 'Fecha de nacimiento no válida' });
-        if (!ROLES_EMPLEADO.includes(rol)) return res.status(400).json({ error: 'Solo puedes registrarte como cocina o mesero' });
+        if (!fechaValida(fecha_nacimiento)) return res.status(400).json({ error: 'Fecha de nacimiento no válida (usa el formato 2005-12-31)' });
         if (contrasena.length < 8 || contrasena.length > 72) return res.status(400).json({ error: 'La contraseña debe tener entre 8 y 72 caracteres' });
-        if (!/^\d{6}$/.test(codigo)) return res.status(400).json({ error: 'El código de registro debe tener 6 números' });
+        if (!CODIGO_RE.test(codigo)) return res.status(400).json({ error: 'El código de registro no tiene un formato válido (TAM-XXXX-XX)' });
 
         // 1) Se consume el código primero (atómico): si no sirve, no se sigue.
         const { data: reclamado, error: errorCodigo } = await reclamarCodigo(codigo);
         if (errorCodigo) return res.status(500).json({ error: 'No se pudo validar el código' });
         if (!reclamado) return res.status(400).json({ error: 'Código de registro inválido, vencido o ya usado' });
         codigoId = reclamado.id;
+
+        const rol = String(reclamado.rol_asignado ?? '').toLowerCase();
+        if (!ROLES_EMPLEADO.includes(rol)) {
+            await liberarCodigo(codigoId);
+            return res.status(500).json({ error: 'El código no tiene un rol válido asignado' });
+        }
 
         // 2) Duplicados (si hay, el código se devuelve para no gastarlo)
         const { data: porCorreo } = await obtenerPorEmail(email);

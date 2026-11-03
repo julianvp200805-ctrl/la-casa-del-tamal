@@ -40,7 +40,7 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
       });
     }
     try {
-      final lista = await _service.obtenerAbiertos();
+      final lista = await _service.obtenerAbiertosCocina();
       if (!mounted) return;
 
       setState(() {
@@ -60,9 +60,7 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
 
   Future<void> _cambiarEstado(PedidoProceso p, String nuevoEstado) async {
     try {
-      if (nuevoEstado == 'listo') {
-        await _service.entregar(p.id);
-      }
+      await _service.cambiarEstado(p.id, nuevoEstado);
       _mensaje('Pedido ${p.numero} actualizado a $nuevoEstado');
       _cargarPedidos();
     } catch (e) {
@@ -122,18 +120,10 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
 
   Widget _buildTarjetaPedido(PedidoProceso p) {
     final esPendiente = p.estado == 'pendiente';
-    
-    // Tratamos p.descripcion dinámicamente según el tipado de tu modelo original de Flutter
-    final rawDesc = p.descripcion;
-    List<String> itemsPlatos = [];
-    
-    if (rawDesc is List) {
-      itemsPlatos = rawDesc.map((e) => e.toString()).toList();
-    } else if (rawDesc != null) {
-      final strDesc = rawDesc.toString();
-      itemsPlatos = strDesc.isNotEmpty ? strDesc.split(',') : <String>[];
-    }
-    
+
+    // Platos reales del pedido: "2 Tamal de pollo", "1 Ajaco...", etc.
+    final itemsPlatos = p.items.map((i) => '${i.cantidad} x ${i.nombre}').toList();
+
     if (!_checkstates.containsKey(p.id) || _checkstates[p.id]!.length != itemsPlatos.length) {
       _checkstates[p.id] = List.generate(itemsPlatos.length, (_) => false);
     }

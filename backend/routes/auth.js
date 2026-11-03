@@ -21,7 +21,7 @@ router.post('/verificar-codigo-registro', porIp, verificarCodigoRegistro);
 router.post('/registro', porIp, registro);
 router.post('/login', porIpYCorreo(8), login);
 
-// --- RECUPERACIÓN DE CONTRASEÑA (BREVO) ---
+// --- RECUPERACIÓN DE CONTRASEÑA (RESEND) ---
 router.post('/forgot-password', porIpYCorreo(5), forgotPassword);
 router.post('/verify-code', porIpYCorreo(10), verifyCode);
 

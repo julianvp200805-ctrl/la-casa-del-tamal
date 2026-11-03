@@ -1,25 +1,37 @@
 import express from "express";
-import { crearPedidoConDetalles, obtenerPedidoUsuario, misPedidos, reporteVentas, reporteRango, pedidosEnProceso, cambiarEstadoPedido, eliminarPedidoUsuario } from "../controllers/pedido.js";
-import { verificarToken, verificarAdmin } from "../middlewares/userMiddleware.js";
+import {
+  crearPedidoMesero,
+  pedidosMeseroAbiertos,
+  pedidosCocinaAbiertos,
+  pedidosEnProceso,
+  cambiarEstadoPedido,
+  entregarPedido,
+  reporteVentas,
+  reporteRango
+} from "../controllers/pedido.js";
+import { verificarToken, verificarAdmin, verificarRol } from "../middlewares/userMiddleware.js";
 
 const router = express.Router();
 
-// POST - Crear pedido
-router.post('/pedidos', crearPedidoConDetalles);
-// GET - Reporte de ventas del admin (diaria/semanal/mensual) — debe ir
-// ANTES que /pedidos/:id para que no la confunda con un id.
-router.get('/reporte', verificarToken, verificarAdmin, reporteVentas);
-// GET - Reporte para un rango de fechas explícito (un día, una semana...)
-router.get('/reporte-rango', verificarToken, verificarAdmin, reporteRango);
-// GET - Pedidos abiertos (admin)
-router.get('/en-proceso', verificarToken, verificarAdmin, pedidosEnProceso);
-// PATCH - Cambiar el estado de un pedido (admin)
-router.patch('/:id/estado', verificarToken, verificarAdmin, cambiarEstadoPedido);
-// GET - Mis pedidos (por usuario) — debe ir ANTES que /:id
-router.get('/mis-pedidos', misPedidos);
-// GET - Obtener pedido por ID
-router.get('/pedidos/:id', obtenerPedidoUsuario);
-// eliminar pedido por ID
-router.delete("/:id", eliminarPedidoUsuario);
+// Todas las rutas de pedidos requieren sesión.
+router.use(verificarToken);
+
+// --- MESERO ---
+router.post('/mesero', verificarRol('mesero', 'admin'), crearPedidoMesero);
+router.get('/mesero/abiertos', verificarRol('mesero', 'admin'), pedidosMeseroAbiertos);
+router.patch('/:id/entregar', verificarRol('mesero', 'admin'), entregarPedido);
+
+// --- COCINA ---
+router.get('/cocina/abiertos', verificarRol('cocina', 'admin'), pedidosCocinaAbiertos);
+
+// --- ADMIN (reportes y bandeja general) ---
+// Deben ir ANTES de /:id para no confundirse con un id.
+router.get('/reporte', verificarAdmin, reporteVentas);
+router.get('/reporte-rango', verificarAdmin, reporteRango);
+router.get('/en-proceso', verificarAdmin, pedidosEnProceso);
+
+// --- COCINA Y ADMIN ---
+// El controlador aplica las transiciones permitidas por rol.
+router.patch('/:id/estado', verificarRol('cocina', 'admin'), cambiarEstadoPedido);
 
 export default router;

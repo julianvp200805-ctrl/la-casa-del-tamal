@@ -3,15 +3,6 @@ import { supabase } from '../config/supabase.js';
 // Columnas públicas permitidas en las respuestas (incluyendo los nuevos campos de empleado)
 const PUBLICAS = 'id, nombre, email, rol, tipo_documento, numero_documento, fecha_nacimiento';
 
-export const crearUsuario = async (nombre, email, contrasena, rol) => {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .insert({ nombre, email, contrasena, rol })
-        .select(PUBLICAS);
-
-    return { data, error };
-};
-
 // Alta de un empleado (cocina o mesero) con sus datos completos.
 export const crearUsuarioEmpleado = async (campos) => {
     const { data, error } = await supabase

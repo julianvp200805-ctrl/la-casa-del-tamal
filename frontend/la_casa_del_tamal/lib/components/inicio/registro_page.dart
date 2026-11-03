@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/menu/campo_inicio.dart';
 import 'package:http/http.dart' as http;
@@ -21,9 +22,16 @@ class _RegistroPageState extends State<RegistroPage> {
   final _codigoCtrl = TextEditingController();
   final _focusCodigo = FocusNode();
 
-  String _tipoDoc = 'C.C.', _rol = 'Mesero';
+  // _fechaIso (yyyy-MM-dd) es lo que viaja al backend; _fechaCtrl muestra dd/mm/yyyy.
+  String? _fechaIso;
+  String _tipoDoc = 'C.C.';
   bool _cargando = false;
   bool _has8Char = false, _hasUpper = false, _hasNumber = false;
+
+  // Rol impuesto por el código de registro (lo genera el admin).
+  String? _rolDelCodigo;
+  bool _verificandoCodigo = false;
+  String? _errorCodigo;
 
   @override
   void initState() {
@@ -53,32 +61,92 @@ class _RegistroPageState extends State<RegistroPage> {
     super.dispose();
   }
 
+  String _tituloRol(String rol) => rol == 'cocina' ? 'Cocina' : 'Mesero';
+
+  // POST /auth/verificar-codigo-registro: confirma que el código existe,
+  // no está vencido ni usado, y devuelve el rol asignado por el admin.
+  Future<void> _verificarCodigo(String codigo) async {
+    setState(() {
+      _verificandoCodigo = true;
+      _errorCodigo = null;
+      _rolDelCodigo = null;
+    });
+    try {
+      final res = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/auth/verificar-codigo-registro'),
+        headers: ApiConfig.headers,
+        body: jsonEncode({'codigo': codigo}),
+      );
+      final data = jsonDecode(res.body);
+      if (!mounted) return;
+      if (res.statusCode == 200 && data['valid'] == true) {
+        setState(() {
+          _rolDelCodigo = (data['rol_asignado'] ?? '').toString();
+          _verificandoCodigo = false;
+        });
+      } else {
+        setState(() {
+          _errorCodigo = (data['error'] ?? 'El código no es válido').toString();
+          _verificandoCodigo = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorCodigo = 'No se pudo verificar el código. Revisa tu conexión.';
+        _verificandoCodigo = false;
+      });
+    }
+  }
+
+  Future<void> _elegirFecha() async {
+    final hoy = DateTime.now();
+    final seleccion = await showDatePicker(
+      context: context,
+      initialDate: DateTime(hoy.year - 20),
+      firstDate: DateTime(1900),
+      lastDate: hoy,
+      helpText: 'Fecha de nacimiento',
+    );
+    if (seleccion == null) return;
+    setState(() {
+      _fechaIso = '${seleccion.year.toString().padLeft(4, '0')}-'
+          '${seleccion.month.toString().padLeft(2, '0')}-'
+          '${seleccion.day.toString().padLeft(2, '0')}';
+      _fechaCtrl.text = '${seleccion.day.toString().padLeft(2, '0')}/'
+          '${seleccion.month.toString().padLeft(2, '0')}/${seleccion.year}';
+    });
+  }
+
   Future<void> _registrarse() async {
     final codigo = _codigoCtrl.text.trim().toUpperCase();
-    if (codigo.length < 11) return _msg('Código interno incompleto', true);
+    if (codigo.length != 11) return _msg('Código interno incompleto', true);
+    if (_errorCodigo != null) return _msg(_errorCodigo!, true);
+    if (_rolDelCodigo == null) return _msg('Verifica primero el código de registro', true);
     if (!_has8Char || !_hasUpper || !_hasNumber) {
       return _msg('La contraseña no cumple los requisitos', true);
     }
+    if (_fechaIso == null) return _msg('Selecciona tu fecha de nacimiento', true);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _cargando = true);
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/registro');
-      
+
       // Limpieza estricta de espacios y caracteres invisibles o de retroceso (\u0008)
       final emailLimpio = _emailCtrl.text
           .trim()
           .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
 
+      // El rol NO se envía: lo impone el código en el backend.
       final bodyData = {
         'nombre': _nombreCtrl.text.trim(),
         'tipo_documento': _tipoDoc,
         'numero_documento': _docCtrl.text.trim(),
-        'correo': emailLimpio,
-        'fecha_nacimiento': _fechaCtrl.text.trim(),
-        'rol': _rol.toLowerCase(),
+        'email': emailLimpio,
+        'fecha_nacimiento': _fechaIso,
         'contrasena': _passCtrl.text,
-        'codigo_interno': codigo,
+        'codigo': codigo,
       };
 
       final res = await http.post(
@@ -173,7 +241,14 @@ class _RegistroPageState extends State<RegistroPage> {
                             controller: _docCtrl,
                             hint: 'Número',
                             icono: Icons.badge_outlined,
-                            validator: (val) => val == null || val.isEmpty ? 'Ingrese documento' : null,
+                            validator: (val) {
+                              final t = (val ?? '').trim();
+                              if (t.isEmpty) return 'Ingrese documento';
+                              if (!RegExp(r'^[A-Za-z0-9]{5,20}$').hasMatch(t)) {
+                                return 'Entre 5 y 20 letras o números';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
@@ -187,22 +262,17 @@ class _RegistroPageState extends State<RegistroPage> {
                   hint: 'Correo electrónico',
                   icono: Icons.mail_outline,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'Ingrese el correo';
-                    if (!val.contains('@') || !val.contains('.')) return 'Correo no válido';
+                    final t = (val ?? '').trim();
+                    if (t.isEmpty) return 'Ingrese el correo';
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(t)) {
+                      return 'Correo no válido';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 _lbl('Fecha de nacimiento'),
-                CampoInicio(
-                  controller: _fechaCtrl,
-                  hint: 'dd/mm/aa',
-                  icono: Icons.calendar_today_outlined,
-                  validator: (val) => val == null || val.isEmpty ? 'Ingrese fecha' : null,
-                ),
-                const SizedBox(height: 12),
-                _lbl('Rol'),
-                _buildDropRol(),
+                _buildCampoFecha(),
                 const SizedBox(height: 12),
                 _lbl('Contraseña'),
                 CampoInicio(
@@ -217,6 +287,7 @@ class _RegistroPageState extends State<RegistroPage> {
                 const SizedBox(height: 16),
                 _lbl('Codigo interno'),
                 _buildCodigoInternoCompleto(),
+                _buildEstadoCodigo(),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -273,26 +344,44 @@ class _RegistroPageState extends State<RegistroPage> {
   );
 
   Widget _buildDropDoc() => DropdownButtonFormField<String>(
-    value: _tipoDoc,
+    initialValue: _tipoDoc,
     dropdownColor: AppEstilos.inputOscuro,
     style: const TextStyle(color: Colors.white, fontSize: 15),
     decoration: _dropDeco(Icons.assignment_ind_outlined),
-    items: ['C.C.', 'C.E.', 'P.P.']
+    items: ['C.C.', 'C.E.', 'T.I.', 'Pasaporte']
         .map((t) => DropdownMenuItem(value: t, child: Text(t)))
         .toList(),
     onChanged: (v) => setState(() => _tipoDoc = v!),
   );
 
-  Widget _buildDropRol() => DropdownButtonFormField<String>(
-    value: _rol,
-    dropdownColor: AppEstilos.inputOscuro,
-    style: const TextStyle(color: Colors.white, fontSize: 15),
-    decoration: _dropDeco(Icons.people_outline),
-    items: ['Mesero', 'Cocina']
-        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-        .toList(),
-    onChanged: (v) => setState(() => _rol = v!),
-  );
+  Widget _buildCampoFecha() {
+    return GestureDetector(
+      onTap: _elegirFecha,
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: _fechaCtrl,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'dd/mm/aaaa',
+            hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+            prefixIcon: const Icon(Icons.calendar_today_outlined, color: AppEstilos.verdeBoton),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.07),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: AppEstilos.verdeBoton, width: 1.5),
+            ),
+          ),
+          validator: (_) => _fechaIso == null ? 'Selecciona tu fecha de nacimiento' : null,
+        ),
+      ),
+    );
+  }
 
   Widget _buildRequisitos() {
     Widget item(String txt, bool ok) => Padding(
@@ -322,6 +411,62 @@ class _RegistroPageState extends State<RegistroPage> {
         item('Una mayúscula', _hasUpper),
         item('Un número', _hasNumber),
       ],
+    );
+  }
+
+  // Bajo las casillas: verificación en vivo del código y su rol asignado.
+  Widget _buildEstadoCodigo() {
+    if (_verificandoCodigo) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8, left: 4),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppEstilos.verdeBoton),
+            ),
+            SizedBox(width: 8),
+            Text('Verificando código...', style: TextStyle(color: Colors.white54, fontSize: 12)),
+          ],
+        ),
+      );
+    }
+    if (_errorCodigo != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8, left: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.redAccent, size: 15),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(_errorCodigo!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+            ),
+          ],
+        ),
+      );
+    }
+    if (_rolDelCodigo != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8, left: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.verified_outlined, color: AppEstilos.verdeBoton, size: 15),
+            const SizedBox(width: 8),
+            Text(
+              'Código válido · rol asignado: ${_tituloRol(_rolDelCodigo!)}',
+              style: const TextStyle(color: AppEstilos.verdeBoton, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Padding(
+      padding: EdgeInsets.only(top: 8, left: 4),
+      child: Text(
+        'Pídele el código al administrador. Vence en 15 minutos y sirve una sola vez.',
+        style: TextStyle(color: Colors.white38, fontSize: 12),
+      ),
     );
   }
 
@@ -370,6 +515,11 @@ class _RegistroPageState extends State<RegistroPage> {
           focusNode: _focusCodigo,
           maxLength: 11,
           keyboardType: TextInputType.text,
+          textCapitalization: TextCapitalization.characters,
+          inputFormatters: [
+            _Mayusculas(),
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Z2-9-]')),
+          ],
           style: const TextStyle(color: Colors.transparent),
           cursorColor: Colors.transparent,
           decoration: const InputDecoration(
@@ -396,9 +546,30 @@ class _RegistroPageState extends State<RegistroPage> {
               );
             }
             setState(() {});
+            // Al completar TAM-XXXX-XX se verifica solo contra el backend.
+            if (formateada.length == 11) {
+              _verificarCodigo(formateada);
+            } else if (_rolDelCodigo != null || _errorCodigo != null || _verificandoCodigo) {
+              setState(() {
+                _rolDelCodigo = null;
+                _errorCodigo = null;
+                _verificandoCodigo = false;
+              });
+            }
           },
         ),
       ],
+    );
+  }
+}
+
+class _Mayusculas extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+      composing: TextRange.empty,
     );
   }
 }
