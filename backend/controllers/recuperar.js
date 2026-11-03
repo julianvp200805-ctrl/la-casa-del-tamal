@@ -1,6 +1,6 @@
 import { crearCodigoRecuperacion, obtenerCodigoValido, marcarCodigoComoUsado } from "../models/recuperar.js";
 import { obtenerPorEmail, actualizarUsuario } from "../models/user.js";
-import { enviarCorreo } from "../config/mailer.js"; // Gmail SMTP si está configurado; si no, Resend
+import { enviarCorreo } from "../config/mailer.js"; // Brevo (API HTTP) si hay key; si no, Resend
 import bcrypt from "bcrypt";
 
 // POST /auth/forgot-password
