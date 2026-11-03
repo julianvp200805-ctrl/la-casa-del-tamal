@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/mesero/pedido_controles.dart' show formatoPesos;
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
@@ -52,12 +53,9 @@ class ProductoDetallePage extends StatelessWidget {
                   (plato.categoria ?? 'General').toUpperCase(),
                   style: const TextStyle(color: AppEstilos.verdeBoton, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Cocción', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    Text('3 - 4 H', style: TextStyle(color: AppEstilos.colorDorado, fontWeight: FontWeight.bold, fontSize: 16)),
-                  ],
+                Text(
+                  '\$${formatoPesos(plato.precio)}',
+                  style: const TextStyle(color: AppEstilos.colorDorado, fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'serif'),
                 ),
               ],
             ),

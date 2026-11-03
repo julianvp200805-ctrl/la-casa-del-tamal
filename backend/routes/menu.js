@@ -1,10 +1,13 @@
 import express from "express";
-import { listarMenu, obtenerMenu, obtenerPorCat, crear, editar, eliminar } from "../controllers/menu.js";
+import { listarMenu, obtenerMenu, obtenerPorCat, crear, editar, eliminar, versionMenu } from "../controllers/menu.js";
 import {verificarToken, verificarAdmin} from "../middlewares/userMiddleware.js"
 
 import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
+
+// GET - Huella del menú (público): permite saber si el admin cambió algo
+router.get('/version', versionMenu);
 
 // GET - Obtener todos
 router.get('/menu', listarMenu);

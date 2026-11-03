@@ -12,8 +12,9 @@ class MenuItem {
   final int? stock;
   final String? imagenUrl;
   final String? categoria;
+  final String? ingredientes;
 
-  MenuItem({required this.id, required this.nombre, this.descripcion, required this.precio, this.stock, this.imagenUrl, this.categoria});
+  MenuItem({required this.id, required this.nombre, this.descripcion, required this.precio, this.stock, this.imagenUrl, this.categoria, this.ingredientes});
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
@@ -24,6 +25,7 @@ class MenuItem {
       stock: json['stock'],
       imagenUrl: json['imagen_url'],
       categoria: json['categoria'],
+      ingredientes: json['ingredientes'] is String ? json['ingredientes'] as String : null,
     );
   }
 }
@@ -39,6 +41,20 @@ class MenuService {
       throw Exception(decodeApiResponse(response)['error'] ?? 'No se pudo cargar el menú');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // GET /menu/version (público): huella que cambia cuando el admin edita el
+  // menú. Se sondea para refrescar la pantalla sin bajar todo el menú.
+  Future<String?> obtenerVersion() async {
+    try {
+      final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/menu/version'), headers: ApiConfig.headers);
+      if (response.statusCode == 200) {
+        return decodeApiResponse(response)['version']?.toString();
+      }
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -71,47 +87,57 @@ class MenuService {
 
   // POST /menu/crear_menu (admin) con parámetro de categoría incluido
   Future<void> crearPlato({
-    required String nombre, 
-    required String descripcion, 
-    required int precio, 
-    required String categoria, 
-    required XFile foto
+    required String nombre,
+    required String descripcion,
+    required int precio,
+    required String categoria,
+    required XFile foto,
+    String? ingredientes,
   }) {
     return _enviar(
-      'POST', 
-      '/menu/crear_menu', 
-      {
-        'nombre': nombre, 
-        'descripcion': descripcion, 
-        'precio': '$precio',
-        'categoria': categoria.toLowerCase().trim()
-      }, 
-      foto, 
+      'POST',
+      '/menu/crear_menu',
+      _camposPlato(nombre: nombre, descripcion: descripcion, precio: precio, categoria: categoria, ingredientes: ingredientes),
+      foto,
       'No se pudo crear el plato'
     );
   }
 
   // PUT /menu/menu/:id (admin) con parámetro de categoría incluido
   Future<void> actualizarPlato({
-    required String id, 
-    required String nombre, 
-    required String descripcion, 
-    required int precio, 
-    required String categoria, 
-    XFile? foto
+    required String id,
+    required String nombre,
+    required String descripcion,
+    required int precio,
+    required String categoria,
+    XFile? foto,
+    String? ingredientes,
   }) {
     return _enviar(
-      'PUT', 
-      '/menu/menu/$id', 
-      {
-        'nombre': nombre, 
-        'descripcion': descripcion, 
-        'precio': '$precio',
-        'categoria': categoria.toLowerCase().trim()
-      }, 
-      foto, 
+      'PUT',
+      '/menu/menu/$id',
+      _camposPlato(nombre: nombre, descripcion: descripcion, precio: precio, categoria: categoria, ingredientes: ingredientes),
+      foto,
       'No se pudo actualizar el plato'
     );
+  }
+
+  Map<String, String> _camposPlato({
+    required String nombre,
+    required String descripcion,
+    required int precio,
+    required String categoria,
+    String? ingredientes,
+  }) {
+    final campos = {
+      'nombre': nombre,
+      'descripcion': descripcion,
+      'precio': '$precio',
+      'categoria': categoria.toLowerCase().trim(),
+    };
+    final ings = (ingredientes ?? '').trim();
+    if (ings.isNotEmpty) campos['ingredientes'] = ings;
+    return campos;
   }
 
   // DELETE /menu/menu/:id (admin)

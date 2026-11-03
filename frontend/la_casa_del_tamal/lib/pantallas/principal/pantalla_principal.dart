@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/components/inicio/inicio_sesion.dart';
+import 'package:frontend/components/mesero/pedido_controles.dart' show formatoPesos;
 import 'package:frontend/components/productos/producto_detalle_page.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
@@ -17,6 +20,10 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MenuItem> _platosBackend = [];
   bool _cargando = true;
   String? _errorMsg;
+  String? _versionMenu;
+  Timer? _sondeo;
+
+  static const Duration _intervaloSondeo = Duration(seconds: 15);
 
   final List<String> _categorias = const [
     'Desayuno',
@@ -29,6 +36,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _obtenerDatosDeRender();
+    _sondeo = Timer.periodic(_intervaloSondeo, (_) => _comprobarSiHayCambios());
+  }
+
+  @override
+  void dispose() {
+    _sondeo?.cancel();
+    super.dispose();
   }
 
   Future<void> _obtenerDatosDeRender() async {
@@ -38,6 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
       _errorMsg = null;
     });
     try {
+      // La huella se toma antes de la lista: si el admin edita entre las dos
+      // peticiones, el sondeo detecta el cambio (de lo contrario podría
+      // quedar una versión nueva guardada como referencia sin verla en pantalla).
+      final huellaInicial = await _menuService.obtenerVersion();
       final resultado = await _menuService.obtenerMenu();
       if (mounted) {
         setState(() {
@@ -45,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _cargando = false;
         });
       }
+      _versionMenu = huellaInicial;
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -55,9 +74,68 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Sondeo ligero: pide solo la huella del menú y recarga la lista si cambió.
+  Future<void> _comprobarSiHayCambios() async {
+    if (!mounted) return;
+    try {
+      final version = await _menuService.obtenerVersion();
+      if (!mounted || version == null) return;
+      if (_versionMenu == null) {
+        _versionMenu = version;
+        return;
+      }
+      if (version != _versionMenu) {
+        _versionMenu = version;
+        await _recargarEnSilencio();
+      }
+    } catch (_) {
+      // Si falla el sondeo la lista visible sigue sirviendo.
+    }
+  }
+
+  Future<void> _recargarEnSilencio() async {
+    if (!mounted) return;
+    try {
+      final resultado = await _menuService.obtenerMenu();
+      if (mounted) {
+        setState(() {
+          _platosBackend = resultado;
+          _errorMsg = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _errorMsg = e.toString());
+    }
+  }
+
+  String _normalizar(String texto) => texto
+      .toLowerCase()
+      .trim()
+      .replaceAll('á', 'a')
+      .replaceAll('é', 'e')
+      .replaceAll('í', 'i')
+      .replaceAll('ó', 'o')
+      .replaceAll('ú', 'u')
+      .replaceAll('ü', 'u');
+
+  /// Los ingredientes los define el admin; si faltan, se deducen de la descripción.
+  List<String> _ingredientesDe(MenuItem plato) {
+    final delBackend = plato.ingredientes?.trim();
+    if (delBackend != null && delBackend.isNotEmpty) {
+      final lista = delBackend
+          .split(RegExp(r'[,;\n]'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .map((s) => s[0].toUpperCase() + s.substring(1))
+          .toList();
+      if (lista.isNotEmpty) return lista;
+    }
+    return _parsearIngredientes(plato.descripcion);
+  }
+
   List<String> _parsearIngredientes(String? descripcion) {
     if (descripcion == null || descripcion.isEmpty) return ['Tradicional'];
-    final descMinuscula = descripcion.toLowerCase();
+    final descMinuscula = _normalizar(descripcion);
     final listaPalabrasClave = [
       'pollo', 'cerdo', 'tocino', 'arroz', 'arveja', 'huevo', 
       'papa', 'zanahoria', 'hogao', 'maiz', 'maduro', 'carnes'
@@ -71,10 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtrados = _platosBackend.where((p) {
-      final c = (p.categoria ?? '').toLowerCase().trim();
-      return c == _categoriaActiva;
-    }).toList();
+    final seleccion = _normalizar(_categoriaActiva);
+    final filtrados = _platosBackend
+        .where((p) => _normalizar(p.categoria ?? '') == seleccion)
+        .toList();
 
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
@@ -179,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (items.isEmpty) return const Center(child: Text('No hay platos disponibles en esta categoría.', style: TextStyle(color: Colors.white38)));
 
     return RefreshIndicator(
-      onRefresh: _obtenerDatosDeRender,
+      onRefresh: _recargarEnSilencio,
       color: AppEstilos.verdeBoton,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -187,7 +265,11 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final plato = items[index];
           return GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductoDetallePage(plato: plato, ingredientes: _parsearIngredientes(plato.descripcion)))),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => ProductoDetallePage(plato: plato, ingredientes: _ingredientesDe(plato))));
+              if (!mounted) return;
+              await _comprobarSiHayCambios();
+            },
             child: Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
@@ -208,6 +290,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         Text(plato.descripcion ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                        const SizedBox(height: 6),
+                        Text('\$${formatoPesos(plato.precio)}', style: const TextStyle(color: AppEstilos.colorDorado, fontSize: 15, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),

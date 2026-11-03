@@ -52,3 +52,12 @@ export const eliminarPlato = async (id) => {
 
   return { data, error };
 };
+
+// Huella del contenido del menú: cambia con cualquier alta, edición o borrado.
+// Ordenar por id es obligatorio: sin orden garantizado la misma tabla puede
+// devolver las filas en otro orden y la huella cambiaría sin que nadie editó.
+export const obtenerFirma = async () => {
+  const { data, error } = await supabase.from('menu').select('*').order('id');
+  const firma = error ? null : (data || []).map((f) => JSON.stringify(f)).join('|');
+  return { firma, error };
+};

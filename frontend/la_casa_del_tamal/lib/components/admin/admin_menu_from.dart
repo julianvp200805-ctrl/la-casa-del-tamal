@@ -19,6 +19,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
   late final _nombre = TextEditingController(text: widget.plato?.nombre ?? '');
   late final _precio = TextEditingController(text: widget.plato != null ? widget.plato!.precio.toStringAsFixed(0) : '');
   late final _descripcion = TextEditingController(text: widget.plato?.descripcion ?? '');
+  late final _ingredientes = TextEditingController(text: widget.plato?.ingredientes ?? '');
   
   String _categoria = 'almuerzo';
   XFile? _foto;
@@ -50,6 +51,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
     _nombre.dispose();
     _precio.dispose();
     _descripcion.dispose();
+    _ingredientes.dispose();
     super.dispose();
   }
 
@@ -74,10 +76,11 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
     setState(() => _guardando = true);
     try {
       final desc = _descripcion.text.trim();
+      final ings = _ingredientes.text.trim();
       if (_esEdicion) {
-        await widget.menuService.actualizarPlato(id: widget.plato!.id, nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, foto: _foto);
+        await widget.menuService.actualizarPlato(id: widget.plato!.id, nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, ingredientes: ings, foto: _foto);
       } else {
-        await widget.menuService.crearPlato(nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, foto: _foto!);
+        await widget.menuService.crearPlato(nombre: nombre, descripcion: desc, precio: precio, categoria: _categoria, ingredientes: ings, foto: _foto!);
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -110,6 +113,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
           CampoHoja(controller: _nombre, hint: 'nombre'),
           CampoHoja(controller: _precio, hint: 'precio', teclado: TextInputType.number),
           CampoHoja(controller: _descripcion, hint: 'descripción', lineas: 2),
+          CampoHoja(controller: _ingredientes, hint: 'ingredientes, separados por coma', lineas: 2),
           CajaHoja(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(

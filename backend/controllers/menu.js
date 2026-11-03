@@ -1,4 +1,18 @@
-import { obtenerTodos, obtenerPorId, obtenerPorCategoria, crearPlato, actualizarPlato, eliminarPlato } from "../models/menu.js";
+import { obtenerTodos, obtenerPorId, obtenerPorCategoria, crearPlato, actualizarPlato, eliminarPlato, obtenerFirma } from "../models/menu.js";
+import { createHash } from "node:crypto";
+
+// GET /menu/version — huella barata para que la pantalla pública sepa
+// si el admin cambió algo sin volver a bajar todo el menú.
+export const versionMenu = async (_req, res) => {
+  try {
+    const { firma, error } = await obtenerFirma();
+    if (error) return res.status(500).json({ error: 'Error al calcular la versión del menú' });
+    const hash = createHash('sha1').update(firma ?? '').digest('hex');
+    return res.status(200).json({ version: hash });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 
 //obtener todos los platillos 
 export const listarMenu = async (req, res) => {
@@ -43,7 +57,7 @@ export const obtenerPorCat = async (req, res) => {
 //crear un platillo
 export const crear = async (req, res) => {
   try {
-    const { nombre, descripcion, precio, stock, imagen_url, categoria, sabor } = req.body;
+    const { nombre, descripcion, precio, stock, imagen_url, categoria, sabor, ingredientes } = req.body;
 
     //// Cloudinary almacena la URL segura en req.file.path
     const imagen = req.file ? req.file.path : req.body.imagen_url;
@@ -63,7 +77,10 @@ export const crear = async (req, res) => {
       stock: stock === '' ? undefined : stock,
       imagen_url: imagen,
       categoria,
-      sabor
+      sabor,
+      // Solo se manda si trae valor: así la creación no falla en bases donde
+      // la columna ingredientes todavía no existe.
+      ...(ingredientes ? { ingredientes } : {})
     });
     
     if (error) {
@@ -86,6 +103,9 @@ export const editar = async (req, res) => {
       if (valor === undefined || clave === 'imagen') continue;
       // precio y stock vacíos no se mandan (la BD no puede convertir "" a número)
       if ((clave === 'precio' || clave === 'stock') && valor === '') continue;
+      // ingredientes vacío se ignora para no escribir en una columna que
+      // puede no existir todavía en otras bases.
+      if (clave === 'ingredientes' && valor === '') continue;
       campos[clave] = valor;
     }
     if (req.file) campos.imagen_url = req.file.path;
