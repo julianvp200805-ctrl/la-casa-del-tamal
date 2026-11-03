@@ -12,8 +12,10 @@ export const enviarCorreoResend = async ({ para, nombre, asunto, html }) => {
 
   try {
     const data = await resend.emails.send({
-      // Usamos el remitente por defecto de pruebas de Resend (o tu dominio verificado si ya lo configuras)
-      from: 'La Casa del Tamal <onboarding@resend.dev>',
+      // RESEND_FROM debe ser una dirección de tu dominio verificado en Resend
+      // (ej. "La Casa del Tamal <no-reply@tudominio.com>"). Si no está, se usa
+      // el remitente de pruebas de Resend, que solo envía a tu propio correo.
+      from: process.env.RESEND_FROM ?? 'La Casa del Tamal <onboarding@resend.dev>',
       to: [para],
       subject: asunto,
       html: html,

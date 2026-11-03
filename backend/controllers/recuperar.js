@@ -1,6 +1,6 @@
 import { crearCodigoRecuperacion, obtenerCodigoValido, marcarCodigoComoUsado } from "../models/recuperar.js";
 import { obtenerPorEmail, actualizarUsuario } from "../models/user.js";
-import { enviarCorreoResend } from "../config/resend.js"; // <-- Importamos Resend
+import { enviarCorreo } from "../config/mailer.js"; // Gmail SMTP si está configurado; si no, Resend
 import bcrypt from "bcrypt";
 
 // POST /auth/forgot-password
@@ -41,10 +41,9 @@ export const forgotPassword = async (req, res) => {
         </div>
         `;
 
-        // Despacho vía Resend (sin silenciar errores)
-        await enviarCorreoResend({
+        // Despacho real del código al correo del usuario
+        await enviarCorreo({
             para: email,
-            nombre: usuario.nombre,
             asunto: `Código de recuperación: ${codigo}`,
             html: htmlRecuperacion
         });
@@ -101,9 +100,8 @@ export const verifyCode = async (req, res) => {
         `;
 
         try {
-            await enviarCorreoResend({
+            await enviarCorreo({
                 para: email,
-                nombre: usuario.nombre,
                 asunto: 'Notificación: Cambio de contraseña exitoso',
                 html: htmlConfirmacion
             });
