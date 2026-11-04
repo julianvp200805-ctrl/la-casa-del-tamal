@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:frontend/components/admin/admin_shell.dart';
+import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,8 +79,20 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
+      floatingActionButton: const ChatFab(),
+      // La maqueta 14 muestra la barra del admin sin ninguna pestana activa:
+      // esta pantalla es hija del shell y al tocar una pestana se regresa al shell.
+      bottomNavigationBar: BarraNavegacion(
+        indiceActivo: -1,
+        onTap: (i) {
+          pestanaAdminActiva.value = i;
+          Navigator.pop(context);
+        },
+        pestanas: pestanasAdmin,
+      ),
       body: SafeArea(
-        child: Padding(
+        bottom: false,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +101,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.subdirectory_arrow_left, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Column(
@@ -114,7 +128,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Text('El código vence en: 15 minutos', style: TextStyle(color: Colors.white60, fontSize: 13, fontStyle: FontStyle.italic)),
+              const Text('El código vence en: 15 minutos', style: TextStyle(color: Colors.white60, fontSize: 13, fontFamily: 'serif')),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -124,7 +138,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                   style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                   child: _cargando 
                       ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text('Generar codigo', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                      : const Text('Generar codigo', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
                 ),
               ),
               const SizedBox(height: 24),
@@ -150,7 +164,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(titulo, style: TextStyle(color: activo ? AppEstilos.verdeBoton : Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(titulo, style: TextStyle(color: activo ? AppEstilos.verdeBoton : Colors.white, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
             const SizedBox(height: 4),
             Text(sub, style: const TextStyle(color: Colors.white38, fontSize: 11)),
           ],
@@ -159,8 +173,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
     );
   }
 
-  // El mockup pide "Código para el Mesero"; en español el artículo cambia con el rol.
-  String get _rolConArticulo => _rolSeleccionado == 'cocina' ? 'la Cocina' : 'el Mesero';
+  String get _rolEtiqueta => _rolSeleccionado == 'cocina' ? 'Cocina' : 'Mesero';
 
   Widget _buildCardCodigo() {
     return Container(
@@ -176,7 +189,11 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Código para $_rolConArticulo', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              Text.rich(
+                TextSpan(text: 'Código para rol ', style: const TextStyle(color: Colors.white60, fontSize: 12), children: [
+                  TextSpan(text: _rolEtiqueta, style: const TextStyle(color: AppEstilos.verdeBoton, fontWeight: FontWeight.bold)),
+                ]),
+              ),
               GestureDetector(
                 onTap: _copiarAlPortapapeles,
                 child: const Text('Copiar', style: TextStyle(color: AppEstilos.colorDorado, fontSize: 12, fontWeight: FontWeight.bold)),

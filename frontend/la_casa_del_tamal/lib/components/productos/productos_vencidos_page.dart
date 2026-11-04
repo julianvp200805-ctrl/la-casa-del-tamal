@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/admin/admin_top_bar.dart';
-import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/components/productos/producto.dart';
 import 'package:frontend/components/productos/producto_fila.dart';
-import 'package:frontend/components/ventas/venta_titulo_row.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/productos/producto_service.dart';
 
-/// Productos vencidos: alerta roja con el total y botón para descartar cada uno.
-class ProductosVencidosPage extends StatefulWidget {
-  const ProductosVencidosPage({super.key});
+/// Pestaña "Vencidos" de Inventario: alerta roja con el total y botón para
+/// descartar cada uno.
+class VencidosVista extends StatefulWidget {
+  const VencidosVista({super.key});
 
   @override
-  State<ProductosVencidosPage> createState() => _ProductosVencidosPageState();
+  State<VencidosVista> createState() => _VencidosVistaState();
 }
 
-class _ProductosVencidosPageState extends State<ProductosVencidosPage> {
+class _VencidosVistaState extends State<VencidosVista> {
   final ProductoService _service = ProductoService();
   late Future<List<Producto>> _futuro = _service.obtenerProductos();
 
@@ -52,35 +50,21 @@ class _ProductosVencidosPageState extends State<ProductosVencidosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppEstilos.fondoOscuro,
-      floatingActionButton: const ChatFab(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const AdminTopBar(),
-            const VentaTituloRow(titulo: 'Productos vencidos'),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 80),
-                child: FutureBuilder<List<Producto>>(
-                  future: _futuro,
-                  builder: (context, snap) {
-                    if (snap.connectionState != ConnectionState.done) {
-                      return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
-                    }
-                    if (snap.hasError) {
-                      return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
-                    }
-                    final vencidos = snap.data!.where((p) => p.vencido).toList();
-                    if (vencidos.isEmpty) return const AppEmptyState(mensaje: 'Todo al día: no hay productos vencidos');
-                    return _contenido(vencidos);
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: FutureBuilder<List<Producto>>(
+        future: _futuro,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
+          }
+          if (snap.hasError) {
+            return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
+          }
+          final vencidos = snap.data!.where((p) => p.vencido).toList();
+          if (vencidos.isEmpty) return const AppEmptyState(mensaje: 'Todo al día: no hay productos vencidos');
+          return _contenido(vencidos);
+        },
       ),
     );
   }

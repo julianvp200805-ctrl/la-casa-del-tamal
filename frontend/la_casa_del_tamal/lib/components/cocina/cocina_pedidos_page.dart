@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/cocina/cocina_top_bar.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/mesero/mesero.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
+/// Bandeja de cocina: cada pedido es un acordeón con una casilla por plato y
+/// el botón "Entregar" (maqueta 30).
 class CocinaPedidosPage extends StatefulWidget {
   const CocinaPedidosPage({super.key});
 
@@ -15,6 +18,7 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
   final MeseroService _service = MeseroService();
   List<PedidoProceso> _pedidosCocina = [];
   final Map<String, List<bool>> _checkstates = {};
+  final Set<String> _abiertos = {};
   bool _cargando = true;
   String? _error;
   Timer? _timer;
@@ -82,17 +86,11 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.white), onPressed: () => Navigator.pop(context)),
-                  const Text('Bandeja Pedidos', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'serif')),
-                ],
-              ),
-            ),
+            const CocinaTopBar(),
+            const TituloCocina(texto: 'Bandeja Pedidos'),
             Expanded(child: _contenido()),
           ],
         ),
@@ -101,86 +99,123 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
   }
 
   Widget _contenido() {
-    if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
+    if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.acentoCocina));
     if (_error != null) return Center(child: Text('Error: $_error', style: const TextStyle(color: Colors.white70)));
-    if (_pedidosCocina.isEmpty) {
-      return const Center(child: Text('No hay mas pedidos', style: TextStyle(color: AppEstilos.colorDorado, fontSize: 16, fontWeight: FontWeight.bold)));
-    }
+    if (_pedidosCocina.isEmpty) return const Align(alignment: Alignment.topCenter, child: _BandaVacia());
 
     return RefreshIndicator(
       onRefresh: _cargarPedidos,
-      color: AppEstilos.verdeBoton,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _pedidosCocina.length,
-        itemBuilder: (context, idx) => _buildTarjetaPedido(_pedidosCocina[idx]),
-      ),
-    );
-  }
-
-  Widget _buildTarjetaPedido(PedidoProceso p) {
-    final esPendiente = p.estado == 'pendiente';
-
-    // Platos reales del pedido: "2 Tamal de pollo", "1 Ajaco...", etc.
-    final itemsPlatos = p.items.map((i) => '${i.cantidad} x ${i.nombre}').toList();
-
-    if (!_checkstates.containsKey(p.id) || _checkstates[p.id]!.length != itemsPlatos.length) {
-      _checkstates[p.id] = List.generate(itemsPlatos.length, (_) => false);
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(color: AppEstilos.inputOscuro, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppEstilos.bordeOscuro)),
-      child: ExpansionTile(
-        iconColor: AppEstilos.colorDorado,
-        collapsedIconColor: AppEstilos.colorDorado,
-        leading: Icon(Icons.menu_book, color: esPendiente ? AppEstilos.rojoChip : AppEstilos.verdeBoton),
-        title: Row(
-          children: [
-            Text('${p.cabecera} ${p.numero}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 8),
-            Text(esPendiente ? '[PENDIENTE]' : '[EN COCINA]', style: TextStyle(color: esPendiente ? AppEstilos.rojoChip : AppEstilos.verdeBoton, fontSize: 11, fontWeight: FontWeight.bold)),
-          ],
-        ),
+      color: AppEstilos.acentoCocina,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: [
-                const Divider(color: Colors.white24),
-                ...List.generate(itemsPlatos.length, (i) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(itemsPlatos[i].trim(), style: const TextStyle(color: Colors.white70, fontSize: 14)),
-                      Checkbox(
-                        value: _checkstates[p.id]![i],
-                        activeColor: AppEstilos.verdeBoton,
-                        checkColor: Colors.black,
-                        side: const BorderSide(color: Colors.white54),
-                        onChanged: esPendiente ? null : (v) => setState(() => _checkstates[p.id]![i] = v!),
-                      ),
-                    ],
-                  );
-                }),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: () => _cambiarEstado(p, esPendiente ? 'en_proceso' : 'listo'),
-                    style: ElevatedButton.styleFrom(backgroundColor: esPendiente ? AppEstilos.verdeBoton : AppEstilos.colorDorado),
-                    child: Text(
-                      esPendiente ? 'Empezar Preparación' : 'Marcar como Listo',
-                      style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          )
+          for (final p in _pedidosCocina) _tarjetaPedido(p),
+          const Padding(padding: EdgeInsets.only(top: 10), child: _BandaVacia()),
         ],
       ),
     );
   }
+
+  Widget _tarjetaPedido(PedidoProceso p) {
+    final lineas = [for (final i in p.items) '${i.cantidad} ${i.nombre}'];
+    final esPendiente = p.estado == 'pendiente';
+    final abierto = _abiertos.contains(p.id);
+    // "personas" aún no viene del backend; se lee tolerando que falte.
+    Object? personas;
+    try { personas = (p as dynamic).personas; } catch (_) { personas = null; }
+
+    if (!_checkstates.containsKey(p.id) || _checkstates[p.id]!.length != lineas.length) {
+      _checkstates[p.id] = List.generate(lineas.length, (_) => false);
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(14, 4, 8, 10),
+      decoration: BoxDecoration(
+        color: AppEstilos.platoMesero,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppEstilos.bordeOscuro),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => abierto ? _abiertos.remove(p.id) : _abiertos.add(p.id)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.menu_book, color: Colors.white70),
+                  const SizedBox(width: 10),
+                  Text('${p.cabecera} ${p.numero}', style: const TextStyle(color: Colors.white, fontSize: 15)),
+                  const SizedBox(width: 10),
+                  if (personas != null && '$personas' != '0')
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(8)),
+                      child: Text('personas $personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                    ),
+                  const Spacer(),
+                  Icon(abierto ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: AppEstilos.acentoCocina, size: 26),
+                ],
+              ),
+            ),
+          ),
+          if (abierto) ...[
+            for (var i = 0; i < lineas.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(lineas[i].trim(), style: const TextStyle(color: Colors.white70, fontSize: 13))),
+                    SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Checkbox(
+                        value: _checkstates[p.id]![i],
+                        fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : Colors.transparent),
+                        checkColor: Colors.black87,
+                        side: const BorderSide(color: Colors.white70),
+                        onChanged: esPendiente ? null : (v) => setState(() => _checkstates[p.id]![i] = v!),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                height: 30,
+                child: ElevatedButton(
+                  onPressed: () => _cambiarEstado(p, esPendiente ? 'en_proceso' : 'listo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppEstilos.botonMesero,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(esPendiente ? 'Preparar' : 'Entregar',
+                      style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// La maqueta cierra la bandeja con la banda ámbar "No hay mas pedidos".
+class _BandaVacia extends StatelessWidget {
+  const _BandaVacia();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        color: AppEstilos.botonMesero,
+        child: const Text('No hay mas pedidos',
+            textAlign: TextAlign.center, style: TextStyle(color: Colors.black87, fontSize: 14, fontFamily: 'serif')),
+      );
 }

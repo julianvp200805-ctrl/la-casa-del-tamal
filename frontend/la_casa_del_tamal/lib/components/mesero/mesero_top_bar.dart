@@ -53,7 +53,7 @@ class MeseroTopBar extends StatelessWidget {
               onTap: () => Navigator.of(context).maybePop(),
               child: const Padding(
                 padding: EdgeInsets.all(4),
-                child: Icon(Icons.logout, color: Colors.white70, size: 28),
+                child: Icon(Icons.subdirectory_arrow_left, color: Colors.white70, size: 28),
               ),
             ),
             const Spacer(),

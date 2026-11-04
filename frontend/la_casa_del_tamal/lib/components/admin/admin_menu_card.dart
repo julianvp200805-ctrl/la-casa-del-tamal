@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ventas/venta_item_card.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
 
-/// Tarjeta de un plato en "Modificar menu": foto, nombre, descripción,
-/// precio, y los íconos de eliminar (arriba) y editar (abajo).
+/// Tarjeta de un plato en "Modificar menu": foto, nombre, descripción y los
+/// íconos de eliminar (arriba) y editar (abajo). La maqueta no muestra precio.
 class AdminMenuCard extends StatelessWidget {
   final MenuItem plato;
   final VoidCallback onEditar;
@@ -17,7 +16,7 @@ class AdminMenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(12, 10, 4, 6),
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 4),
       decoration: BoxDecoration(
         color: AppEstilos.inputOscuro,
         borderRadius: BorderRadius.circular(12),
@@ -37,16 +36,15 @@ class AdminMenuCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(plato.nombre, style: const TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'serif')),
+                Text(plato.nombre, style: const TextStyle(color: Colors.white70, fontSize: 15, fontFamily: 'serif')),
                 const SizedBox(height: 4),
                 if ((plato.descripcion ?? '').isNotEmpty)
-                  Text(plato.descripcion!, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                const SizedBox(height: 4),
-                Text('\$${formatoMoneda(plato.precio)}', style: const TextStyle(color: AppEstilos.verdeAccion, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
               ],
             ),
           ),
           Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.delete, color: AppEstilos.verdeAccion, size: 20), onPressed: onEliminar),
               IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.edit, color: AppEstilos.verdeAccion, size: 18), onPressed: onEditar),

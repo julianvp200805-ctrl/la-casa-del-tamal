@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/gerente/gerent.dart';
+import 'package:frontend/components/admin/admin_shell.dart';
 import 'package:frontend/components/inicio/registro_page.dart'; 
-import 'package:frontend/components/mesero/mesero_home_page.dart';
-import 'package:frontend/components/cocina/cocina_home_page.dart'; 
+import 'package:frontend/components/mesero/mesero_shell.dart';
+import 'package:frontend/components/cocina/cocina_shell.dart'; 
 import 'package:frontend/components/recuperar/boton_verde.dart';
 import 'package:frontend/components/recuperar/recuperar_contrasena.dart';
 import 'package:frontend/core/colores.dart';
@@ -46,10 +46,10 @@ class _InicioSesionState extends State<InicioSesion> {
       final rol = (usuario.rol ?? '').toLowerCase().trim();
       
       final Widget? destino = rol == 'admin'
-          ? const AdminHomePage()
+          ? const AdminShell()
           : (rol == 'mesero' 
-              ? const MeseroHomePage() 
-              : (rol == 'cocina' ? const CocinaHomePage() : null));
+              ? const MeseroShell()
+              : (rol == 'cocina' ? const CocinaShell() : null));
 
       if (destino == null) {
         await _userService.cerrarSesion();
@@ -89,14 +89,15 @@ class _InicioSesionState extends State<InicioSesion> {
             children: [
               const EncabezadoInicio(),
               const SizedBox(height: 28),
-              CampoInicio(controller: _emailController, hint: 'Correo electrónico', icono: Icons.mail_outline),
+              CampoInicio(controller: _emailController, hint: 'correo', icono: Icons.mail_outline),
               const SizedBox(height: 20),
-              CampoInicio(controller: _passwordController, hint: 'Contraseña', icono: Icons.lock_outline, esPassword: true),
-              const SizedBox(height: 16),
-              Center(
+              CampoInicio(controller: _passwordController, hint: 'Ingresé su contraseña', icono: Icons.lock_outline, esPassword: true),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecuperarContrasenaPage())),
-                  child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: AppEstilos.verdeBoton, fontWeight: FontWeight.w600, fontSize: 15)),
+                  child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: AppEstilos.verdeBoton, fontWeight: FontWeight.w600, fontSize: 14)),
                 ),
               ),
               const SizedBox(height: 36),
@@ -127,7 +128,12 @@ class _InicioSesionState extends State<InicioSesion> {
                   ),
                   child: const Text(
                     'Registrarse',
-                    style: TextStyle(color: AppEstilos.colorDorado, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: AppEstilos.colorDorado,
+                      fontSize: 16,
+                      fontFamily: 'serif',
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

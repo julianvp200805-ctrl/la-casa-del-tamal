@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/admin/admin_top_bar.dart';
-import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/components/productos/producto.dart';
 import 'package:frontend/components/productos/producto_fila.dart';
 import 'package:frontend/components/productos/productos_from_sheet.dart';
-import 'package:frontend/components/ventas/venta_titulo_row.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/productos/producto_service.dart';
 
-/// Productos: tabla Producto | Lote con los datos reales del inventario.
-class ProductosPage extends StatefulWidget {
-  const ProductosPage({super.key});
+/// Pestaña "Productos" de Inventario: tabla Producto | Lote con los datos
+/// reales. La página dueña (InventarioPage) pone barra, título y botonera.
+class ProductosVista extends StatefulWidget {
+  const ProductosVista({super.key});
 
   @override
-  State<ProductosPage> createState() => _ProductosPageState();
+  State<ProductosVista> createState() => _ProductosVistaState();
 }
 
-class _ProductosPageState extends State<ProductosPage> {
+class _ProductosVistaState extends State<ProductosVista> {
   final ProductoService _service = ProductoService();
   late Future<List<Producto>> _futuro = _service.obtenerProductos();
 
@@ -34,50 +32,29 @@ class _ProductosPageState extends State<ProductosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppEstilos.fondoOscuro,
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.small(
-            heroTag: 'mas_producto',
-            backgroundColor: AppEstilos.botonMas,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            onPressed: _agregar,
-            child: const Icon(Icons.add, color: Colors.black),
-          ),
-          const SizedBox(height: 12),
-          const ChatFab(),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const AdminTopBar(),
-            const VentaTituloRow(titulo: 'Productos'),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-                child: FutureBuilder<List<Producto>>(
-                  future: _futuro,
-                  builder: (context, snap) {
-                    if (snap.connectionState != ConnectionState.done) {
-                      return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
-                    }
-                    if (snap.hasError) {
-                      return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
-                    }
-                    final lista = [...snap.data!]..sort((a, b) => (a.vencimiento ?? DateTime(9999)).compareTo(b.vencimiento ?? DateTime(9999)));
-                    if (lista.isEmpty) return const AppEmptyState(mensaje: 'No hay productos registrados.\nUsa el botón + para agregar.');
-                    return _tabla(lista);
-                  },
-                ),
-              ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
+            child: FutureBuilder<List<Producto>>(
+              future: _futuro,
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
+                }
+                if (snap.hasError) {
+                  return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
+                }
+                final lista = [...snap.data!]..sort((a, b) => (a.vencimiento ?? DateTime(9999)).compareTo(b.vencimiento ?? DateTime(9999)));
+                if (lista.isEmpty) return const AppEmptyState(mensaje: 'No hay productos registrados.\nUsa el botón + para agregar.');
+                return _tabla(lista);
+              },
             ),
-          ],
+          ),
         ),
-      ),
+        Positioned(right: 24, bottom: 24, child: _BotonMas(onTap: _agregar)),
+      ],
     );
   }
 
@@ -102,6 +79,30 @@ class _ProductosPageState extends State<ProductosPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Cuadrado verde con + de la maqueta. Botón normal, no FAB: el FAB ya lo usa
+/// el shell para Tamalin y se montarían uno sobre otro.
+class _BotonMas extends StatelessWidget {
+  final VoidCallback onTap;
+  const _BotonMas({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppEstilos.botonMas,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: const SizedBox(
+          width: 46,
+          height: 46,
+          child: Icon(Icons.add, color: Colors.black, size: 26),
+        ),
       ),
     );
   }

@@ -72,7 +72,9 @@ class _ChatBotPageState extends State<ChatBotPage> {
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.of(context).maybePop()),
                   const SizedBox(width: 6),
-                  const Text('Tamalin - Asistente', style: TextStyle(color: AppEstilos.verdeAccion, fontSize: 16)),
+                  const Flexible(
+                    child: Text('Tamalin - Asistente', style: TextStyle(color: AppEstilos.verdeAccion, fontSize: 16), overflow: TextOverflow.ellipsis),
+                  ),
                 ],
               ),
             ),

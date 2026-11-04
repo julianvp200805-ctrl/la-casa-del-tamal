@@ -122,16 +122,16 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
                 IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
                 const Text('Recupera tu contraseña', style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Te enviaremos un código, ingrésalo para que puedas establecer una contraseña nueva.', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                const Text('Te enviaremos un código, ingrésalo para que puedas tener una contraseña nueva.', style: TextStyle(color: Colors.white60, fontSize: 13)),
                 const SizedBox(height: 24),
-                CampoInicio(controller: _emailCtrl, hint: 'Correo electrónico', icono: Icons.mail_outline),
+                CampoInicio(controller: _emailCtrl, hint: 'Correo', icono: Icons.mail_outline),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity, height: 50,
                   child: ElevatedButton(
                     onPressed: _cargandoCodigo ? null : _solicitarCodigoBrevo,
                     style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: _cargandoCodigo ? const CircularProgressIndicator(color: Colors.black) : const Text('Enviar código', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: _cargandoCodigo ? const CircularProgressIndicator(color: Colors.black) : const Text('Enviar código', style: TextStyle(color: Colors.black87, fontSize: 16, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 28),
@@ -148,7 +148,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
                   child: ElevatedButton(
                     onPressed: (_cargandoVerificacion || !_codigoEnviadoExitosamente) ? null : _procesarRestablecimiento,
                     style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: _cargandoVerificacion ? const CircularProgressIndicator(color: Colors.black) : const Text('Verificar', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: _cargandoVerificacion ? const CircularProgressIndicator(color: Colors.black) : const Text('Verificar', style: TextStyle(color: Colors.black87, fontSize: 16, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

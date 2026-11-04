@@ -31,7 +31,7 @@ class EncabezadoInicio extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         const Text(
-          'Hola de nuevo',
+          'Bienvenido',
           style: TextStyle(
             color: Colors.white,
             fontSize: 26,

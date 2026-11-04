@@ -274,6 +274,9 @@ class _RegistroPageState extends State<RegistroPage> {
                 _lbl('Fecha de nacimiento'),
                 _buildCampoFecha(),
                 const SizedBox(height: 12),
+                _lbl('Rol'),
+                _buildCampoRol(),
+                const SizedBox(height: 12),
                 _lbl('Contraseña'),
                 CampoInicio(
                   controller: _passCtrl,
@@ -328,11 +331,12 @@ class _RegistroPageState extends State<RegistroPage> {
     ),
   );
 
-  InputDecoration _dropDeco(IconData ico) => InputDecoration(
-    prefixIcon: Icon(ico, color: AppEstilos.verdeBoton),
+  // Sin prefijo de icono: la maqueta muestra 'C.C.' solo y el campo es angosto
+  // (2/5 del ancho), que con icono no da para el texto más la flecha.
+  InputDecoration _dropDeco() => InputDecoration(
     filled: true,
     fillColor: Colors.white.withValues(alpha: 0.07),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(15),
       borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
@@ -345,9 +349,10 @@ class _RegistroPageState extends State<RegistroPage> {
 
   Widget _buildDropDoc() => DropdownButtonFormField<String>(
     initialValue: _tipoDoc,
+    isDense: true,
     dropdownColor: AppEstilos.inputOscuro,
     style: const TextStyle(color: Colors.white, fontSize: 15),
-    decoration: _dropDeco(Icons.assignment_ind_outlined),
+    decoration: _dropDeco(),
     items: ['C.C.', 'C.E.', 'T.I.', 'Pasaporte']
         .map((t) => DropdownMenuItem(value: t, child: Text(t)))
         .toList(),
@@ -383,8 +388,39 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-  Widget _buildRequisitos() {
-    Widget item(String txt, bool ok) => Padding(
+  // El rol no se elige: lo impone el código interno verificado contra el backend.
+  Widget _buildCampoRol() {
+    final texto = _verificandoCodigo
+        ? 'Verificando...'
+        : (_rolDelCodigo == null ? 'Pendiente' : _tituloRol(_rolDelCodigo!));
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.person_outline, color: AppEstilos.verdeBoton, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              texto,
+              style: TextStyle(
+                color: _rolDelCodigo == null ? Colors.white54 : Colors.white,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const Icon(Icons.expand_more, color: AppEstilos.colorDorado, size: 22),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequisitos() {    Widget item(String txt, bool ok) => Padding(
       padding: const EdgeInsets.only(bottom: 5, left: 6),
       child: Row(
         children: [

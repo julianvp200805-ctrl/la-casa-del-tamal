@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/admin/admin_top_bar.dart';
-import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/components/ventas/venta_item_card.dart';
-import 'package:frontend/components/ventas/venta_titulo_row.dart';
 import 'package:frontend/components/ventas/venta_total_card.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/pedido/pedido_service.dart';
 
 const _meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-/// Ventas del mes: total del mes y el total de cada semana (barras). Cada
-/// semana se pide al backend por su rango exacto de fechas.
-class VentasMesPage extends StatefulWidget {
-  const VentasMesPage({super.key});
+/// Pestaña "Mes" de Ventas: total del mes y el total de cada semana (barras).
+/// Cada semana se pide al backend por su rango exacto de fechas.
+class VentasMesVista extends StatefulWidget {
+  const VentasMesVista({super.key});
 
   @override
-  State<VentasMesPage> createState() => _VentasMesPageState();
+  State<VentasMesVista> createState() => _VentasMesVistaState();
 }
 
-class _VentasMesPageState extends State<VentasMesPage> {
+class _VentasMesVistaState extends State<VentasMesVista> {
   final PedidoService _pedidoService = PedidoService();
   int _mes = DateTime.now().month;
   late Future<List<ReporteVentas>> _futuro = _cargarMes(_mes);
@@ -43,39 +40,25 @@ class _VentasMesPageState extends State<VentasMesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppEstilos.fondoOscuro,
-      floatingActionButton: const ChatFab(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const AdminTopBar(),
-            const VentaTituloRow(titulo: 'Mes', centrado: true),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 80),
-                child: Column(
-                  children: [
-                    _selectorMes(),
-                    const SizedBox(height: 16),
-                    FutureBuilder<List<ReporteVentas>>(
-                      future: _futuro,
-                      builder: (context, snap) {
-                        if (snap.connectionState != ConnectionState.done) {
-                          return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
-                        }
-                        if (snap.hasError) {
-                          return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: () => _elegir(_mes));
-                        }
-                        return _resumen(snap.data!.map((r) => r.totalVentas).toList());
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Column(
+        children: [
+          _selectorMes(),
+          const SizedBox(height: 16),
+          FutureBuilder<List<ReporteVentas>>(
+            future: _futuro,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Padding(padding: EdgeInsets.symmetric(vertical: 48), child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
+              }
+              if (snap.hasError) {
+                return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: () => _elegir(_mes));
+              }
+              return _resumen(snap.data!.map((r) => r.totalVentas).toList());
+            },
+          ),
+        ],
       ),
     );
   }

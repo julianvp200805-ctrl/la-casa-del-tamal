@@ -74,6 +74,7 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: AppEstilos.fondoOscuro,
         body: SafeArea(
+          bottom: false,
           child: Column(
             children: [
               const MeseroTopBar(),

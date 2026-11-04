@@ -71,4 +71,10 @@ class AppEstilos {
   static const Color meseroOliva = Color(0xFF97B510); // "Mesero" y perfil
   static const Color platoMesero = Color(0xFF35433D); // tarjeta de cada plato
   static const Color botonMesero = Color(0xFFB28C37); // botón "Hacer pedido"
+
+  // ---- Barra de navegación inferior (medidos de tus mockups) ----
+  static const Color fondoBarra = Color(0xFF0D1411); // tira inferior, más oscura que el fondo
+  static const Color bordeBarra = Color(0xFF223028); // filete superior de la barra
+  static const Color textoBarraInactivo = Color(0xFF7C8A80); // pestañas sin seleccionar
+  static const Color acentoCocina = Color(0xFFD8A33F); // icono y pestaña activa de cocina
 }

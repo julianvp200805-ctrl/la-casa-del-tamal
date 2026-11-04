@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/admin/admin_menu_card.dart';
 import 'package:frontend/components/admin/admin_menu_from.dart';
 import 'package:frontend/components/admin/admin_top_bar.dart';
-import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/components/ventas/venta_titulo_row.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
@@ -69,8 +68,8 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
-      floatingActionButton: const ChatFab(),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             const AdminTopBar(),

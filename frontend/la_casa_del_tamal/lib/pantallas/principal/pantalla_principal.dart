@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/components/inicio/inicio_sesion.dart';
-import 'package:frontend/components/mesero/pedido_controles.dart' show formatoPesos;
 import 'package:frontend/components/productos/producto_detalle_page.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
@@ -16,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final MenuService _menuService = MenuService();
-  String _categoriaActiva = 'Almuerzo';
+  String _categoriaActiva = 'almuerzo';
   List<MenuItem> _platosBackend = [];
   bool _cargando = true;
   String? _errorMsg;
@@ -25,11 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const Duration _intervaloSondeo = Duration(seconds: 15);
 
+  // En minúscula porque así los dibuja la maqueta; el filtro compara normalizados
+  // (sin acentos ni mayúsculas), así que sigue casando con 'Comida Rápida' del backend.
   final List<String> _categorias = const [
-    'Desayuno',
-    'Almuerzo',
-    'Comida Rápida',
-    'Bebidas'
+    'desayuno',
+    'almuerzo',
+    'comida rapida',
+    'bebidas'
   ];
 
   @override
@@ -162,10 +163,33 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildTopBar(context),
             const Padding(
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: Row(
+                children: [
+                  CircleAvatar(radius: 4, backgroundColor: AppEstilos.verdeBoton),
+                  SizedBox(width: 8),
+                  Text(
+                    'Bienvenido',
+                    style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                'El sabor de casa\nen cada tamal.',
-                style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1.2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'El sabor de casa',
+                    style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1.2),
+                  ),
+                  Text(
+                    'en cada tamal.',
+                    style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1.2),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
@@ -287,11 +311,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
-                        Text(plato.descripcion ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white60, fontSize: 12)),
-                        const SizedBox(height: 6),
-                        Text('\$${formatoPesos(plato.precio)}', style: const TextStyle(color: AppEstilos.colorDorado, fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text(plato.descripcion ?? '', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.35)),
                       ],
                     ),
                   ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
 
-/// Barra de escribir del chat: campo redondeado y botón verde de enviar.
+/// Barra de escribir del chat: campo verde y botón circular de enviar, como
+/// la maqueta 18 (el texto del campo es oscuro sobre verde, no al revés).
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final bool enviando;
@@ -24,29 +25,19 @@ class ChatInput extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppEstilos.inputOscuro, // Fondo gris oscuro minimalista
+                color: AppEstilos.verdeAccion,
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 1,
-                ),
               ),
               child: TextField(
                 controller: controller,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onEnviar(),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Escribe tu pregunta...',
-                  hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    fontSize: 14,
-                  ),
+                  hintText: 'Escribe tu pregunta..',
+                  hintStyle: const TextStyle(color: Colors.black54, fontSize: 14),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   filled: true,
                   fillColor: Colors.transparent,
                 ),
@@ -59,7 +50,7 @@ class ChatInput extends StatelessWidget {
             shape: const CircleBorder(),
             elevation: 2,
             child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.black87, size: 20),
+              icon: const Icon(Icons.send, color: Colors.white, size: 20),
               onPressed: enviando ? null : onEnviar,
             ),
           ),

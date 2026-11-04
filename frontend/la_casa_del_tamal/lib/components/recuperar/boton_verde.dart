@@ -19,7 +19,7 @@ class BotonVerde extends StatelessWidget {
     required this.onPressed,
     this.cargando = false,
     this.alto = 56,
-    this.radio = 30,
+    this.radio = 14,
     this.colorTexto = Colors.black,
     this.colorDeshabilitado,
     this.tamanoSpinner = 24,
@@ -65,6 +65,7 @@ class BotonVerde extends StatelessWidget {
                 texto,
                 style: TextStyle(
                   fontSize: 16,
+                  fontFamily: 'serif',
                   fontWeight: FontWeight.bold,
                   color: colorTexto,
                 ),
