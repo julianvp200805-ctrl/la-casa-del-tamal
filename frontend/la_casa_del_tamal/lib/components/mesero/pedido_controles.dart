@@ -21,7 +21,7 @@ class TituloMesero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(36, 8, 24, 16),
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
         child: SizedBox(
           width: double.infinity,
           child: Text(
@@ -109,7 +109,8 @@ class ResumenPedido extends StatelessWidget {
       );
 }
 
-/// Botón dorado 162 x 40.
+/// Botón dorado "Hacer pedido". Altura 48 y texto con altura de línea fija:
+/// con 40 el serif quedaba recortado contra el borde inferior.
 class BotonHacerPedido extends StatelessWidget {
   final int cantidad;
   final bool enviando;
@@ -118,20 +119,25 @@ class BotonHacerPedido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
-        child: SizedBox(
-          width: 162,
-          height: 40,
-          child: ElevatedButton(
-            onPressed: enviando ? null : onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppEstilos.botonMesero,
-              elevation: 0,
-              shape: const StadiumBorder(side: BorderSide(color: Color(0xFFD9B35A))),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+        child: Center(
+          child: SizedBox(
+            width: 210,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: enviando ? null : onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppEstilos.botonMesero,
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                padding: EdgeInsets.zero,
+                shape: const StadiumBorder(),
+              ),
+              child: enviando
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black54))
+                  : const Text('Hacer pedido',
+                      style: TextStyle(color: Colors.black87, fontSize: 15, fontFamily: 'serif', height: 1)),
             ),
-            child: enviando
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Hacer pedido', style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'serif')),
           ),
         ),
       );

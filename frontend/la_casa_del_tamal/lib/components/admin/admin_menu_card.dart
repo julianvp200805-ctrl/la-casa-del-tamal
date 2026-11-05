@@ -4,42 +4,64 @@ import 'package:frontend/services/menu/menu_services.dart';
 
 
 /// Tarjeta de un plato en "Modificar menu": foto, nombre, descripción y los
-/// íconos de eliminar (arriba) y editar (abajo). La maqueta no muestra precio.
+/// íconos de eliminar (arriba) y editar (abajo). El disco verde de la esquina
+/// es el interruptor de disponibilidad: "-" agota el plato y "+" lo reactiva.
 class AdminMenuCard extends StatelessWidget {
   final MenuItem plato;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
+  final VoidCallback onToggleDisponibilidad;
 
-  const AdminMenuCard({super.key, required this.plato, required this.onEditar, required this.onEliminar});
+  const AdminMenuCard({
+    super.key,
+    required this.plato,
+    required this.onEditar,
+    required this.onEliminar,
+    required this.onToggleDisponibilidad,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final agotado = !plato.disponible;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(12, 8, 4, 4),
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
       decoration: BoxDecoration(
         color: AppEstilos.inputOscuro,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppEstilos.bordeOscuro),
+        border: Border.all(color: agotado ? AppEstilos.rojoChip : AppEstilos.bordeOscuro),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
-                ? Image.network(plato.imagenUrl!, width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _vacia())
-                : _vacia(),
+          Column(
+            children: [
+              _insigniaDisponibilidad(agotado),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Opacity(
+                  opacity: agotado ? 0.35 : 1,
+                  child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
+                      ? Image.network(plato.imagenUrl!, width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _vacia())
+                      : _vacia(),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(plato.nombre, style: const TextStyle(color: Colors.white70, fontSize: 15, fontFamily: 'serif')),
+                Text(plato.nombre, style: TextStyle(color: agotado ? Colors.white38 : Colors.white70, fontSize: 15, fontFamily: 'serif')),
                 const SizedBox(height: 4),
                 if ((plato.descripcion ?? '').isNotEmpty)
                   Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                if (agotado) ...[
+                  const SizedBox(height: 6),
+                  const _PillAgotado(),
+                ],
               ],
             ),
           ),
@@ -55,5 +77,36 @@ class AdminMenuCard extends StatelessWidget {
     );
   }
 
+  Widget _insigniaDisponibilidad(bool agotado) {
+    return Tooltip(
+      message: agotado ? 'Reactivar plato' : 'Marcar como agotado',
+      child: GestureDetector(
+        onTap: onToggleDisponibilidad,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: agotado ? AppEstilos.rojoVencido : AppEstilos.verdeBoton,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(agotado ? Icons.add : Icons.remove, size: 16, color: AppEstilos.fondoOscuro),
+        ),
+      ),
+    );
+  }
+
   Widget _vacia() => Container(width: 64, height: 64, color: AppEstilos.bordeOscuro, child: const Icon(Icons.restaurant, color: Colors.white38));
+}
+
+class _PillAgotado extends StatelessWidget {
+  const _PillAgotado();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: AppEstilos.rojoFondo, borderRadius: BorderRadius.circular(10)),
+      child: const Text('Agotado', style: TextStyle(color: AppEstilos.rojoVencido, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
 }

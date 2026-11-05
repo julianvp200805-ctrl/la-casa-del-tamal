@@ -1,5 +1,5 @@
 import express from "express";
-import { listarMenu, obtenerMenu, obtenerPorCat, crear, editar, eliminar, versionMenu } from "../controllers/menu.js";
+import { listarMenu, obtenerMenu, obtenerPorCat, crear, editar, eliminar, versionMenu, cambiarDisponibilidad } from "../controllers/menu.js";
 import {verificarToken, verificarAdmin} from "../middlewares/userMiddleware.js"
 
 import { upload } from "../config/cloudinary.js";
@@ -24,5 +24,7 @@ router.post('/crear_menu', verificarToken, verificarAdmin, upload.single('imagen
 router.put('/menu/:id', verificarToken, verificarAdmin, upload.single('imagen'), editar);
 // DELETE - Eliminar plato
 router.delete('/menu/:id', verificarToken, verificarAdmin, eliminar);
+// PATCH - Agotar / reactivar un plato sin borrarlo
+router.patch('/menu/:id/disponible', verificarToken, verificarAdmin, cambiarDisponibilidad);
 
 export default router;

@@ -31,6 +31,10 @@ export const crearPedidoMesero = async (req, res) => {
       }
       const { data: plato, error } = await obtenerPlato(it.menu_id);
       if (error || !plato) return res.status(400).json({ error: 'Un plato del pedido ya no existe en el menú' });
+      // El admin lo marcó como agotado: ni el mesero puede tomarlo.
+      if (plato.disponible === false) {
+        return res.status(400).json({ error: `"${plato.nombre}" está agotado ahora mismo` });
+      }
       const precioUnitario = Number(plato.precio);
       const subtotal = precioUnitario * cantidad;
       total += subtotal;

@@ -63,13 +63,13 @@ class SelectorMesa extends StatelessWidget {
               onSelected: onPersonas,
               itemBuilder: (_) => [
                 for (int i = 1; i <= 20; i++)
-                  PopupMenuItem(value: i, child: Text('$i personas', style: const TextStyle(color: Colors.white))),
+                  PopupMenuItem(value: i, child: Text(i == 1 ? '1 persona' : '$i personas', style: const TextStyle(color: Colors.white))),
               ],
               child: Container(
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(8)),
-                child: Text('$personas personas', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                child: Text(personas == 1 ? '1 persona' : '$personas personas', style: const TextStyle(color: Colors.white70, fontSize: 13)),
               ),
             ),
           ),

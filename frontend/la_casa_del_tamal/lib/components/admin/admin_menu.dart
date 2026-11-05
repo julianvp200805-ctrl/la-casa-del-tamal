@@ -41,6 +41,17 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
     }
   }
 
+  Future<void> _toggleDisponibilidad(MenuItem plato) async {
+    try {
+      final msg = await _menuService.marcarDisponibilidad(plato.id, !plato.disponible);
+      if (!mounted) return;
+      _mensaje(msg);
+      _recargar();
+    } catch (e) {
+      if (mounted) _mensaje(e.toString(), esError: true);
+    }
+  }
+
   Future<void> _eliminar(MenuItem plato) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -89,7 +100,13 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 90),
                       children: [
-                        for (final p in snap.data!) AdminMenuCard(plato: p, onEditar: () => _abrirFormulario(plato: p), onEliminar: () => _eliminar(p)),
+                        for (final p in snap.data!)
+                          AdminMenuCard(
+                            plato: p,
+                            onEditar: () => _abrirFormulario(plato: p),
+                            onEliminar: () => _eliminar(p),
+                            onToggleDisponibilidad: () => _toggleDisponibilidad(p),
+                          ),
                         _botonAgregar(),
                       ],
                     ),

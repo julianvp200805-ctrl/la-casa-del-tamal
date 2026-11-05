@@ -65,7 +65,8 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   Future<void> _cargar() async {
     setState(() { _cargando = true; _error = null; });
     try {
-      final platos = await _menuService.obtenerMenu();
+      // Los platos agotados no se muestran: el mesero no puede tomarlos.
+      final platos = await _menuService.obtenerMenu(soloDisponibles: true);
       if (!mounted) return;
       setState(() => _platos = platos);
     } catch (e) {

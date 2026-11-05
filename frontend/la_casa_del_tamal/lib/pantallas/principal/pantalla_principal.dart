@@ -57,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // peticiones, el sondeo detecta el cambio (de lo contrario podría
       // quedar una versión nueva guardada como referencia sin verla en pantalla).
       final huellaInicial = await _menuService.obtenerVersion();
-      final resultado = await _menuService.obtenerMenu();
+      // El cliente no ve los platos que el admin agotó; solo se piden los disponibles.
+      final resultado = await _menuService.obtenerMenu(soloDisponibles: true);
       if (mounted) {
         setState(() {
           _platosBackend = resultado;
@@ -97,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _recargarEnSilencio() async {
     if (!mounted) return;
     try {
-      final resultado = await _menuService.obtenerMenu();
+      final resultado = await _menuService.obtenerMenu(soloDisponibles: true);
       if (mounted) {
         setState(() {
           _platosBackend = resultado;

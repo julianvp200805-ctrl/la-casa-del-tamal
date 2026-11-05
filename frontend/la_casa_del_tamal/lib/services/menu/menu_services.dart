@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:frontend/services/api_response.dart';
 import 'package:frontend/services/config/api_config.dart';
 import 'package:http/http.dart' as http;
@@ -13,8 +15,9 @@ class MenuItem {
   final String? imagenUrl;
   final String? categoria;
   final String? ingredientes;
+  final bool disponible;
 
-  MenuItem({required this.id, required this.nombre, this.descripcion, required this.precio, this.stock, this.imagenUrl, this.categoria, this.ingredientes});
+  MenuItem({required this.id, required this.nombre, this.descripcion, required this.precio, this.stock, this.imagenUrl, this.categoria, this.ingredientes, this.disponible = true});
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
@@ -26,15 +29,20 @@ class MenuItem {
       imagenUrl: json['imagen_url'],
       categoria: json['categoria'],
       ingredientes: json['ingredientes'] is String ? json['ingredientes'] as String : null,
+      // Mientras la columna no exista en la base, el campo llega ausente y
+      // el plato se toma como disponible.
+      disponible: json['disponible'] != false,
     );
   }
 }
 
 class MenuService {
   // GET /menu/menu (público, no requiere token)
-  Future<List<MenuItem>> obtenerMenu() async {
+  // soloDisponibles oculta los platos que el admin marcó como agotados.
+  Future<List<MenuItem>> obtenerMenu({bool soloDisponibles = false}) async {
     try {
-      final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/menu/menu'), headers: ApiConfig.headers);
+      final url = Uri.parse('${ApiConfig.baseUrl}/menu/menu${soloDisponibles ? '?disponibles=true' : ''}');
+      final response = await http.get(url, headers: ApiConfig.headers);
       if (response.statusCode == 200) {
         return (decodeApiResponse(response) as List).map((e) => MenuItem.fromJson(e)).toList();
       }
@@ -147,6 +155,23 @@ class MenuService {
       final data = decodeApiResponse(response);
       if (response.statusCode == 200) return data['message'] ?? 'Plato eliminado';
       throw Exception(data['error'] ?? 'No se pudo eliminar el plato');
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // PATCH /menu/menu/:id/disponible (admin): agota o reactiva un plato sin
+  // borrarlo del menú.
+  Future<String> marcarDisponibilidad(String id, bool disponible) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('${ApiConfig.baseUrl}/menu/menu/$id/disponible'),
+        headers: ApiConfig.headersConToken(await _token()),
+        body: jsonEncode({'disponible': disponible}),
+      );
+      final data = decodeApiResponse(response);
+      if (response.statusCode == 200) return data['message'] ?? (disponible ? 'Plato habilitado' : 'Plato agotado');
+      throw Exception(data['error'] ?? 'No se pudo cambiar la disponibilidad');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }

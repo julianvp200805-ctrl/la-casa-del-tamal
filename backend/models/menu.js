@@ -53,6 +53,18 @@ export const eliminarPlato = async (id) => {
   return { data, error };
 };
 
+// Deshabilitar un plato temporalmente (se acabó el insumo) sin borrarlo del
+// menú ni perder su foto, precio ni categoría.
+export const marcarDisponibilidad = async (id, disponible) => {
+  const { data, error } = await supabase
+    .from('menu')
+    .update({ disponible })
+    .eq('id', id)
+    .select();
+
+  return { data, error };
+};
+
 // Huella del contenido del menú: cambia con cualquier alta, edición o borrado.
 // Ordenar por id es obligatorio: sin orden garantizado la misma tabla puede
 // devolver las filas en otro orden y la huella cambiaría sin que nadie editó.

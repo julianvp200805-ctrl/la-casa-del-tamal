@@ -1,4 +1,4 @@
-import { obtenerTodos, obtenerPorId, obtenerPorCategoria, crearPlato, actualizarPlato, eliminarPlato, obtenerFirma } from "../models/menu.js";
+import { obtenerTodos, obtenerPorId, obtenerPorCategoria, crearPlato, actualizarPlato, eliminarPlato, obtenerFirma, marcarDisponibilidad } from "../models/menu.js";
 import { createHash } from "node:crypto";
 
 // GET /menu/version — huella barata para que la pantalla pública sepa
@@ -14,14 +14,40 @@ export const versionMenu = async (_req, res) => {
   }
 };
 
-//obtener todos los platillos 
+//obtener todos los platillos
+// ?disponibles=true deja fuera los que el admin marcó como agotados. El filtro
+// se hace aquí y no en la consulta para que la pantalla pública siga funcionando
+// en las bases donde la columna disponible todavía no se ha creado.
 export const listarMenu = async (req, res) => {
   try {
     const { data, error } = await obtenerTodos();
     if (error) {
       return res.status(500).json({ error: 'Error al obtener' });
     }
-    return res.status(200).json(data);
+    const soloDisponibles = String(req.query.disponibles ?? '') === 'true';
+    const platos = soloDisponibles ? (data ?? []).filter((p) => p.disponible !== false) : data;
+    return res.status(200).json(platos);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// PATCH /menu/menu/:id/disponible  body: { disponible: true|false }
+export const cambiarDisponibilidad = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const disponible = req.body?.disponible === true || String(req.body?.disponible).toLowerCase() === 'true';
+
+    const { data, error } = await marcarDisponibilidad(id, disponible);
+    if (error) {
+      console.error('Error Supabase (disponibilidad):', error);
+      if (/disponible/.test(error.message ?? '') && /does not exist|column|schema/i.test(error.message ?? '')) {
+        return res.status(500).json({ error: 'Falta la columna "disponible" en la tabla menu. Ejecuta la migración en Supabase.' });
+      }
+      return res.status(500).json({ error: 'No se pudo cambiar la disponibilidad' });
+    }
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Plato no encontrado' });
+    return res.status(200).json({ message: disponible ? 'Plato habilitado' : 'Plato agotado', menu: data[0] });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
