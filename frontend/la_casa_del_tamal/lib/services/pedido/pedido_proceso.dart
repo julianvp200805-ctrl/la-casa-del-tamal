@@ -16,13 +16,17 @@ class ItemPedido {
   final String nombre;
   final double subtotal;
 
-  ItemPedido({required this.cantidad, required this.nombre, required this.subtotal});
+  /// Indicación del mesero para la cocina ("sin mayonesa"), vacía si no hubo.
+  final String nota;
+
+  ItemPedido({required this.cantidad, required this.nombre, required this.subtotal, this.nota = ''});
 
   factory ItemPedido.fromJson(Map<String, dynamic> json) {
     return ItemPedido(
       cantidad: (json['cantidad'] as num?)?.toInt() ?? 0,
       nombre: (json['menu'] is Map ? json['menu']['nombre'] : null) ?? 'Producto',
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      nota: (json['nota'] ?? '').toString().trim(),
     );
   }
 }

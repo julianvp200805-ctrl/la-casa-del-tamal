@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
+import 'package:frontend/core/mesas.dart';
 
 const Color _amarillo = Color(0xFFFFD60A);
 
@@ -71,38 +72,74 @@ class CategoriaTabs extends StatelessWidget {
       );
 }
 
-/// Barra "Mesa 4 / detalle ........ Valor total: 50.000"
+/// Barra "Mesa 4 / 5 personas · Tamal, Chorizo ......... Valor total: 50.000"
 class ResumenPedido extends StatelessWidget {
   final int? mesa;
   final String detalle;
   final double total;
-  const ResumenPedido({super.key, required this.mesa, required this.detalle, required this.total});
+  final int items;
+  final int notas;
+
+  const ResumenPedido({
+    super.key,
+    required this.mesa,
+    required this.detalle,
+    required this.total,
+    this.items = 0,
+    this.notas = 0,
+  });
 
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: AppEstilos.platoMesero, borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppEstilos.platoMesero,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: items > 0 ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro),
+          ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(mesa == null ? 'Mesa' : 'Mesa $mesa', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                    Text(detalle.isEmpty ? 'Sin platos' : detalle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'serif')),
+                    Text(
+                      mesa == null ? 'Mesa sin asignar' : 'Mesa $mesa · ${cupoMesa(mesa!)} personas',
+                      style: TextStyle(color: mesa == null ? Colors.white38 : Colors.white, fontSize: 13, fontFamily: 'serif'),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      detalle.isEmpty ? 'Aún no agregas platos' : detalle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: items == 0 ? Colors.white24 : Colors.white54, fontSize: 10),
+                    ),
+                    if (notas > 0) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.notes, size: 10, color: AppEstilos.meseroOliva),
+                          const SizedBox(width: 4),
+                          Text('$notas nota${notas == 1 ? '' : 's'} para cocina',
+                              style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 10)),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Text('Valor total: ${formatoPesos(total)}',
-                  style: const TextStyle(color: _amarillo, fontSize: 12, fontWeight: FontWeight.bold)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(formatoPesos(total), style: const TextStyle(color: _amarillo, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+                  Text('$items artículos', style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                ],
+              ),
             ],
           ),
         ),

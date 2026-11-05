@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/mesero/mesero_top_bar.dart';
+import 'package:frontend/components/mesero/nota_cocina_sheet.dart';
 import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/components/mesero/plato_pedido_card.dart';
 import 'package:frontend/components/mesero/selector_mesa.dart';
@@ -22,8 +23,8 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   final MeseroService _meseroService = MeseroService();
   List<MenuItem> _platos = [];
   final Map<String, int> _cant = {};
+  final Map<String, String> _notas = {};
   int? _mesa;
-  int _personas = 1; // solo visual: el backend no lo recibe
   int _categoria = 2;
   bool _cargando = true, _enviando = false;
   String? _error;
@@ -78,8 +79,25 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
 
   void _cambiar(String id, int d) => setState(() {
         final n = ((_cant[id] ?? 0) + d).clamp(0, 99);
-        n == 0 ? _cant.remove(id) : _cant[id] = n;
+        if (n == 0) {
+          _cant.remove(id);
+          _notas.remove(id); // sin plato en la cuenta no tiene sentido dejar la nota
+        } else {
+          _cant[id] = n;
+        }
       });
+
+  Future<void> _editarNota(MenuItem plato) async {
+    final nueva = await abrirNotaCocina(context, plato: plato, nota: _notas[plato.id] ?? '');
+    if (nueva == null || !mounted) return;
+    setState(() {
+      if (nueva.isEmpty) {
+        _notas.remove(plato.id);
+      } else {
+        _notas[plato.id] = nueva;
+      }
+    });
+  }
 
   void _mensaje(String t, {bool esError = false}) => ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(t), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700));
@@ -89,10 +107,13 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
     if (_totalItems == 0) return _mensaje('Agrega al menos un plato', esError: true);
     setState(() => _enviando = true);
     try {
-      await _meseroService.crearPedido(mesa: '$_mesa', cantidades: _cant);
+      await _meseroService.crearPedido(mesa: '$_mesa', cantidades: _cant, notas: _notas);
       if (!mounted) return;
       _mensaje('Pedido de la mesa $_mesa enviado a cocina');
-      setState(_cant.clear);
+      setState(() {
+        _cant.clear();
+        _notas.clear();
+      });
     } catch (e) {
       if (mounted) _mensaje(e.toString(), esError: true);
     } finally {
@@ -110,14 +131,15 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
               const MeseroTopBar(),
               const TituloMesero(texto: 'Tomar pedido'),
               CategoriaTabs(seleccionada: _categoria, onChanged: (i) => setState(() => _categoria = i)),
-              SelectorMesa(
-                mesa: _mesa,
-                onChanged: (m) => setState(() => _mesa = m),
-                personas: _personas,
-                onPersonas: (p) => setState(() => _personas = p),
-              ),
+              SelectorMesa(mesa: _mesa, onChanged: (m) => setState(() => _mesa = m)),
               Expanded(child: _contenido()),
-              ResumenPedido(mesa: _mesa, detalle: _detalle, total: _total),
+              ResumenPedido(
+                mesa: _mesa,
+                detalle: _detalle,
+                total: _total,
+                items: _totalItems,
+                notas: _notas.keys.where(_cant.containsKey).length,
+              ),
               BotonHacerPedido(cantidad: _totalItems, enviando: _enviando, onPressed: _hacerPedido),
             ],
           ),
@@ -138,8 +160,10 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
             plato: p,
             etiqueta: _etiqueta(p),
             cantidad: _cant[p.id] ?? 0,
+            nota: _notas[p.id] ?? '',
             onMas: () => _cambiar(p.id, 1),
             onMenos: () => _cambiar(p.id, -1),
+            onEditar: () => _editarNota(p),
           ),
       ],
     );

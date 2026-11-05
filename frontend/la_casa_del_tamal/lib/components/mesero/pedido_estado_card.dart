@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/core/colores.dart';
+import 'package:frontend/core/mesas.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
 const Color _verde = Color(0xFF4ADE60);
 
-/// Lee un campo de PedidoProceso sin romper si no existe.
-T? _g<T>(T Function() f) {
-  try { return f(); } catch (_) { return null; }
-}
-
-/// Tarjeta del diseño: Mesa + chip de estado, chip de personas, platos y "ver detalle".
+/// Tarjeta del diseño: Mesa + chip de estado, cupo de la mesa, platos con su
+/// nota y "ver detalle".
 class PedidoEstadoCard extends StatefulWidget {
   final PedidoProceso pedido;
   final VoidCallback onEntregar;
@@ -26,14 +23,14 @@ class _PedidoEstadoCardState extends State<PedidoEstadoCard> {
   @override
   Widget build(BuildContext context) {
     final p = widget.pedido;
-    final d = p as dynamic;
-    final items = _g(() => (d.items as List)) ?? [];
-    final lineas = [for (final i in items) '${_g(() => i.cantidad) ?? 1} ${_g(() => i.nombre) ?? ''}'];
-    final personas = _g(() => d.personas);
-    final total = _g(() => (d.total as num)) ?? 0;
+    final items = p.items;
+    // El cupo no viaja en el pedido: es el fijo de esa mesa del salón.
+    final numero = mesaNumero(p.numero);
+    final cupo = numero == null ? null : cupoMesa(numero);
+    final total = p.total;
     final listo = p.estado == 'listo';
     final etiqueta = {'listo': 'Listo', 'en_proceso': 'En proceso'}[p.estado] ?? 'Pendiente';
-    final visibles = _abierto ? lineas : lineas.take(2).toList();
+    final visibles = _abierto ? items : items.take(2).toList();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -62,15 +59,27 @@ class _PedidoEstadoCardState extends State<PedidoEstadoCard> {
               ),
             ],
           ),
-          if (personas != null && '$personas' != '0')
+          if (cupo != null)
             Container(
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
               decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(10)),
-              child: Text('$personas personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              child: Text('$cupo personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
             ),
           const SizedBox(height: 10),
-          for (final l in visibles) Text(l, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          for (final i in visibles)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${i.cantidad} ${i.nombre}', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  if (_abierto && i.nota.isNotEmpty)
+                    Text('nota: ${i.nota}',
+                        style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 11, fontStyle: FontStyle.italic)),
+                ],
+              ),
+            ),
           if (_abierto) ...[
             const SizedBox(height: 8),
             Text('Valor total: ${formatoPesos(total)}', style: const TextStyle(color: _verde, fontSize: 12)),

@@ -37,12 +37,18 @@ class MeseroService {
     }
   }
 
-  // POST /pedido/mesero  { mesa, items: [{ menu_id, cantidad }] }
-  // El precio lo calcula el backend con los datos del menú.
-  Future<void> crearPedido({required String mesa, required Map<String, int> cantidades}) => _seguro(() async {
+  // POST /pedido/mesero  { mesa, items: [{ menu_id, cantidad, nota }] }
+  // El precio lo calcula el backend con los datos del menú. `notas` lleva la
+  // indicación por plato que el mesero escribe con el lápiz ("sin cebolla").
+  Future<void> crearPedido({required String mesa, required Map<String, int> cantidades, Map<String, String> notas = const {}}) => _seguro(() async {
         final items = [
           for (final e in cantidades.entries)
-            if (e.value > 0) {'menu_id': e.key, 'cantidad': e.value},
+            if (e.value > 0)
+              {
+                'menu_id': e.key,
+                'cantidad': e.value,
+                if ((notas[e.key] ?? '').trim().isNotEmpty) 'nota': notas[e.key]!.trim(),
+              },
         ];
         final r = await http.post(
           Uri.parse('${ApiConfig.baseUrl}/pedido/mesero'),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/cocina/cocina_top_bar.dart';
 import 'package:frontend/core/colores.dart';
+import 'package:frontend/core/mesas.dart';
 import 'package:frontend/services/mesero/mesero.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
@@ -117,15 +118,15 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
   }
 
   Widget _tarjetaPedido(PedidoProceso p) {
-    final lineas = [for (final i in p.items) '${i.cantidad} ${i.nombre}'];
+    final items = p.items;
     final esPendiente = p.estado == 'pendiente';
     final abierto = _abiertos.contains(p.id);
-    // "personas" aún no viene del backend; se lee tolerando que falte.
-    Object? personas;
-    try { personas = (p as dynamic).personas; } catch (_) { personas = null; }
+    // El cupo no viene en el pedido: es el que le toca a esa mesa del salón.
+    final numero = mesaNumero(p.numero);
+    final cupo = numero == null ? null : cupoMesa(numero);
 
-    if (!_checkstates.containsKey(p.id) || _checkstates[p.id]!.length != lineas.length) {
-      _checkstates[p.id] = List.generate(lineas.length, (_) => false);
+    if (!_checkstates.containsKey(p.id) || _checkstates[p.id]!.length != items.length) {
+      _checkstates[p.id] = List.generate(items.length, (_) => false);
     }
 
     return Container(
@@ -148,11 +149,11 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
                   const SizedBox(width: 10),
                   Text('${p.cabecera} ${p.numero}', style: const TextStyle(color: Colors.white, fontSize: 15)),
                   const SizedBox(width: 10),
-                  if (personas != null && '$personas' != '0')
+                  if (cupo != null)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                       decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(8)),
-                      child: Text('personas $personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                      child: Text('$cupo personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
                     ),
                   const Spacer(),
                   Icon(abierto ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: AppEstilos.acentoCocina, size: 26),
@@ -161,12 +162,37 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
             ),
           ),
           if (abierto) ...[
-            for (var i = 0; i < lineas.length; i++)
+            for (var i = 0; i < items.length; i++)
               Padding(
-                padding: const EdgeInsets.only(bottom: 2),
+                padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(child: Text(lineas[i].trim(), style: const TextStyle(color: Colors.white70, fontSize: 13))),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${items[i].cantidad} ${items[i].nombre}'.trim(),
+                              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                          if (items[i].nota.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2, right: 8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.notes, size: 12, color: AppEstilos.acentoCocina),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(items[i].nota,
+                                        style: const TextStyle(
+                                            color: AppEstilos.acentoCocina, fontSize: 11, fontStyle: FontStyle.italic, height: 1.25)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                     SizedBox(
                       width: 34,
                       height: 34,

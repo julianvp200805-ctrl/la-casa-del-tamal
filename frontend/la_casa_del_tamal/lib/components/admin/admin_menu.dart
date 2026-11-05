@@ -79,6 +79,14 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'admin_agregar_producto',
+        onPressed: () => _abrirFormulario(),
+        backgroundColor: AppEstilos.verdeAccion,
+        foregroundColor: Colors.black87,
+        icon: const Icon(Icons.add),
+        label: const Text('Agregar producto', style: TextStyle(fontFamily: 'serif', fontSize: 14)),
+      ),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -98,7 +106,7 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                   return RefreshIndicator(
                     onRefresh: () async => _recargar(),
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 90),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
                       children: [
                         for (final p in snap.data!)
                           AdminMenuCard(
@@ -107,7 +115,6 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                             onEliminar: () => _eliminar(p),
                             onToggleDisponibilidad: () => _toggleDisponibilidad(p),
                           ),
-                        _botonAgregar(),
                       ],
                     ),
                   );
@@ -115,28 +122,6 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _botonAgregar() {
-    return Material(
-      color: AppEstilos.inputOscuro,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: AppEstilos.bordeAgregar)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => _abrirFormulario(),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add, color: AppEstilos.verdeAccion, size: 20),
-              SizedBox(width: 6),
-              Text('Agregar producto', style: TextStyle(color: AppEstilos.verdeAccion, fontSize: 14)),
-            ],
-          ),
         ),
       ),
     );

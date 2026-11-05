@@ -88,4 +88,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     _sinErrores(tester.takeException(), 'cambio de pestana');
   });
+
+  testWidgets('deslizar el cuerpo cambia de pestana', (WidgetTester tester) async {
+    await _montar(tester, const MeseroShell(), desmontar: false);
+    expect(pestanaMeseroActiva.value, 0);
+
+    await tester.dragFrom(const Offset(195, 420), const Offset(-320, 0));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pestanaMeseroActiva.value, 1, reason: 'arrastrar a la izquierda pasa a la siguiente pestana');
+
+    await tester.dragFrom(const Offset(195, 420), const Offset(320, 0));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pestanaMeseroActiva.value, 0, reason: 'arrastrar a la derecha regresa');
+
+    _sinErrores(tester.takeException(), 'deslizar pestanas');
+    await tester.pumpWidget(const SizedBox());
+  });
 }

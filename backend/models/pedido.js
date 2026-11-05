@@ -5,25 +5,36 @@ export const crearPedido = async (pedidoData) => {
   return { data, error };
 };
 
+// La columna "nota" de detalle_pedido puede no existir todavía en la base.
+// Si la consulta falla por esa columna se reintenta sin ella, así la bandeja
+// de cocina y la pantalla de estados siguen sirviendo antes de la migración.
+const reintentarSinNota = async (ejecutar) => {
+  const intento = await ejecutar(true);
+  if (intento.error && /nota/.test(intento.error.message || '')) return ejecutar(false);
+  return intento;
+};
+
 export const obtenerPedidoConDetalles = async (id) => {
-  const { data, error } = await supabase
+  const ejecutar = (conNota) => supabase
     .from('pedidos')
-    .select(`*, usuario:usuario_id(id, nombre, email), detalles:detalle_pedido(id, cantidad, precio_unitario, subtotal, menu:menu_id(id, nombre, imagen_url))`)
+    .select(`*, usuario:usuario_id(id, nombre, email), detalles:detalle_pedido(id, cantidad, precio_unitario, subtotal${conNota ? ', nota' : ''}, menu:menu_id(id, nombre, imagen_url))`)
     .eq('id', id)
     .single();
+  const { data, error } = await reintentarSinNota(ejecutar);
   return { data, error };
 };
 
 // Pedidos abiertos (ni entregados ni cancelados) de un mesero concreto,
 // con sus productos. Es la lista "mis pedidos" de la pantalla de estados.
 export const obtenerPedidosAbiertosPorUsuario = async (usuarioId) => {
-  const { data, error } = await supabase
+  const ejecutar = (conNota) => supabase
     .from('pedidos')
-    .select('*, detalles:detalle_pedido(cantidad, precio_unitario, subtotal, menu:menu_id(nombre))')
+    .select(`*, detalles:detalle_pedido(cantidad, precio_unitario, subtotal${conNota ? ', nota' : ''}, menu:menu_id(nombre))`)
     .eq('usuario_id', usuarioId)
     .or('estado.is.null,estado.not.in.(entregado,cancelado)')
     .order('fecha_pedido', { ascending: true })
     .limit(100);
+  const { data, error } = await reintentarSinNota(ejecutar);
   return { data, error };
 };
 
@@ -40,17 +51,25 @@ export const actualizarEstadoPedido = async (id, estado) => {
 // Pedidos que todavía no se cierran (ni entregados ni cancelados), del más
 // viejo al más nuevo, con sus productos.
 export const obtenerPedidosEnProceso = async () => {
-  const { data, error } = await supabase
+  const ejecutar = (conNota) => supabase
     .from('pedidos')
-    .select('*, detalles:detalle_pedido(cantidad, precio_unitario, subtotal, menu:menu_id(nombre))')
+    .select(`*, detalles:detalle_pedido(cantidad, precio_unitario, subtotal${conNota ? ', nota' : ''}, menu:menu_id(nombre))`)
     .or('estado.is.null,estado.not.in.(entregado,cancelado)')
     .order('fecha_pedido', { ascending: true })
     .limit(100);
+  const { data, error } = await reintentarSinNota(ejecutar);
   return { data, error };
 };
 
 export const crearDetallePedido = async (detalleData) => {
-  const { data, error } = await supabase.from('detalle_pedido').insert(detalleData).select();
+  let { data, error } = await supabase.from('detalle_pedido').insert(detalleData).select();
+  // Si la columna "nota" todavía no está en la base, el pedido no se pierde:
+  // se guarda el detalle sin la nota.
+  if (error && /nota/.test(error.message || '')) {
+    console.warn('detalle_pedido.nota no existe, guardo el detalle sin nota');
+    const { nota, ...sinNota } = detalleData;
+    ({ data, error } = await supabase.from('detalle_pedido').insert(sinNota).select());
+  }
   return { data, error };
 };
 

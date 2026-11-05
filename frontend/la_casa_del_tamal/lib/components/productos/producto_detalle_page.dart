@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/cocina/cocina_shell.dart';
 import 'package:frontend/components/cocina/cocina_top_bar.dart';
+import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
@@ -96,15 +97,27 @@ class ProductoDetallePage extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              // El backend aún no guarda el tiempo de cocción.
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text('Cocción', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                                  SizedBox(height: 4),
-                                  Text('—', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: 18, fontFamily: 'serif')),
-                                ],
-                              ),
+                              // En la carta pública el precio manda; en la vista
+                              // de cocina queda el dato de cocción de la maqueta.
+                              if (deCocina)
+                                const Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text('Cocción', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                    SizedBox(height: 4),
+                                    Text('—', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: 18, fontFamily: 'serif')),
+                                  ],
+                                )
+                              else
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Text('Precio', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                    const SizedBox(height: 4),
+                                    Text('\$${formatoPesos(plato.precio)}',
+                                        style: const TextStyle(color: AppEstilos.verdeBoton, fontSize: 20, fontFamily: 'serif', height: 1.1)),
+                                  ],
+                                ),
                             ],
                           ),
                           const SizedBox(height: 24),

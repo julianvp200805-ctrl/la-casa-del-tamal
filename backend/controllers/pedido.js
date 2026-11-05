@@ -38,7 +38,16 @@ export const crearPedidoMesero = async (req, res) => {
       const precioUnitario = Number(plato.precio);
       const subtotal = precioUnitario * cantidad;
       total += subtotal;
-      detalles.push({ menu_id: plato.id, cantidad, precio_unitario: precioUnitario, subtotal });
+      // Nota del mesero para la cocina ("sin mayonesa"). Cabeza en cualquier
+      // plato, no solo en el último.
+      const nota = typeof it.nota === 'string' ? it.nota.trim().slice(0, 200) : '';
+      detalles.push({
+        menu_id: plato.id,
+        cantidad,
+        precio_unitario: precioUnitario,
+        subtotal,
+        ...(nota ? { nota } : {}),
+      });
     }
 
     // La tabla pedidos no tiene columna "mesa": se guarda como

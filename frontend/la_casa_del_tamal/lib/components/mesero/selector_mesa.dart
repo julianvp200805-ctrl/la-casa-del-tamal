@@ -1,38 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
+import 'package:frontend/core/mesas.dart';
 
-/// "Mesa   4 ⌄" + chip "8 personas".
+const Color _amarillo = Color(0xFFFFD60A);
+
+/// "Mesa 4 ⌄" + el cupo fijo de esa mesa. El cupo no se elige: cada una de las
+/// 13 mesas del salón trae su número de personas ya fijado (4 a 6).
 class SelectorMesa extends StatelessWidget {
   final int? mesa;
   final ValueChanged<int?> onChanged;
-  final int totalMesas;
-  final int personas;
-  final ValueChanged<int> onPersonas;
 
-  const SelectorMesa({
-    super.key,
-    required this.mesa,
-    required this.onChanged,
-    required this.personas,
-    required this.onPersonas,
-    this.totalMesas = 20,
-  });
+  const SelectorMesa({super.key, required this.mesa, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     const estilo = TextStyle(color: Colors.white, fontSize: 13);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
       child: Row(
         children: [
           Container(
-            width: 146,
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            width: 150,
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: AppEstilos.platoMesero,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppEstilos.bordeOscuro),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: mesa == null ? AppEstilos.bordeOscuro : AppEstilos.meseroOliva),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -40,7 +34,8 @@ class SelectorMesa extends StatelessWidget {
                 isExpanded: true,
                 hint: const Text('Mesa', style: estilo),
                 dropdownColor: AppEstilos.platoMesero,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFFFFD60A)),
+                borderRadius: BorderRadius.circular(10),
+                icon: const Icon(Icons.keyboard_arrow_down, color: _amarillo),
                 style: estilo,
                 selectedItemBuilder: (_) => [
                   for (int m = 1; m <= totalMesas; m++)
@@ -48,28 +43,49 @@ class SelectorMesa extends StatelessWidget {
                       const Text('Mesa', style: estilo),
                       const Spacer(),
                       Text('$m', style: estilo),
-                      const SizedBox(width: 6),
                     ]),
                 ],
-                items: [for (int m = 1; m <= totalMesas; m++) DropdownMenuItem(value: m, child: Text('Mesa $m'))],
+                items: [
+                  for (int m = 1; m <= totalMesas; m++)
+                    DropdownMenuItem(
+                      value: m,
+                      child: Row(
+                        children: [
+                          const Text('Mesa', style: estilo),
+                          const Spacer(),
+                          Text('$m', style: estilo),
+                          const SizedBox(width: 8),
+                          Text('${cupoMesa(m)} p', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                ],
                 onChanged: onChanged,
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Expanded(
-            child: PopupMenuButton<int>(
-              color: AppEstilos.platoMesero,
-              onSelected: onPersonas,
-              itemBuilder: (_) => [
-                for (int i = 1; i <= 20; i++)
-                  PopupMenuItem(value: i, child: Text(i == 1 ? '1 persona' : '$i personas', style: const TextStyle(color: Colors.white))),
-              ],
-              child: Container(
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(8)),
-                child: Text(personas == 1 ? '1 persona' : '$personas personas', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1F3A2C),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppEstilos.bordeOscuro),
+              ),
+              child: Row(
+                children: [
+                  Icon(mesa == null ? Icons.table_restaurant : Icons.group, color: AppEstilos.meseroOliva, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      mesa == null ? 'Elige la mesa' : '${cupoMesa(mesa!)} personas',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: mesa == null ? Colors.white38 : Colors.white70, fontSize: 13, fontFamily: 'serif'),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

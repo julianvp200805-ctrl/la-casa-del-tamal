@@ -111,6 +111,12 @@ class ShellConBarra extends StatefulWidget {
 class _ShellConBarraState extends State<ShellConBarra> {
   late int _activa = widget.controlador?.value ?? widget.pestanaInicial;
 
+  /// Desplazamiento en píxeles de la pestaña mientras se arrastra; solo sirve
+  /// como feedback visual, el cambio real se decide al soltar.
+  double _deslize = 0;
+
+  static const double _umbral = 44;
+
   @override
   void initState() {
     super.initState();
@@ -132,6 +138,26 @@ class _ShellConBarraState extends State<ShellConBarra> {
     setState(() => _activa = i);
   }
 
+  void _alArrastrar(DragUpdateDetails d) {
+    final primera = _activa == 0;
+    final ultima = _activa == widget.pestanas.length - 1;
+    var dx = _deslize + d.delta.dx;
+    // En los extremos la pantalla cede poco, para que se sienta que no hay más.
+    if ((primera && dx > 0) || (ultima && dx < 0)) dx = dx / 3;
+    setState(() => _deslize = dx.clamp(-_umbral * 1.6, _umbral * 1.6));
+  }
+
+  void _alSoltar(DragEndDetails d) {
+    final velocidad = d.velocity.pixelsPerSecond.dx;
+    final destino = (_deslize < -_umbral || velocidad < -400)
+        ? _activa + 1
+        : (_deslize > _umbral || velocidad > 400)
+            ? _activa - 1
+            : _activa;
+    setState(() => _deslize = 0);
+    if (destino != _activa && destino >= 0 && destino < widget.pestanas.length) _elegir(destino);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,9 +170,18 @@ class _ShellConBarraState extends State<ShellConBarra> {
         pestanas: widget.pestanas,
       ),
       // IndexedStack conserva el estado y el scroll de cada pestaña al cambiar.
-      body: IndexedStack(
-        index: _activa,
-        children: [for (final p in widget.pestanas) p.pagina ?? const SizedBox.shrink()],
+      // El arrastre horizontal pasa a la pestaña de al lado, como en la barra.
+      body: GestureDetector(
+        onHorizontalDragUpdate: widget.pestanas.length > 1 ? _alArrastrar : null,
+        onHorizontalDragEnd: widget.pestanas.length > 1 ? _alSoltar : null,
+        onHorizontalDragCancel: () => setState(() => _deslize = 0),
+        child: Transform.translate(
+          offset: Offset(_deslize, 0),
+          child: IndexedStack(
+            index: _activa,
+            children: [for (final p in widget.pestanas) p.pagina ?? const SizedBox.shrink()],
+          ),
+        ),
       ),
     );
   }

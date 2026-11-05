@@ -7,7 +7,7 @@ MenuItem _plato({bool? disponible}) => MenuItem.fromJson({
   'id': 7,
   'nombre': 'Tamal de olla',
   'precio': 32,
-  if (disponible != null) 'disponible': disponible,
+  'disponible': ?disponible,
 });
 
 void main() {

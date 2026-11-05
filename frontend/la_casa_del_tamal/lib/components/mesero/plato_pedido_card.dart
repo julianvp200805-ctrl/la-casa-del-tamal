@@ -4,13 +4,19 @@ import 'package:frontend/services/menu/menu_services.dart';
 
 const Color _amarillo = Color(0xFFFFD60A);
 
-/// Franja superior (etiqueta + foto) y abajo nombre, descripción, editar y − n +.
+/// Tarjeta de un plato en "Tomar pedido": arriba la etiqueta y la foto, abajo
+/// el nombre con la descripción, el lápiz de la nota para cocina y el − n +.
+/// Todas miden lo mismo, así un plato recién creado entra con el mismo formato
+/// que los demás.
 class PlatoPedidoCard extends StatelessWidget {
   final MenuItem plato;
   final int cantidad;
   final VoidCallback onMas;
   final VoidCallback onMenos;
   final String etiqueta;
+
+  /// Nota escrita para la cocina; vacía si el mesero no puso ninguna.
+  final String nota;
   final VoidCallback? onEditar;
 
   const PlatoPedidoCard({
@@ -20,17 +26,18 @@ class PlatoPedidoCard extends StatelessWidget {
     required this.onMas,
     required this.onMenos,
     this.etiqueta = 'Típico',
+    this.nota = '',
     this.onEditar,
   });
 
   Widget _vacia() => Container(
-      width: 54, height: 54, color: AppEstilos.fondoOscuro, child: const Icon(Icons.restaurant, color: Colors.white38));
+      width: 58, height: 58, color: AppEstilos.fondoOscuro, child: const Icon(Icons.restaurant, color: Colors.white38));
 
   Widget _boton(IconData icono, VoidCallback? onTap) => InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Padding(
-          padding: const EdgeInsets.all(3),
+          padding: const EdgeInsets.all(4),
           child: Icon(icono, size: 18, color: onTap == null ? Colors.white24 : _amarillo),
         ),
       );
@@ -39,41 +46,51 @@ class PlatoPedidoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hayImagen = plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty;
     final colorEtiqueta = etiqueta.toLowerCase().startsWith('t') ? const Color(0xFF4ADE60) : _amarillo;
+    final seleccion = cantidad > 0;
     return Container(
-      height: 148,
+      height: 152,
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppEstilos.platoMesero,
-        borderRadius: BorderRadius.circular(10),
-        border: cantidad > 0 ? Border.all(color: AppEstilos.meseroOliva, width: 1.2) : null,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: seleccion ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro, width: seleccion ? 1.3 : 1),
       ),
       child: Column(
         children: [
           Container(
-            height: 74,
+            height: 78,
             width: double.infinity,
-            color: const Color(0xFF2E4A3C),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF2E4A3C), Color(0xFF2A4238)],
+              ),
+            ),
             child: Stack(
               children: [
                 Positioned(
                   left: 12,
-                  top: 10,
+                  top: 11,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                    decoration: BoxDecoration(color: colorEtiqueta, borderRadius: BorderRadius.circular(10)),
-                    child: Text(etiqueta, style: const TextStyle(fontSize: 10, color: Colors.black87)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(color: colorEtiqueta, borderRadius: BorderRadius.circular(11)),
+                    child: Text(etiqueta, style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w600)),
                   ),
                 ),
                 Positioned(
                   right: 12,
                   top: 10,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: hayImagen
-                        ? Image.network(plato.imagenUrl!, width: 54, height: 54, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _vacia())
-                        : _vacia(),
+                  child: Container(
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(9), border: Border.all(color: Colors.black26)),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: hayImagen
+                          ? Image.network(plato.imagenUrl!, width: 58, height: 58, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _vacia())
+                          : _vacia(),
+                    ),
                   ),
                 ),
               ],
@@ -83,7 +100,7 @@ class PlatoPedidoCard extends StatelessWidget {
           // nombres cortos el lápiz y el contador salían corridos.
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
               child: Row(
                 children: [
                   Expanded(
@@ -92,11 +109,25 @@ class PlatoPedidoCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(plato.nombre, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'serif')),
-                        if ((plato.descripcion ?? '').isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                            style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'serif', height: 1.2)),
+                        const SizedBox(height: 3),
+                        if ((plato.descripcion ?? '').isNotEmpty)
                           Text(plato.descripcion!, maxLines: 2, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white54, fontSize: 10, height: 1.25)),
+                              style: const TextStyle(color: Colors.white54, fontSize: 10, height: 1.3))
+                        else
+                          const Text('Sin descripción', style: TextStyle(color: Colors.white24, fontSize: 10, height: 1.3)),
+                        if (nota.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.notes, size: 11, color: AppEstilos.meseroOliva),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(nota, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 10, fontStyle: FontStyle.italic)),
+                              ),
+                            ],
+                          ),
                         ],
                       ],
                     ),
@@ -106,18 +137,29 @@ class PlatoPedidoCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      GestureDetector(onTap: onEditar, child: const Icon(Icons.edit, size: 17, color: Colors.white70)),
+                      Tooltip(
+                        message: nota.isEmpty ? 'Nota para cocina' : 'Editar la nota',
+                        child: InkWell(
+                          onTap: onEditar,
+                          customBorder: const CircleBorder(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Icon(Icons.edit, size: 17, color: nota.isEmpty ? Colors.white70 : AppEstilos.meseroOliva),
+                          ),
+                        ),
+                      ),
                       Container(
-                        height: 30,
+                        height: 32,
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(color: AppEstilos.fondoOscuro, borderRadius: BorderRadius.circular(15)),
+                        decoration: BoxDecoration(color: AppEstilos.fondoOscuro, borderRadius: BorderRadius.circular(16)),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _boton(Icons.remove, cantidad > 0 ? onMenos : null),
                             SizedBox(
                               width: 26,
-                              child: Text('$cantidad', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                              child: Text('$cantidad', textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                             ),
                             _boton(Icons.add, onMas),
                           ],
