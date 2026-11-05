@@ -32,12 +32,19 @@ class ChatInput extends StatelessWidget {
                 controller: controller,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onEnviar(),
+                cursorColor: Colors.black87,
                 style: const TextStyle(color: Colors.black87, fontSize: 14),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Escribe tu pregunta..',
-                  hintStyle: const TextStyle(color: Colors.black54, fontSize: 14),
+                  hintStyle: TextStyle(color: Colors.black54, fontSize: 14),
+                  // Sin borde de foco: el tema pinta un contorno azul por dentro
+                  // de la pastilla verde apenas se selecciona el campo.
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   filled: true,
                   fillColor: Colors.transparent,
                 ),

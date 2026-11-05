@@ -36,6 +36,15 @@ class MenuItem {
   }
 }
 
+/// El admin intentó borrar un plato que ya tiene pedidos: la base de datos
+/// no lo permite para no romper el historial. La alternativa es descontinuarlo.
+class PlatoConPedidosException implements Exception {
+  final String mensaje;
+  PlatoConPedidosException(this.mensaje);
+  @override
+  String toString() => mensaje;
+}
+
 class MenuService {
   // GET /menu/menu (público, no requiere token)
   // soloDisponibles oculta los platos que el admin marcó como agotados.
@@ -83,11 +92,7 @@ class MenuService {
       }
       final response = await http.Response.fromStream(await req.send());
       if (response.statusCode >= 200 && response.statusCode < 300) return;
-      String? msg;
-      try {
-        msg = decodeApiResponse(response)['error']?.toString();
-      } catch (_) {}
-      throw Exception(msg ?? falla);
+      throw Exception(mensajeDeRespuesta(response) ?? '$falla (HTTP ${response.statusCode})');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
@@ -152,9 +157,12 @@ class MenuService {
   Future<String> eliminarPlato(String id) async {
     try {
       final response = await http.delete(Uri.parse('${ApiConfig.baseUrl}/menu/menu/$id'), headers: ApiConfig.headersConToken(await _token()));
-      final data = decodeApiResponse(response);
-      if (response.statusCode == 200) return data['message'] ?? 'Plato eliminado';
-      throw Exception(data['error'] ?? 'No se pudo eliminar el plato');
+      final mensaje = mensajeDeRespuesta(response);
+      if (response.statusCode == 200) return mensaje ?? 'Plato eliminado';
+      if (response.statusCode == 409) throw PlatoConPedidosException(mensaje ?? 'El plato tiene pedidos y no se puede borrar');
+      throw Exception(mensaje ?? 'No se pudo eliminar el plato (HTTP ${response.statusCode})');
+    } on PlatoConPedidosException {
+      rethrow;
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
@@ -169,9 +177,9 @@ class MenuService {
         headers: ApiConfig.headersConToken(await _token()),
         body: jsonEncode({'disponible': disponible}),
       );
-      final data = decodeApiResponse(response);
-      if (response.statusCode == 200) return data['message'] ?? (disponible ? 'Plato habilitado' : 'Plato agotado');
-      throw Exception(data['error'] ?? 'No se pudo cambiar la disponibilidad');
+      final mensaje = mensajeDeRespuesta(response);
+      if (response.statusCode == 200) return mensaje ?? (disponible ? 'Plato habilitado' : 'Plato agotado');
+      throw Exception(mensaje ?? 'No se pudo cambiar la disponibilidad (HTTP ${response.statusCode})');
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }

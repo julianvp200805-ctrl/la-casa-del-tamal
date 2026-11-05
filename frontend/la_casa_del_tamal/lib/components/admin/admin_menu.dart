@@ -42,6 +42,30 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
   }
 
   Future<void> _toggleDisponibilidad(MenuItem plato) async {
+    final agotando = plato.disponible;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppEstilos.tablaInventario,
+        title: Text(agotando ? 'Descontinuar plato' : 'Habilitar plato'),
+        content: Text(
+          agotando
+              ? '¿Desea descontinuar "${plato.nombre}"? Deja de verse en la carta y el mesero no puede tomarlo.'
+              : '¿Desea volver a habilitar "${plato.nombre}"? Vuelve a la carta y a los pedidos.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              agotando ? 'Descontinuar' : 'Habilitar',
+              style: TextStyle(color: agotando ? AppEstilos.rojoVencido : AppEstilos.verdeAccion),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
     try {
       final msg = await _menuService.marcarDisponibilidad(plato.id, !plato.disponible);
       if (!mounted) return;
@@ -70,6 +94,32 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
       if (!mounted) return;
       _mensaje(msg);
       _recargar();
+    } on PlatoConPedidosException catch (e) {
+      if (!mounted) return;
+      _mensaje(e.mensaje, esError: true);
+      final si = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Tiene pedidos'),
+          content: Text('"${plato.nombre}" aparece en pedidos ya tomados y la base no lo deja borrar. ¿Descontinuarlo para que deje de verse en la carta?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Descontinuar', style: TextStyle(color: AppEstilos.rojoVencido)),
+            ),
+          ],
+        ),
+      );
+      if (si != true) return;
+      try {
+        final msg = await _menuService.marcarDisponibilidad(plato.id, false);
+        if (!mounted) return;
+        _mensaje(msg);
+        _recargar();
+      } catch (e) {
+        if (mounted) _mensaje(e.toString(), esError: true);
+      }
     } catch (e) {
       if (mounted) _mensaje(e.toString(), esError: true);
     }
@@ -87,6 +137,9 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
         icon: const Icon(Icons.add),
         label: const Text('Agregar producto', style: TextStyle(fontFamily: 'serif', fontSize: 14)),
       ),
+      // El shell del admin pone su FAB de Tamalín en esta esquina; el botón
+      // sube para que queden apilados en lugar de encimados.
+      floatingActionButtonLocation: const _FlotanteSobreElChat(),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -106,7 +159,9 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                   return RefreshIndicator(
                     onRefresh: () async => _recargar(),
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
+                      // Holgado abajo para que el último plato quede libre de
+                      // los dos FAB apilados (Agregar producto + Tamalín).
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 168),
                       children: [
                         for (final p in snap.data!)
                           AdminMenuCard(
@@ -126,4 +181,16 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
       ),
     );
   }
+}
+
+/// Ubicación de FAB que deja espacio para el botón de Tamalín del shell.
+class _FlotanteSobreElChat extends FloatingActionButtonLocation {
+  const _FlotanteSobreElChat();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry geometria) =>
+      FloatingActionButtonLocation.endFloat.getOffset(geometria) - const Offset(0, 74);
+
+  @override
+  String toString() => 'FlotanteSobreElChat';
 }

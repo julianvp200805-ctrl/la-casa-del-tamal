@@ -45,10 +45,13 @@ export const actualizarPlato = async (id, menuData) => {
 };
 
 export const eliminarPlato = async (id) => {
+  // .select('id') devuelve las filas realmente borradas; sin eso no hay forma
+  // de distinguir "no existía" de "borró 0 filas por otra razón".
   const { data, error } = await supabase
     .from('menu')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
 
   return { data, error };
 };

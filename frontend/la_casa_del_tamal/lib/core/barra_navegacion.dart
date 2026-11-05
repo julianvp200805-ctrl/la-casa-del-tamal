@@ -108,12 +108,18 @@ class ShellConBarra extends StatefulWidget {
   State<ShellConBarra> createState() => _ShellConBarraState();
 }
 
-class _ShellConBarraState extends State<ShellConBarra> {
+class _ShellConBarraState extends State<ShellConBarra> with SingleTickerProviderStateMixin {
   late int _activa = widget.controlador?.value ?? widget.pestanaInicial;
 
-  /// Desplazamiento en píxeles de la pestaña mientras se arrastra; solo sirve
-  /// como feedback visual, el cambio real se decide al soltar.
+  /// Desplazamiento en píxeles mientras el dedo arrastra la pantalla.
   double _deslize = 0;
+
+  /// Punto de partida del deslizamiento de la pestaña nueva: el ancho completo
+  /// al tocar la barra, o donde quedó el dedo al soltar el arrastre.
+  double _desde = 0;
+
+  late final AnimationController _anima =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 280))..value = 1;
 
   static const double _umbral = 44;
 
@@ -123,19 +129,32 @@ class _ShellConBarraState extends State<ShellConBarra> {
     widget.controlador?.addListener(_sincronizar);
   }
 
-  void _sincronizar() {
-    if (mounted) setState(() => _activa = widget.controlador!.value);
-  }
+  void _sincronizar() => _moverA(widget.controlador!.value);
 
   @override
   void dispose() {
     widget.controlador?.removeListener(_sincronizar);
+    _anima.dispose();
     super.dispose();
   }
 
-  void _elegir(int i) {
-    widget.controlador?.value = i;
-    setState(() => _activa = i);
+  /// Cambia de pestaña deslizando la nueva hacia su sitio. `desde` evita el
+  /// brinco cuando el cambio nace de un arrastre: se retoma del punto donde
+  /// quedó el dedo en vez de empezar desde el borde de la pantalla.
+  void _moverA(int i, {double? desde}) {
+    if (!mounted) return;
+    if (i < 0 || i >= widget.pestanas.length || i == _activa) {
+      if (_deslize != 0) setState(() => _deslize = 0);
+      return;
+    }
+    final ancho = MediaQuery.sizeOf(context).width;
+    setState(() {
+      _desde = desde ?? (i > _activa ? ancho : -ancho);
+      _deslize = 0;
+      _activa = i;
+    });
+    if (widget.controlador != null && widget.controlador!.value != i) widget.controlador!.value = i;
+    _anima.forward(from: 0);
   }
 
   void _alArrastrar(DragUpdateDetails d) {
@@ -154,29 +173,37 @@ class _ShellConBarraState extends State<ShellConBarra> {
         : (_deslize > _umbral || velocidad > 400)
             ? _activa - 1
             : _activa;
-    setState(() => _deslize = 0);
-    if (destino != _activa && destino >= 0 && destino < widget.pestanas.length) _elegir(destino);
+    if (destino == _activa) {
+      setState(() => _deslize = 0);
+      return;
+    }
+    _moverA(destino, desde: _deslize);
   }
 
   @override
   Widget build(BuildContext context) {
+    final deslizable = widget.pestanas.length > 1;
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
       floatingActionButton: widget.botonFlotante,
       bottomNavigationBar: BarraNavegacion(
         indiceActivo: _activa,
         colorActivo: widget.colorActivo,
-        onTap: _elegir,
+        onTap: _moverA,
         pestanas: widget.pestanas,
       ),
-      // IndexedStack conserva el estado y el scroll de cada pestaña al cambiar.
-      // El arrastre horizontal pasa a la pestaña de al lado, como en la barra.
+      // IndexedStack conserva el estado y el scroll de cada pestaña; la que
+      // entra se desliza desde el lado que toca en vez de aparecer de golpe.
       body: GestureDetector(
-        onHorizontalDragUpdate: widget.pestanas.length > 1 ? _alArrastrar : null,
-        onHorizontalDragEnd: widget.pestanas.length > 1 ? _alSoltar : null,
+        onHorizontalDragUpdate: deslizable ? _alArrastrar : null,
+        onHorizontalDragEnd: deslizable ? _alSoltar : null,
         onHorizontalDragCancel: () => setState(() => _deslize = 0),
-        child: Transform.translate(
-          offset: Offset(_deslize, 0),
+        child: AnimatedBuilder(
+          animation: _anima,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(_desde * (1 - Curves.easeOutCubic.transform(_anima.value)) + _deslize, 0),
+            child: child,
+          ),
           child: IndexedStack(
             index: _activa,
             children: [for (final p in widget.pestanas) p.pagina ?? const SizedBox.shrink()],

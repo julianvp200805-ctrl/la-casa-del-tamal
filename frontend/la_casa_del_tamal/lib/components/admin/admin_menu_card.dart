@@ -23,21 +23,19 @@ class AdminMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final agotado = !plato.disponible;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-      decoration: BoxDecoration(
-        color: AppEstilos.inputOscuro,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: agotado ? AppEstilos.rojoChip : AppEstilos.bordeOscuro),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.fromLTRB(12, 28, 4, 10),
+          decoration: BoxDecoration(
+            color: AppEstilos.inputOscuro,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: agotado ? AppEstilos.rojoChip : AppEstilos.bordeOscuro),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _insigniaDisponibilidad(agotado),
-              const SizedBox(height: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Opacity(
@@ -47,49 +45,57 @@ class AdminMenuCard extends StatelessWidget {
                       : _vacia(),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(plato.nombre, style: TextStyle(color: agotado ? Colors.white38 : Colors.white70, fontSize: 15, fontFamily: 'serif')),
-                const SizedBox(height: 4),
-                if ((plato.descripcion ?? '').isNotEmpty)
-                  Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                if (agotado) ...[
-                  const SizedBox(height: 6),
-                  const _PillAgotado(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(plato.nombre, style: TextStyle(color: agotado ? Colors.white38 : Colors.white70, fontSize: 15, fontFamily: 'serif')),
+                    const SizedBox(height: 4),
+                    if ((plato.descripcion ?? '').isNotEmpty)
+                      Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                    if (agotado) ...[
+                      const SizedBox(height: 6),
+                      const _PillAgotado(),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.delete, color: AppEstilos.verdeAccion, size: 20), onPressed: onEliminar),
+                  IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.edit, color: AppEstilos.verdeAccion, size: 18), onPressed: onEditar),
                 ],
-              ],
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.delete, color: AppEstilos.verdeAccion, size: 20), onPressed: onEliminar),
-              IconButton(visualDensity: VisualDensity.compact, icon: const Icon(Icons.edit, color: AppEstilos.verdeAccion, size: 18), onPressed: onEditar),
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+        // La insignia va clavada en la esquina izquierda de la tarjeta, como
+        // en la maqueta; el contenido empieza debajo de ella.
+        Positioned(left: 10, top: 9, child: _insigniaDisponibilidad(agotado)),
+      ],
     );
   }
 
   Widget _insigniaDisponibilidad(bool agotado) {
     return Tooltip(
-      message: agotado ? 'Reactivar plato' : 'Marcar como agotado',
-      child: GestureDetector(
-        onTap: onToggleDisponibilidad,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: agotado ? AppEstilos.rojoVencido : AppEstilos.verdeBoton,
-            shape: BoxShape.circle,
+      message: agotado ? 'Habilitar plato' : 'Descontinuar plato',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onToggleDisponibilidad,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: agotado ? AppEstilos.rojoVencido : AppEstilos.verdeBoton,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppEstilos.fondoOscuro, width: 2),
+            ),
+            child: Icon(agotado ? Icons.add : Icons.remove, size: 16, color: AppEstilos.fondoOscuro),
           ),
-          child: Icon(agotado ? Icons.add : Icons.remove, size: 16, color: AppEstilos.fondoOscuro),
         ),
       ),
     );

@@ -152,10 +152,24 @@ export const editar = async (req, res) => {
 export const eliminar = async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await eliminarPlato(id);
+    const { data, error } = await eliminarPlato(id);
     if (error) {
-      return res.status(500).json({ error: 'Error al eliminar' });
+      console.error('Error Supabase (eliminar plato):', error);
+      const mensaje = error.message ?? '';
+      // 23503 = violación de clave foránea: detalle_pedido apunta a este plato y
+      // Postgres no deja borrar la fila. Se desactiva la fila en la carta con
+      // disponible=false, que es justo para lo que existe ese interruptor.
+      if (error.code === '23503' || /foreign key|violates referential/i.test(mensaje)) {
+        return res.status(409).json({
+          error: 'Este plato ya tiene pedidos registrados, así que no se puede borrar. Descontinúalo con el círculo de la esquina para que deje de verse en la carta.',
+        });
+      }
+      return res.status(500).json({
+        error: `No se pudo eliminar: ${mensaje || 'el servidor no devolvió detalle'}`,
+        detalle: mensaje,
+      });
     }
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Plato no encontrado' });
     return res.status(200).json({ message: 'Eliminado' });
   } catch (error) {
     return res.status(500).json({ error: error.message });

@@ -41,3 +41,18 @@ dynamic decodeApiResponse(http.Response response) {
 
   return data;
 }
+
+/// Texto legible que el backend puso en el cuerpo (`error` o `message`), o null
+/// si el cuerpo no es el JSON esperado. [decodeApiResponse] lanza volcando el
+/// cuerpo crudo (`Error HTTP 500: {error: ...}`), así que para mostrarle al
+/// usuario el motivo real hay que leer el campo sin pasar por ese lanzamiento.
+String? mensajeDeRespuesta(http.Response response) {
+  try {
+    final data = jsonDecode(response.body.trim());
+    if (data is Map) {
+      final texto = (data['error'] ?? data['message'])?.toString().trim();
+      if (texto != null && texto.isNotEmpty) return texto;
+    }
+  } catch (_) {}
+  return null;
+}
