@@ -63,7 +63,7 @@ class _PedidosProcesoPageState extends State<PedidosProcesoPage> {
 
   void _mensaje(String texto, {bool esError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(texto), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700),
+      SnackBar(content: Text(texto), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700, duration: const Duration(seconds: 3)),
     );
   }
 

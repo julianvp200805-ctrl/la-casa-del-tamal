@@ -4,6 +4,7 @@ import 'package:frontend/core/colores.dart';
 import 'package:frontend/components/admin/admin_shell.dart';
 import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/gerente/gerent_services.dart';
 
 class GenerarCodigoPage extends StatefulWidget {
   const GenerarCodigoPage({super.key});
@@ -42,6 +43,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
         content: Text(texto),
         backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -50,6 +52,12 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
     if (_codigoGenerado.isEmpty) return;
     Clipboard.setData(ClipboardData(text: _codigoGenerado));
     _notificar('Código copiado al portapapeles', esError: false);
+  }
+
+  Future<void> _cerrarSesion() async {
+    await UserService().cerrarSesion();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -77,9 +85,20 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.subdirectory_arrow_left, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.subdirectory_arrow_left, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      // Cierre de sesión disponible desde la pantalla de generar
+                      // código, igual que desde el perfil del admin.
+                      IconButton(
+                        icon: const Icon(Icons.logout_outlined, color: AppEstilos.rojoVencido),
+                        onPressed: _cerrarSesion,
+                      ),
+                    ],
                   ),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.end,

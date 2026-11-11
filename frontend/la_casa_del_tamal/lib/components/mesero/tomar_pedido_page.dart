@@ -162,6 +162,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
         content: Text(t),
         backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
         action: accion != null
             ? SnackBarAction(label: accion, textColor: Colors.white, onPressed: alAccionar ?? () {})
             : null,

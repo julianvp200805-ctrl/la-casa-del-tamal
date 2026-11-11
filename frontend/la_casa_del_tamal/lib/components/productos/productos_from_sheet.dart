@@ -74,7 +74,7 @@ class _FormProductoState extends State<_FormProducto> {
       if (!mounted) return;
       // El aviso llega del backend: "Lote LT002 de carne: vence el ..."
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(aviso), backgroundColor: Colors.green.shade700),
+        SnackBar(content: Text(aviso), backgroundColor: Colors.green.shade700, duration: const Duration(seconds: 3)),
       );
       Navigator.pop(context, true);
     } catch (e) {
@@ -86,7 +86,7 @@ class _FormProductoState extends State<_FormProducto> {
 
   void _mensaje(String texto, {bool esError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(texto), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700),
+      SnackBar(content: Text(texto), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700, duration: const Duration(seconds: 3)),
     );
   }
 

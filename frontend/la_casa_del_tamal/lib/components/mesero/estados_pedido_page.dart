@@ -106,7 +106,7 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
   }
 
   void _mensaje(String t, {bool esError = false}) => ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700, behavior: SnackBarBehavior.floating));
+      SnackBar(content: Text(t), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700, behavior: SnackBarBehavior.floating, duration: const Duration(seconds: 3)));
 
   @override
   Widget build(BuildContext context) => Scaffold(

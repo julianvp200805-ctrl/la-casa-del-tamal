@@ -92,8 +92,18 @@ class PedidoProceso {
   String get numero => _numeroMesa ?? '#${id.length > 6 ? id.substring(0, 6) : id}';
 
   String get hora {
-    final d = DateTime.tryParse(fecha ?? '')?.toLocal();
+    final d = DateTime.tryParse(fecha ?? '');
     if (d == null) return '';
-    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    // La app corre en Render (UTC) pero el restaurante está en Colombia
+    // (UTC-5): la hora que se muestra debe estar en ese huso, no en el de la
+    // máquina que corre la app.
+    final ms = d.isUtc
+        ? d.millisecondsSinceEpoch
+        : DateTime.utc(d.year, d.month, d.day, d.hour, d.minute, d.second, d.millisecond).millisecondsSinceEpoch;
+    final msBogota = ms - const Duration(hours: 5).inMilliseconds;
+    final colombia = DateTime.fromMillisecondsSinceEpoch(msBogota.toInt());
+    final periodo = colombia.hour < 12 ? 'AM' : 'PM';
+    final hora12 = colombia.hour % 12 == 0 ? 12 : colombia.hour % 12;
+    return '${hora12.toString()}:${colombia.minute.toString().padLeft(2, '0')} $periodo';
   }
 }

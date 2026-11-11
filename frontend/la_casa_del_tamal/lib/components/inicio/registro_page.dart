@@ -164,6 +164,7 @@ class _RegistroPageState extends State<RegistroPage> {
         content: Text(txt),
         backgroundColor: err ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }

@@ -41,6 +41,14 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
     super.dispose();
   }
 
+  // Tiempo (ms) en que se creó el pedido: sirve para ordenar la bandeja de
+  // cocina de los primeros pedidos a los últimos (primero en entrar, primero
+  // en salir).
+  int _tiempoMs(PedidoProceso p) {
+    final d = DateTime.tryParse(p.fecha ?? '');
+    return d == null ? 0 : d.millisecondsSinceEpoch;
+  }
+
   Future<void> _cargarPedidos({bool silencioso = false}) async {
     if (_ocupado) return;
     _ocupado = true;
@@ -55,7 +63,11 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
       if (!mounted) return;
 
       setState(() {
-        _pedidosCocina = lista.where((p) => p.estado == 'pendiente' || p.estado == 'en_proceso').toList();
+        final pedidos = lista
+            .where((p) => p.estado == 'pendiente' || p.estado == 'en_proceso')
+            .toList()
+          ..sort((a, b) => _tiempoMs(a).compareTo(_tiempoMs(b)));
+        _pedidosCocina = pedidos;
         _error = null;
         _cargando = false;
       });
@@ -102,6 +114,7 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
         content: Text(texto),
         backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }

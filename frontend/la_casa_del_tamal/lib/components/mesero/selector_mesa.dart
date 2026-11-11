@@ -44,11 +44,12 @@ class SelectorMesa extends StatelessWidget {
                 style: estilo,
                 selectedItemBuilder: (_) => [
                   for (int m = 1; m <= totalMesas; m++)
-                    Row(children: [
-                      const Text('Mesa', style: estilo),
-                      const Spacer(),
-                      Text('$m', style: estilo),
-                    ]),
+                    if (!mesasOcupadas.contains(m))
+                      Row(children: [
+                        const Text('Mesa', style: estilo),
+                        const Spacer(),
+                        Text('$m', style: estilo),
+                      ]),
                 ],
                 items: [
                   for (int m = 1; m <= totalMesas; m++)
