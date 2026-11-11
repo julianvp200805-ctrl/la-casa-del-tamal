@@ -15,7 +15,11 @@ class _VentasDiariasVistaState extends State<VentasDiariasVista> {
   final PedidoService _pedidoService = PedidoService();
   late Future<ReporteVentas> _futuro = _pedidoService.obtenerReporteHoy();
 
-  void _recargar() => setState(() => _futuro = _pedidoService.obtenerReporteHoy());
+  void _recargar() {
+    setState(() {
+      _futuro = _pedidoService.obtenerReporteHoy();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -7,6 +7,7 @@ import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/components/mesero/plato_pedido_card.dart';
 import 'package:frontend/components/mesero/selector_mesa.dart';
 import 'package:frontend/core/colores.dart';
+import 'package:frontend/core/mesas.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 import 'package:frontend/services/mesero/mesero.dart';
 
@@ -32,6 +33,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   Timer? _timer;
   String? _version;
   bool _ocupado = false;
+  final Set<int> _mesasOcupadas = {};
 
   int get _totalItems => _cant.values.fold(0, (a, b) => a + b);
   double get _total => _platos.fold(0.0, (s, p) => s + p.precio * (_cant[p.id] ?? 0));
@@ -67,14 +69,45 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   void initState() {
     super.initState();
     _cargar();
+    _cargarMesas();
     // Si el admin edita el menú, la huella cambia y la lista se refresca sola.
     _timer = Timer.periodic(const Duration(seconds: 15), (_) => _sondearVersion());
+    // Al volver a la pestaña "Tomar pedido" recalcula las mesas ocupadas: la
+    // que el mesero liberó entregando vuelve a poder tomar pedido.
+    pestanaMeseroActiva.addListener(_recalcularMesas);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    pestanaMeseroActiva.removeListener(_recalcularMesas);
     super.dispose();
+  }
+
+  void _recalcularMesas() {
+    if (pestanaMeseroActiva.value == 0) _cargarMesas();
+  }
+
+  // Mesas con pedido abierto: hasta que ese pedido no se entregue, la mesa no
+  // puede volver a seleccionarse para un pedido nuevo.
+  Future<void> _cargarMesas() async {
+    try {
+      final pedidos = await _meseroService.obtenerAbiertos();
+      if (!mounted) return;
+      final ocupadas = <int>{};
+      for (final p in pedidos) {
+        final n = int.tryParse(p.numero);
+        if (n != null && n >= 1 && n <= totalMesas) ocupadas.add(n);
+      }
+      if (!mounted) return;
+      setState(() {
+        _mesasOcupadas
+          ..clear()
+          ..addAll(ocupadas);
+      });
+    } catch (_) {
+      // Si no se pueden leer los pedidos, no bloqueamos mesas por defecto.
+    }
   }
 
   Future<void> _sondearVersion() async {
@@ -137,6 +170,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   Future<void> _hacerPedido() async {
     if (_mesa == null) return _mensaje('Elige la mesa del pedido', esError: true);
     if (_totalItems == 0) return _mensaje('Agrega al menos un plato', esError: true);
+    if (_mesasOcupadas.contains(_mesa!)) return _mensaje('La mesa $_mesa ya tiene un pedido en curso', esError: true);
     setState(() => _enviando = true);
     try {
       await _meseroService.crearPedido(mesa: '$_mesa', cantidades: _cant, notas: _notas);
@@ -147,6 +181,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
         alAccionar: () => pestanaMeseroActiva.value = 1,
       );
       setState(() {
+        _mesasOcupadas.add(_mesa!);
         _cant.clear();
         _notas.clear();
       });
@@ -171,7 +206,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
                 onChanged: (i) => setState(() => _categoria = i),
                 colorActivo: AppEstilos.meseroOliva,
               ),
-              SelectorMesa(mesa: _mesa, onChanged: (m) => setState(() => _mesa = m)),
+              SelectorMesa(mesa: _mesa, onChanged: (m) => setState(() => _mesa = m), mesasOcupadas: _mesasOcupadas),
               Expanded(child: _contenido()),
               ResumenPedido(
                 mesa: _mesa,

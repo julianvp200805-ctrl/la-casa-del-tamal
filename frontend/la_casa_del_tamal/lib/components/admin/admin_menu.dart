@@ -20,7 +20,13 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
   final MenuService _menuService = MenuService();
   late Future<List<MenuItem>> _futuro = _menuService.obtenerMenu();
 
-  void _recargar() => setState(() => _futuro = _menuService.obtenerMenu());
+  void _recargar() {
+    // setState exige un callback void: con la flecha (=>) la asignación
+    // devolvía el Future y disparaba el warning de setState.
+    setState(() {
+      _futuro = _menuService.obtenerMenu();
+    });
+  }
 
   void _mensaje(String texto, {bool esError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(

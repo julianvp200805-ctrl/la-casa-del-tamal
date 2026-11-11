@@ -18,7 +18,11 @@ class _VencidosVistaState extends State<VencidosVista> {
   final ProductoService _service = ProductoService();
   late Future<List<Producto>> _futuro = _service.obtenerProductos();
 
-  void _recargar() => setState(() => _futuro = _service.obtenerProductos());
+  void _recargar() {
+    setState(() {
+      _futuro = _service.obtenerProductos();
+    });
+  }
 
   void _mensaje(String texto, {bool esError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(

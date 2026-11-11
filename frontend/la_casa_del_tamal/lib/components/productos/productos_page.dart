@@ -18,7 +18,11 @@ class _ProductosVistaState extends State<ProductosVista> {
   final ProductoService _service = ProductoService();
   late Future<List<Producto>> _futuro = _service.obtenerProductos();
 
-  void _recargar() => setState(() => _futuro = _service.obtenerProductos());
+  void _recargar() {
+    setState(() {
+      _futuro = _service.obtenerProductos();
+    });
+  }
 
   Future<void> _agregar() async {
     final guardado = await mostrarFormProducto(context, _service);

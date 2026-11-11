@@ -9,12 +9,16 @@ const Color _amarillo = Color(0xFFFFD60A);
 class SelectorMesa extends StatelessWidget {
   final int? mesa;
   final ValueChanged<int?> onChanged;
+  final Set<int> mesasOcupadas;
 
-  const SelectorMesa({super.key, required this.mesa, required this.onChanged});
+  const SelectorMesa({super.key, required this.mesa, required this.onChanged, this.mesasOcupadas = const {}});
+
+  bool _ocupada(int m) => mesasOcupadas.contains(m);
 
   @override
   Widget build(BuildContext context) {
     const estilo = TextStyle(color: Colors.white, fontSize: 13);
+    final mesaOcupada = mesa != null && _ocupada(mesa!);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
       child: Row(
@@ -31,7 +35,7 @@ class SelectorMesa extends StatelessWidget {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
-                value: mesa,
+                value: mesaOcupada ? null : mesa,
                 isExpanded: true,
                 hint: const Text('Mesa', style: estilo),
                 dropdownColor: AppEstilos.platoMesero,
@@ -48,18 +52,19 @@ class SelectorMesa extends StatelessWidget {
                 ],
                 items: [
                   for (int m = 1; m <= totalMesas; m++)
-                    DropdownMenuItem(
-                      value: m,
-                      child: Row(
-                        children: [
-                          const Text('Mesa', style: estilo),
-                          const Spacer(),
-                          Text('$m', style: estilo),
-                          const SizedBox(width: 8),
-                          Text('${cupoMesa(m)} p', style: const TextStyle(color: Colors.white38, fontSize: 11)),
-                        ],
+                    if (!mesasOcupadas.contains(m))
+                      DropdownMenuItem(
+                        value: m,
+                        child: Row(
+                          children: [
+                            const Text('Mesa', style: estilo),
+                            const Spacer(),
+                            Text('$m', style: estilo),
+                            const SizedBox(width: 8),
+                            Text('${cupoMesa(m)} p', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                          ],
+                        ),
                       ),
-                    ),
                 ],
                 onChanged: onChanged,
               ),
