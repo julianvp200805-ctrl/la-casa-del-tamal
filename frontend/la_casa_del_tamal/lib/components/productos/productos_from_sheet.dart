@@ -5,7 +5,9 @@ import 'package:frontend/components/productos/tipo_producto_dialog.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/productos/producto_service.dart';
 
-/// Hoja para registrar un lote de producto. Devuelve true si se guardó.
+/// Hoja para registrar un lote de producto. La fecha de ingreso se fija al
+/// día en que se registra (hoy) y el código de lote lo asigna el backend
+/// (LT001, LT002... según el tipo). Devuelve true si se guardó.
 Future<bool?> mostrarFormProducto(BuildContext context, ProductoService service) {
   return showModalBottomSheet<bool>(
     context: context,
@@ -25,10 +27,8 @@ class _FormProducto extends StatefulWidget {
 
 class _FormProductoState extends State<_FormProducto> {
   static const _nuevo = '__nuevo__';
-  final _lote = TextEditingController();
   List<TipoProducto> _tipos = [];
   String? _tipoId;
-  DateTime _ingreso = DateTime.now();
   bool _cargandoTipos = true;
   bool _guardando = false;
 
@@ -36,12 +36,6 @@ class _FormProductoState extends State<_FormProducto> {
   void initState() {
     super.initState();
     _cargarTipos();
-  }
-
-  @override
-  void dispose() {
-    _lote.dispose();
-    super.dispose();
   }
 
   Future<void> _cargarTipos() async {
@@ -66,22 +60,23 @@ class _FormProductoState extends State<_FormProducto> {
     });
   }
 
-  Future<void> _elegirFecha() async {
-    final f = await showDatePicker(context: context, initialDate: _ingreso, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 365)));
-    if (f != null) setState(() => _ingreso = f);
-  }
+  TipoProducto? get _tipo => _tipos.where((t) => t.id.toString() == _tipoId).firstOrNull;
 
   Future<void> _guardar() async {
-    final tipo = _tipos.where((t) => t.id.toString() == _tipoId).firstOrNull;
-    if (tipo == null || _lote.text.trim().isEmpty) {
-      _mensaje('Elige el tipo y escribe el código de lote', esError: true);
+    final tipo = _tipo;
+    if (tipo == null) {
+      _mensaje('Elige el tipo de producto', esError: true);
       return;
     }
     setState(() => _guardando = true);
     try {
-      final f = '${_ingreso.year}-${_ingreso.month.toString().padLeft(2, '0')}-${_ingreso.day.toString().padLeft(2, '0')}';
-      await widget.service.crearProducto(idTipo: tipo.id, fechaIngreso: f, lote: _lote.text.trim());
-      if (mounted) Navigator.pop(context, true);
+      final aviso = await widget.service.crearProducto(idTipo: tipo.id);
+      if (!mounted) return;
+      // El aviso llega del backend: "Lote LT002 de carne: vence el ..."
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(aviso), backgroundColor: Colors.green.shade700),
+      );
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       _mensaje(e.toString(), esError: true);
@@ -97,6 +92,9 @@ class _FormProductoState extends State<_FormProducto> {
 
   @override
   Widget build(BuildContext context) {
+    final hoy = DateTime.now();
+    final tipo = _tipo;
+    final vence = tipo == null ? null : DateTime(hoy.year, hoy.month, hoy.day).add(Duration(days: tipo.dias));
     return HojaFormulario(
       titulo: 'Agregar producto',
       child: Column(
@@ -120,15 +118,38 @@ class _FormProductoState extends State<_FormProducto> {
                     ),
                   ),
           ),
+          // La fecha de ingreso se fija al día en que se registra el lote y el
+          // código de lote lo asigna el backend, así que aquí solo se informa
+          // cómo va a quedar el registro antes de guardarlo.
           CajaHoja(
-            onTap: _elegirFecha,
-            child: Row(children: [
-              const Icon(Icons.event, color: Colors.white70, size: 18),
-              const SizedBox(width: 10),
-              Text('Ingreso: ${fechaCorta(_ingreso)}', style: const TextStyle(color: Colors.white, fontSize: 13)),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Icon(Icons.event_available, color: Colors.white70, size: 18),
+                  const SizedBox(width: 10),
+                  Text('Ingreso: hoy ${fechaCorta(hoy)}', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                ]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  const Icon(Icons.schedule, color: Colors.white70, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      vence == null ? 'Vence: elige un tipo' : 'Vence: ${fechaCorta(vence)} (${tipo!.dias} días)',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  const Icon(Icons.tag, color: Colors.white70, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('Lote: se asigna automáticamente', style: const TextStyle(color: Colors.white, fontSize: 13))),
+                ]),
+              ],
+            ),
           ),
-          CampoHoja(controller: _lote, hint: 'Código de lote (ej: CT001)'),
           const SizedBox(height: 4),
           SizedBox(
             width: double.infinity,

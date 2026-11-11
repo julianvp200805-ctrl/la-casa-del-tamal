@@ -17,14 +17,17 @@ class ProductoService {
     return (data as List).map((e) => TipoProducto.fromJson(e)).toList();
   }
 
-  // POST /producto/crearProducto (el backend calcula el vencimiento)
-  Future<void> crearProducto({required Object idTipo, required String fechaIngreso, required String lote}) {
-    return _api.postJson(
+  // POST /producto/crearProducto. Solo se elige el tipo: la fecha de ingreso
+  // se fija al día en que se registra y el código de lote (LT001, LT002...
+  // por tipo) los asigna el backend. Devuelve el aviso con lote y vencimiento.
+  Future<String> crearProducto({required Object idTipo}) async {
+    final data = await _api.postJson(
       '/producto/crearProducto',
-      {'id_tipo': idTipo, 'fecha_ingreso': fechaIngreso, 'codigo_lote': lote},
+      {'id_tipo': idTipo},
       conToken: true,
       defecto: 'No se pudo guardar el producto',
     );
+    return data is Map ? (data['aviso']?.toString() ?? 'Producto guardado') : 'Producto guardado';
   }
 
   // POST /tipoProducto/crear_tipo
@@ -38,8 +41,9 @@ class ProductoService {
     return TipoProducto.fromJson(data['data']);
   }
 
-  // DELETE /producto/eliminar/:id (descartar un producto vencido)
+  // DELETE /producto/eliminar/:id (sacar un lote vencido del inventario; su
+  // número de lote queda libre para el próximo ingreso)
   Future<void> eliminarProducto(Object id) {
-    return _api.deleteJson('/producto/eliminar/$id', conToken: true, defecto: 'No se pudo descartar el producto');
+    return _api.deleteJson('/producto/eliminar/$id', conToken: true, defecto: 'No se pudo sacar el producto');
   }
 }

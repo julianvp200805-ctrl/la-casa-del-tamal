@@ -50,7 +50,7 @@ class AdminMenuCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(plato.nombre, style: TextStyle(color: agotado ? Colors.white38 : Colors.white70, fontSize: 15, fontFamily: 'serif')),
+                    Text(plato.nombre, style: TextStyle(color: agotado ? Colors.white70 : Colors.white, fontSize: 15, fontFamily: 'serif')),
                     const SizedBox(height: 4),
                     if ((plato.descripcion ?? '').isNotEmpty)
                       Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
@@ -109,10 +109,18 @@ class _PillAgotado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fondo rojo vivo con texto blanco: antes era texto rojo claro sobre un
+    // rojo apagado y casi no se leía la letra.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: AppEstilos.rojoFondo, borderRadius: BorderRadius.circular(10)),
-      child: const Text('Agotado', style: TextStyle(color: AppEstilos.rojoVencido, fontSize: 10, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: AppEstilos.rojoVencido,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Text(
+        'Descontinuado',
+        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.4),
+      ),
     );
   }
 }

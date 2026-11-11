@@ -23,22 +23,34 @@ DateTime _hoy() {
 /// 3-05-2026 (día sin cero a la izquierda, mes con dos dígitos).
 String fechaCorta(DateTime? d) => d == null ? '—' : '${d.day}-${d.month.toString().padLeft(2, '0')}-${d.year}';
 
-/// Un lote de producto del inventario. El nombre viene de su tipo y la fecha
-/// de vencimiento la calcula el backend (ingreso + días del tipo).
+/// Código de lote tal como se muestra en la app: el backend guarda
+/// "T{id_tipo}-LT001" porque codigo_lote es la clave primaria de la tabla y
+/// debe ser único en toda ella; aquí se le quita el prefijo interno para que
+/// el lote se vea como LT001 en cada producto.
+String _loteVisible(String codigo) {
+  final i = codigo.indexOf('-LT');
+  return i >= 0 ? codigo.substring(i + 1) : codigo;
+}
+
+/// Un lote de producto del inventario. El nombre viene de su tipo, la fecha
+/// de ingreso es el día en que se registró el lote y la de vencimiento la
+/// calcula el backend (ingreso + días del tipo).
 class Producto {
   final Object id;
   final String nombre;
   final String lote;
+  final DateTime? ingreso;
   final DateTime? vencimiento;
 
-  Producto({required this.id, required this.nombre, required this.lote, this.vencimiento});
+  Producto({required this.id, required this.nombre, required this.lote, this.ingreso, this.vencimiento});
 
   factory Producto.fromJson(Map<String, dynamic> json) {
     final tipo = json['tipos_producto'];
     return Producto(
       id: json['id_producto'] ?? '',
       nombre: ((tipo is Map ? tipo['nombre'] : null) ?? 'Producto').toString(),
-      lote: (json['codigo_lote'] ?? '').toString(),
+      lote: _loteVisible((json['codigo_lote'] ?? '').toString()),
+      ingreso: DateTime.tryParse((json['fecha_ingreso'] ?? '').toString()),
       vencimiento: DateTime.tryParse((json['fecha_vencimiento'] ?? '').toString()),
     );
   }

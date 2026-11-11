@@ -31,9 +31,12 @@ class ProductoFila extends StatelessWidget {
                     ? Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(color: AppEstilos.rojoChip, borderRadius: BorderRadius.circular(4)),
-                        child: Text(fecha, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        child: Text('Venció el $fecha', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                       )
-                    : Text(fecha, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                    : Text(
+                        'Ingreso ${fechaCorta(producto.ingreso)} · Vence el $fecha',
+                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      ),
               ],
             ),
           ),

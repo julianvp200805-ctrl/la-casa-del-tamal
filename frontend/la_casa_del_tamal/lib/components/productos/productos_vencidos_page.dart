@@ -5,7 +5,8 @@ import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/productos/producto_service.dart';
 
 /// Pestaña "Vencidos" de Inventario: alerta roja con el total y botón para
-/// descartar cada uno.
+/// sacar cada lote vencido. Al sacarlo, su número de lote queda libre para
+/// el próximo ingreso de ese mismo tipo de producto.
 class VencidosVista extends StatefulWidget {
   const VencidosVista({super.key});
 
@@ -25,15 +26,22 @@ class _VencidosVistaState extends State<VencidosVista> {
     );
   }
 
-  Future<void> _descartar(Producto p) async {
+  Future<void> _sacar(Producto p) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Descartar producto'),
-        content: Text('¿Descartar ${p.nombre} (lote ${p.lote})? Se eliminará del inventario.'),
+        backgroundColor: AppEstilos.tablaInventario,
+        title: const Text('Sacar lote vencido', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '¿Sacar ${p.nombre} (lote ${p.lote}) del inventario? Su número de lote queda libre para el próximo ingreso.',
+          style: const TextStyle(color: Colors.white70),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Descartar', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sacar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -41,7 +49,7 @@ class _VencidosVistaState extends State<VencidosVista> {
     try {
       await _service.eliminarProducto(p.id);
       if (!mounted) return;
-      _mensaje('${p.nombre} descartado');
+      _mensaje('${p.nombre} (lote ${p.lote}) sacado del inventario');
       _recargar();
     } catch (e) {
       if (mounted) _mensaje(e.toString(), esError: true);
@@ -96,10 +104,10 @@ class _VencidosVistaState extends State<VencidosVista> {
                   producto: p,
                   fechaEnChip: true,
                   trailing: InkWell(
-                    onTap: () => _descartar(p),
+                    onTap: () => _sacar(p),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
-                      child: Text('Descartar', style: TextStyle(color: AppEstilos.rojoVencido, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+                      child: Text('Sacar', style: TextStyle(color: AppEstilos.rojoVencido, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'serif')),
                     ),
                   ),
                 ),

@@ -47,19 +47,25 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppEstilos.tablaInventario,
-        title: Text(agotando ? 'Descontinuar plato' : 'Habilitar plato'),
+        // Textos claros: el fondo es oscuro y con el color por defecto del
+        // tema claro las letras quedaban casi invisibles.
+        title: Text(
+          agotando ? 'Descontinuar plato' : 'Habilitar plato',
+          style: const TextStyle(color: Colors.white),
+        ),
         content: Text(
           agotando
               ? '¿Desea descontinuar "${plato.nombre}"? Deja de verse en la carta y el mesero no puede tomarlo.'
               : '¿Desea volver a habilitar "${plato.nombre}"? Vuelve a la carta y a los pedidos.',
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               agotando ? 'Descontinuar' : 'Habilitar',
-              style: TextStyle(color: agotando ? AppEstilos.rojoVencido : AppEstilos.verdeAccion),
+              style: TextStyle(color: agotando ? AppEstilos.rojoVencido : AppEstilos.verdeAccion, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -100,13 +106,17 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
       final si = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Tiene pedidos'),
-          content: Text('"${plato.nombre}" aparece en pedidos ya tomados y la base no lo deja borrar. ¿Descontinuarlo para que deje de verse en la carta?'),
+          backgroundColor: AppEstilos.tablaInventario,
+          title: const Text('Tiene pedidos', style: TextStyle(color: Colors.white)),
+          content: Text(
+            '"${plato.nombre}" aparece en pedidos ya tomados y la base no lo deja borrar. ¿Descontinuarlo para que deje de verse en la carta?',
+            style: const TextStyle(color: Colors.white70),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Descontinuar', style: TextStyle(color: AppEstilos.rojoVencido)),
+              child: const Text('Descontinuar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
