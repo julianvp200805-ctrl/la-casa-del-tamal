@@ -45,6 +45,13 @@ export const actualizarPlato = async (id, menuData) => {
 };
 
 export const eliminarPlato = async (id) => {
+  // Borrado permanente del plato. Antes de borrar el menú se retiran sus
+  // líneas de detalle_pedido (FK detalle_pedido_menu_id_fkey): así el plato se
+  // puede eliminar de verdad aunque existan pedidos registrados que lo usen.
+  // Sin esto Postgres rechaza el DELETE y la única salida era descontinuar.
+  const { error: errorDetalles } = await supabase.from('detalle_pedido').delete().eq('menu_id', id);
+  if (errorDetalles) return { data: null, error: errorDetalles };
+
   // .select('id') devuelve las filas realmente borradas; sin eso no hay forma
   // de distinguir "no existía" de "borró 0 filas por otra razón".
   const { data, error } = await supabase

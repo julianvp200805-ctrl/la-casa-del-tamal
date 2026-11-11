@@ -30,13 +30,51 @@ class _ProductosVistaState extends State<ProductosVista> {
     return p.porVencer ? AppEstilos.pillPorVencer : AppEstilos.pillFresco;
   }
 
+  Future<void> _eliminar(Producto p) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppEstilos.tablaInventario,
+        title: const Text('Eliminar producto', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '¿Eliminar ${p.nombre} (lote ${p.lote}) del inventario? Su número de lote queda libre para el próximo ingreso.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await _service.eliminarProducto(p.id);
+      if (!mounted) return;
+      _mensaje('${p.nombre} (lote ${p.lote}) eliminado del inventario');
+      _recargar();
+    } catch (e) {
+      if (mounted) _mensaje(e.toString(), esError: true);
+    }
+  }
+
+  void _mensaje(String texto, {bool esError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(texto), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
+            // Holgura para que la última fila no quede debajo de los dos
+            // botones de la esquina (+ y el FAB de Tamalín del shell).
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 176),
             child: FutureBuilder<List<Producto>>(
               future: _futuro,
               builder: (context, snap) {
@@ -53,7 +91,10 @@ class _ProductosVistaState extends State<ProductosVista> {
             ),
           ),
         ),
-        Positioned(right: 24, bottom: 24, child: _BotonMas(onTap: _agregar)),
+        // El + va ARRIBA del FAB de Tamalín (el shell lo pone en esta misma
+        // esquina y se dibuja encima): si queda abajo, el chat se come el
+        // toque y el botón de agregar nunca responde.
+        Positioned(right: 24, bottom: 98, child: _BotonMas(onTap: _agregar)),
       ],
     );
   }
@@ -72,10 +113,24 @@ class _ProductosVistaState extends State<ProductosVista> {
           for (final p in lista)
             ProductoFila(
               producto: p,
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(color: _colorLote(p), borderRadius: BorderRadius.circular(12)),
-                child: Text(p.lote, style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(color: _colorLote(p), borderRadius: BorderRadius.circular(12)),
+                    child: Text(p.lote, style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _eliminar(p),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.delete_outline, color: AppEstilos.rojoVencido, size: 20),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -85,7 +140,8 @@ class _ProductosVistaState extends State<ProductosVista> {
 }
 
 /// Cuadrado verde con + de la maqueta. Botón normal, no FAB: el FAB ya lo usa
-/// el shell para Tamalin y se montarían uno sobre otro.
+/// el shell para Tamalín y se montarían uno sobre otro, por eso va flotando
+/// más arriba (el + tapado por el chat nunca respondía al toque).
 class _BotonMas extends StatelessWidget {
   final VoidCallback onTap;
   const _BotonMas({required this.onTap});

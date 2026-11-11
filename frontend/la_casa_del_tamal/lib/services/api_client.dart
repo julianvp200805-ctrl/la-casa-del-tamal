@@ -17,7 +17,9 @@ class ApiException implements Exception {
 }
 
 /// Único punto de conexión con el backend.
-/// - Timeout de 30 s por petición (Render gratuito despierta lento).
+/// - Timeout de 30 s en lecturas (GET) y de 60 s en escrituras
+///   (POST/PATCH/PUT/DELETE): Render gratuito tarda ~50 s en despertar y las
+///   escrituras no se reintentan, así que necesitan más margen.
 /// - Los GET reintentan hasta 3 veces (1 s y 2 s de espera) ante caídas,
 ///   timeouts o errores 5xx: cubre el arranque en frío de Render.
 /// - POST/PATCH/PUT/DELETE NUNCA se reintentan: repetirlos duplicaría
@@ -29,6 +31,7 @@ class ApiClient {
 
   final http.Client _http = http.Client();
   static const Duration _timeout = Duration(seconds: 30);
+  static const Duration _timeoutEscritura = Duration(seconds: 60);
 
   Future<Map<String, String>> _headers(bool conToken) async {
     final headers = {...ApiConfig.headers};
@@ -72,8 +75,8 @@ class ApiClient {
       ..fields.addAll(campos)
       ..files.addAll(archivos);
     try {
-      final streamed = await _http.send(req).timeout(_timeout);
-      final r = await http.Response.fromStream(streamed).timeout(_timeout);
+      final streamed = await _http.send(req).timeout(_timeoutEscritura);
+      final r = await http.Response.fromStream(streamed).timeout(_timeoutEscritura);
       return _procesar(r, defecto);
     } on ApiException {
       rethrow;
@@ -86,6 +89,9 @@ class ApiClient {
     final headers = await _headers(conToken);
     final url = Uri.parse('${ApiConfig.baseUrl}$ruta');
     final intentos = reintentar ? 3 : 1;
+    // Las escrituras no se reintentan: si Render está despertando (~50 s)
+    // necesitan más margen que las lecturas, que sí reintentan.
+    final timeout = metodo == 'GET' ? _timeout : _timeoutEscritura;
     Object? ultimo;
 
     for (var i = 0; i < intentos; i++) {
@@ -93,8 +99,8 @@ class ApiClient {
       try {
         final req = http.Request(metodo, url)..headers.addAll(headers);
         if (cuerpo != null) req.body = jsonEncode(cuerpo);
-        final streamed = await _http.send(req).timeout(_timeout);
-        final r = await http.Response.fromStream(streamed).timeout(_timeout);
+        final streamed = await _http.send(req).timeout(timeout);
+        final r = await http.Response.fromStream(streamed).timeout(timeout);
         return _procesar(r, defecto);
       } on ApiException catch (e) {
         // 4xx (correo duplicado, plato agotado, sesión vencida...): el

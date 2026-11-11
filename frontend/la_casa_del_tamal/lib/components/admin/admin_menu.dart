@@ -86,11 +86,20 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar plato'),
-        content: Text('¿Seguro que quieres eliminar "${plato.nombre}" del menú?'),
+        backgroundColor: AppEstilos.tablaInventario,
+        // Textos claros: el fondo es oscuro y con el tema claro las letras
+        // quedaban casi invisibles.
+        title: const Text('Eliminar plato', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '¿Seguro que quieres eliminar permanentemente "${plato.nombre}" del menú? Si ya tiene pedidos registrados, también se borrarán esas líneas de pedido.',
+          style: const TextStyle(color: Colors.white70),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -100,36 +109,6 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
       if (!mounted) return;
       _mensaje(msg);
       _recargar();
-    } on PlatoConPedidosException catch (e) {
-      if (!mounted) return;
-      _mensaje(e.mensaje, esError: true);
-      final si = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: AppEstilos.tablaInventario,
-          title: const Text('Tiene pedidos', style: TextStyle(color: Colors.white)),
-          content: Text(
-            '"${plato.nombre}" aparece en pedidos ya tomados y la base no lo deja borrar. ¿Descontinuarlo para que deje de verse en la carta?',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Descontinuar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      );
-      if (si != true) return;
-      try {
-        final msg = await _menuService.marcarDisponibilidad(plato.id, false);
-        if (!mounted) return;
-        _mensaje(msg);
-        _recargar();
-      } catch (e) {
-        if (mounted) _mensaje(e.toString(), esError: true);
-      }
     } catch (e) {
       if (mounted) _mensaje(e.toString(), esError: true);
     }

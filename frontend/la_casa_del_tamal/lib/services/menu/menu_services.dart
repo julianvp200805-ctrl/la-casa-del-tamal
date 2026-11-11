@@ -32,15 +32,6 @@ class MenuItem {
   }
 }
 
-/// El admin intentó borrar un plato que ya tiene pedidos: la base de datos
-/// no lo permite para no romper el historial. La alternativa es descontinuarlo.
-class PlatoConPedidosException implements Exception {
-  final String mensaje;
-  PlatoConPedidosException(this.mensaje);
-  @override
-  String toString() => mensaje;
-}
-
 class MenuService {
   final ApiClient _api = ApiClient.I;
 
@@ -133,15 +124,12 @@ class MenuService {
     return campos;
   }
 
-  // DELETE /menu/menu/:id (admin)
+  // DELETE /menu/menu/:id (admin): borrado permanente. El backend retira las
+  // líneas de detalle de pedido que referencian al plato antes de borrarlo, así
+  // un plato que ya tiene pedidos registrados sí se puede eliminar del menú.
   Future<String> eliminarPlato(String id) async {
-    try {
-      final data = await _api.deleteJson('/menu/menu/$id', conToken: true, defecto: 'No se pudo eliminar el plato');
-      return (data is Map ? data['message']?.toString() : null) ?? 'Plato eliminado';
-    } on ApiException catch (e) {
-      if (e.codigo == 409) throw PlatoConPedidosException(e.mensaje);
-      rethrow;
-    }
+    final data = await _api.deleteJson('/menu/menu/$id', conToken: true, defecto: 'No se pudo eliminar el plato');
+    return (data is Map ? data['message']?.toString() : null) ?? 'Plato eliminado';
   }
 
   // PATCH /menu/menu/:id/disponible (admin): agota o reactiva un plato sin

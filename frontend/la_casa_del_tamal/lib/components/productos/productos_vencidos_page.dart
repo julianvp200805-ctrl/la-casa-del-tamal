@@ -59,7 +59,9 @@ class _VencidosVistaState extends State<VencidosVista> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      // Holgura inferior para que el FAB de Tamalín del shell no tape el
+      // botón "Sacar" de las últimas filas.
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
       child: FutureBuilder<List<Producto>>(
         future: _futuro,
         builder: (context, snap) {
