@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/mesero/mesero_shell.dart';
 import 'package:frontend/components/mesero/mesero_top_bar.dart';
 import 'package:frontend/components/mesero/nota_cocina_sheet.dart';
 import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/components/mesero/plato_pedido_card.dart';
 import 'package:frontend/components/mesero/selector_mesa.dart';
-import 'package:frontend/core/app_states.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 import 'package:frontend/services/mesero/mesero.dart';
@@ -28,51 +29,75 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   int _categoria = 2;
   bool _cargando = true, _enviando = false;
   String? _error;
+  Timer? _timer;
+  String? _version;
+  bool _ocupado = false;
 
   int get _totalItems => _cant.values.fold(0, (a, b) => a + b);
-  double get _total => _platos.fold(0.0, (s, p) => s + (p.precio as num).toDouble() * (_cant[p.id] ?? 0));
+  double get _total => _platos.fold(0.0, (s, p) => s + p.precio * (_cant[p.id] ?? 0));
   String get _detalle => _platos.where((p) => (_cant[p.id] ?? 0) > 0).map((p) => p.nombre).join(', ');
 
-  // Lee "categoria" o "tipo" sin romper si no existen.
-  String _texto(MenuItem p) {
-    var s = '';
-    try { s = '${(p as dynamic).categoria ?? ''}'; } catch (_) {}
-    if (s.isEmpty) { try { s = '${(p as dynamic).tipo ?? ''}'; } catch (_) {} }
-    s = s.toLowerCase();
+  // Categoría en minúsculas y sin tildes para comparar con las pestañas.
+  String _clave(MenuItem p) {
+    var s = (p.categoria ?? '').toLowerCase();
     const a = 'áéíóú', b = 'aeiou';
-    for (var i = 0; i < 5; i++) { s = s.replaceAll(a[i], b[i]); }
+    for (var i = 0; i < 5; i++) {
+      s = s.replaceAll(a[i], b[i]);
+    }
     return s;
   }
 
   String _etiqueta(MenuItem p) {
-    try {
-      final t = '${(p as dynamic).tipo ?? ''}';
-      if (t.isNotEmpty) return t[0].toUpperCase() + t.substring(1);
-    } catch (_) {}
-    return 'Típico';
+    const nombres = {'desayuno': 'Desayuno', 'almuerzo': 'Almuerzo', 'rapida': 'Rápida', 'bebida': 'Bebida'};
+    final clave = _clave(p);
+    for (final e in nombres.entries) {
+      if (clave.contains(e.key)) return e.value;
+    }
+    final c = (p.categoria ?? '').trim();
+    if (c.isEmpty) return 'Típico';
+    return c[0].toUpperCase() + c.substring(1);
   }
 
   List<MenuItem> get _visibles {
-    if (!_platos.any((p) => _claves.any(_texto(p).contains))) return _platos;
-    return _platos.where((p) => _texto(p).contains(_claves[_categoria])).toList();
+    if (!_platos.any((p) => _claves.any(_clave(p).contains))) return _platos;
+    return _platos.where((p) => _clave(p).contains(_claves[_categoria])).toList();
   }
 
   @override
   void initState() {
     super.initState();
     _cargar();
+    // Si el admin edita el menú, la huella cambia y la lista se refresca sola.
+    _timer = Timer.periodic(const Duration(seconds: 15), (_) => _sondearVersion());
   }
 
-  Future<void> _cargar() async {
-    setState(() { _cargando = true; _error = null; });
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _sondearVersion() async {
+    if (_ocupado || _enviando) return;
+    final v = await _menuService.obtenerVersion();
+    if (!mounted || v == null) return;
+    if (_version != null && v != _version) await _cargar(silencioso: true);
+    _version = v;
+  }
+
+  Future<void> _cargar({bool silencioso = false}) async {
+    if (_ocupado) return;
+    _ocupado = true;
+    if (!silencioso) setState(() { _cargando = true; _error = null; });
     try {
       // Los platos agotados no se muestran: el mesero no puede tomarlos.
       final platos = await _menuService.obtenerMenu(soloDisponibles: true);
       if (!mounted) return;
-      setState(() => _platos = platos);
+      setState(() { _platos = platos; _error = null; });
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted && !silencioso) setState(() => _error = e.toString());
     } finally {
+      _ocupado = false;
       if (mounted) setState(() => _cargando = false);
     }
   }
@@ -99,8 +124,15 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
     });
   }
 
-  void _mensaje(String t, {bool esError = false}) => ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t), backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700));
+  void _mensaje(String t, {bool esError = false, String? accion, VoidCallback? alAccionar}) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(t),
+        backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        action: accion != null
+            ? SnackBarAction(label: accion, textColor: Colors.white, onPressed: alAccionar ?? () {})
+            : null,
+      ));
 
   Future<void> _hacerPedido() async {
     if (_mesa == null) return _mensaje('Elige la mesa del pedido', esError: true);
@@ -109,7 +141,11 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
     try {
       await _meseroService.crearPedido(mesa: '$_mesa', cantidades: _cant, notas: _notas);
       if (!mounted) return;
-      _mensaje('Pedido de la mesa $_mesa enviado a cocina');
+      _mensaje(
+        'Pedido de la mesa $_mesa enviado a cocina',
+        accion: 'Ver pedidos',
+        alAccionar: () => pestanaMeseroActiva.value = 1,
+      );
       setState(() {
         _cant.clear();
         _notas.clear();
@@ -130,7 +166,11 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
             children: [
               const MeseroTopBar(),
               const TituloMesero(texto: 'Tomar pedido'),
-              CategoriaTabs(seleccionada: _categoria, onChanged: (i) => setState(() => _categoria = i)),
+              CategoriaTabs(
+                seleccionada: _categoria,
+                onChanged: (i) => setState(() => _categoria = i),
+                colorActivo: AppEstilos.meseroOliva,
+              ),
               SelectorMesa(mesa: _mesa, onChanged: (m) => setState(() => _mesa = m)),
               Expanded(child: _contenido()),
               ResumenPedido(
@@ -149,23 +189,28 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
   Widget _contenido() {
     if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.meseroOliva));
     if (_error != null) return AppErrorState(mensaje: _error!, onReintentar: _cargar);
-    if (_platos.isEmpty) return const AppEmptyState(mensaje: 'El menú está vacío');
+    if (_platos.isEmpty) return const AppEmptyState(mensaje: 'El menú está vacío', icono: Icons.restaurant_menu);
     final v = _visibles;
-    if (v.isEmpty) return const AppEmptyState(mensaje: 'No hay platos en esta categoría');
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-      children: [
-        for (final p in v)
-          PlatoPedidoCard(
-            plato: p,
-            etiqueta: _etiqueta(p),
-            cantidad: _cant[p.id] ?? 0,
-            nota: _notas[p.id] ?? '',
-            onMas: () => _cambiar(p.id, 1),
-            onMenos: () => _cambiar(p.id, -1),
-            onEditar: () => _editarNota(p),
-          ),
-      ],
+    if (v.isEmpty) return const AppEmptyState(mensaje: 'No hay platos en esta categoría', icono: Icons.no_meals_outlined);
+    return RefreshIndicator(
+      color: AppEstilos.meseroOliva,
+      onRefresh: _cargar,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+        children: [
+          for (final p in v)
+            PlatoPedidoCard(
+              plato: p,
+              etiqueta: _etiqueta(p),
+              cantidad: _cant[p.id] ?? 0,
+              nota: _notas[p.id] ?? '',
+              onMas: () => _cambiar(p.id, 1),
+              onMenos: () => _cambiar(p.id, -1),
+              onEditar: () => _editarNota(p),
+            ),
+        ],
+      ),
     );
   }
 }

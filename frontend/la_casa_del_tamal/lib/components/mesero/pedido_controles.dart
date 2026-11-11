@@ -28,18 +28,31 @@ class TituloMesero extends StatelessWidget {
           child: Text(
             texto,
             textAlign: centrado ? TextAlign.center : TextAlign.left,
-            style: const TextStyle(color: Colors.white70, fontSize: 24, height: 1.25, fontFamily: 'serif'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 25,
+              height: 1.25,
+              fontFamily: 'serif',
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       );
 }
 
-/// desayuno | almuerzo | comida rápida | bebidas
+/// Desayuno | Almuerzo | Comida rápida | Bebidas.
+/// [colorActivo] tiñe la pestaña elegida: oliva en mesero, ámbar en cocina.
 class CategoriaTabs extends StatelessWidget {
-  static const etiquetas = ['desayuno', 'almuerzo', 'comida\nrápida', 'bebidas'];
+  static const etiquetas = ['Desayuno', 'Almuerzo', 'Comida\nrápida', 'Bebidas'];
   final int seleccionada;
   final ValueChanged<int> onChanged;
-  const CategoriaTabs({super.key, required this.seleccionada, required this.onChanged});
+  final Color colorActivo;
+  const CategoriaTabs({
+    super.key,
+    required this.seleccionada,
+    required this.onChanged,
+    this.colorActivo = AppEstilos.verdeBoton,
+  });
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -50,19 +63,29 @@ class CategoriaTabs extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () => onChanged(i),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
                     height: 44,
-                    margin: EdgeInsets.only(right: i == etiquetas.length - 1 ? 0 : 4),
+                    margin: EdgeInsets.only(right: i == etiquetas.length - 1 ? 0 : 6),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: i == seleccionada ? const Color(0xFF4ADE60) : AppEstilos.platoMesero,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppEstilos.bordeOscuro),
+                      color: i == seleccionada ? colorActivo : AppEstilos.platoMesero,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: i == seleccionada ? colorActivo : AppEstilos.bordeOscuro),
+                      boxShadow: i == seleccionada
+                          ? [BoxShadow(color: colorActivo.withValues(alpha: 0.25), blurRadius: 10, offset: const Offset(0, 3))]
+                          : [],
                     ),
                     child: Text(
                       etiquetas[i],
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 11, color: i == seleccionada ? Colors.black : Colors.white),
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.2,
+                        fontWeight: i == seleccionada ? FontWeight.bold : FontWeight.w500,
+                        color: i == seleccionada ? Colors.black87 : Colors.white70,
+                      ),
                     ),
                   ),
                 ),
@@ -72,7 +95,7 @@ class CategoriaTabs extends StatelessWidget {
       );
 }
 
-/// Barra "Mesa 4 / 5 personas · Tamal, Chorizo ......... Valor total: 50.000"
+/// Barra "Mesa 4 · 5 personas · Tamal, Chorizo · Valor total: $50.000"
 class ResumenPedido extends StatelessWidget {
   final int? mesa;
   final String detalle;
@@ -92,13 +115,14 @@ class ResumenPedido extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: AppEstilos.platoMesero,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: items > 0 ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: items > 0 ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro, width: items > 0 ? 1.3 : 1),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -109,7 +133,12 @@ class ResumenPedido extends StatelessWidget {
                   children: [
                     Text(
                       mesa == null ? 'Mesa sin asignar' : 'Mesa $mesa · ${cupoMesa(mesa!)} personas',
-                      style: TextStyle(color: mesa == null ? Colors.white38 : Colors.white, fontSize: 13, fontFamily: 'serif'),
+                      style: TextStyle(
+                        color: mesa == null ? Colors.white38 : Colors.white,
+                        fontSize: 13,
+                        fontFamily: 'serif',
+                        fontWeight: mesa == null ? FontWeight.normal : FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -124,7 +153,7 @@ class ResumenPedido extends StatelessWidget {
                         children: [
                           const Icon(Icons.notes, size: 10, color: AppEstilos.meseroOliva),
                           const SizedBox(width: 4),
-                          Text('$notas nota${notas == 1 ? '' : 's'} para cocina',
+                          Text('Notas para cocina: $notas',
                               style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 10)),
                         ],
                       ),
@@ -136,8 +165,8 @@ class ResumenPedido extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(formatoPesos(total), style: const TextStyle(color: _amarillo, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'serif')),
-                  Text('$items artículos', style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text('\$${formatoPesos(total)}', style: const TextStyle(color: _amarillo, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+                  Text('Artículos: $items', style: const TextStyle(color: Colors.white38, fontSize: 10)),
                 ],
               ),
             ],
@@ -146,8 +175,7 @@ class ResumenPedido extends StatelessWidget {
       );
 }
 
-/// Botón dorado "Hacer pedido". Altura 48 y texto con altura de línea fija:
-/// con 40 el serif quedaba recortado contra el borde inferior.
+/// Botón dorado "Hacer pedido", ancho completo para que sea fácil de tocar.
 class BotonHacerPedido extends StatelessWidget {
   final int cantidad;
   final bool enviando;
@@ -157,24 +185,25 @@ class BotonHacerPedido extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-        child: Center(
-          child: SizedBox(
-            width: 210,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: enviando ? null : onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppEstilos.botonMesero,
-                foregroundColor: Colors.black87,
-                elevation: 0,
-                padding: EdgeInsets.zero,
-                shape: const StadiumBorder(),
-              ),
-              child: enviando
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black54))
-                  : const Text('Hacer pedido',
-                      style: TextStyle(color: Colors.black87, fontSize: 15, fontFamily: 'serif', height: 1)),
+        child: SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: enviando ? null : onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppEstilos.botonMesero,
+              disabledBackgroundColor: AppEstilos.botonMesero.withValues(alpha: 0.5),
+              foregroundColor: Colors.black87,
+              elevation: 0,
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
+            child: enviando
+                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black54))
+                : Text(
+                    cantidad > 0 ? 'Hacer pedido · $cantidad' : 'Hacer pedido',
+                    style: const TextStyle(color: Colors.black87, fontSize: 16, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1),
+                  ),
           ),
         ),
       );

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:frontend/components/admin/admin_shell.dart';
 import 'package:frontend/components/chat/chat_fab.dart';
-import 'package:frontend/services/config/api_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/services/api_client.dart';
 
 class GenerarCodigoPage extends StatefulWidget {
   const GenerarCodigoPage({super.key});
@@ -23,37 +20,17 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
   Future<void> _peticionGenerarCodigo() async {
     setState(() => _cargando = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token') ?? '';
-
-      // RUTA FIJA UNIFICADA: Apunta exactamente al router plano sin anteponer /api
-      final String urlFinal = '${ApiConfig.baseUrl}/auth/generar-codigo';
-
-      final response = await http.post(
-        Uri.parse(urlFinal),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'rol': _rolSeleccionado}),
+      final data = await ApiClient.I.postJson(
+        '/auth/generar-codigo',
+        {'rol': _rolSeleccionado},
+        conToken: true,
+        defecto: 'Error al procesar la solicitud',
       );
-
-      // Si aún así tu hosting o Render devuelve un HTML de error, capturamos el estatus
-      if (response.body.trim().startsWith('<!DOCTYPE')) {
-        _notificar('Error ${response.statusCode}: Endpoint no encontrado en esta URL base.', esError: true);
-        return;
-      }
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        setState(() => _codigoGenerado = data['codigo'] ?? '');
-        _notificar('Código generado con éxito', esError: false);
-      } else {
-        _notificar(data['error'] ?? 'Error al procesar la solicitud', esError: true);
-      }
+      if (!mounted) return;
+      setState(() => _codigoGenerado = data['codigo'] ?? '');
+      _notificar('Código generado con éxito', esError: false);
     } catch (e) {
-      _notificar('Error de red: ${e.toString()}', esError: true);
+      if (mounted) _notificar(e.toString(), esError: true);
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -114,7 +91,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text('Codigo de acceso', style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+              const Text('Código de acceso', style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               const Text('Genera un código para que el nuevo usuario se registre con el rol que elijas.', style: TextStyle(color: Colors.white60, fontSize: 13)),
               const SizedBox(height: 24),
@@ -138,7 +115,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                   style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.verdeBoton, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                   child: _cargando 
                       ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text('Generar codigo', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+                      : const Text('Generar código', style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
                 ),
               ),
               const SizedBox(height: 24),

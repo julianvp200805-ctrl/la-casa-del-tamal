@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/menu/campo_inicio.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:frontend/services/config/api_config.dart';
+import 'package:frontend/services/gerente/gerent_services.dart';
 
 class RecuperarContrasenaPage extends StatefulWidget {
   const RecuperarContrasenaPage({super.key});
@@ -38,35 +37,25 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
     super.dispose();
   }
 
-  // LOGICA 1: Llama al endpoint de Brevo para disparar el correo transaccional
+  // Paso 1: el backend envía un código de 6 dígitos al correo.
   Future<void> _solicitarCodigoBrevo() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) return _msg('Ingresa tu correo electrónico', true);
 
     setState(() => _cargandoCodigo = true);
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password'),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({'email': email}),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        setState(() => _codigoEnviadoExitosamente = true);
-        _msg('Código enviado con éxito a tu correo', false);
-      } else {
-        _msg(data['error'] ?? 'El correo no coincide con ningún empleado', true);
-      }
+      await UserService().enviarCodigoRecuperacion(email);
+      if (!mounted) return;
+      setState(() => _codigoEnviadoExitosamente = true);
+      _msg('Código enviado con éxito a tu correo', false);
     } catch (e) {
-      _msg('Error: Clave de Brevo o remitente inválido en el servidor.', true);
+      if (mounted) _msg(e.toString(), true);
     } finally {
       if (mounted) setState(() => _cargandoCodigo = false);
     }
   }
 
-  // LOGICA 2: Valida los 6 dígitos numéricos recibidos por email y asienta la nueva contraseña
+  // Paso 2: valida los 6 dígitos y asienta la nueva contraseña.
   Future<void> _procesarRestablecimiento() async {
     final codigo = _codigoCtrl.text.trim();
     final pass = _nuevaPassCtrl.text;
@@ -76,26 +65,16 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
 
     setState(() => _cargandoVerificacion = true);
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/verify-code'),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({
-          'email': _emailCtrl.text.trim(),
-          'codigo': codigo,
-          'newPassword': pass,
-        }),
+      await UserService().confirmarRecuperacion(
+        email: _emailCtrl.text.trim(),
+        codigo: codigo,
+        nuevaContrasena: pass,
       );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _msg('Contraseña restablecida correctamente', false);
-        if (mounted) Navigator.pop(context);
-      } else {
-        _msg(data['error'] ?? 'Código inválido o expirado', true);
-      }
+      if (!mounted) return;
+      _msg('Contraseña restablecida correctamente', false);
+      Navigator.pop(context);
     } catch (e) {
-      _msg('Error de conexión con el servidor', true);
+      if (mounted) _msg(e.toString(), true);
     } finally {
       if (mounted) setState(() => _cargandoVerificacion = false);
     }
@@ -124,7 +103,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
                 const SizedBox(height: 8),
                 const Text('Te enviaremos un código, ingrésalo para que puedas tener una contraseña nueva.', style: TextStyle(color: Colors.white60, fontSize: 13)),
                 const SizedBox(height: 24),
-                CampoInicio(controller: _emailCtrl, hint: 'Correo', icono: Icons.mail_outline),
+                CampoInicio(controller: _emailCtrl, hint: 'Correo', icono: Icons.mail_outline, teclado: TextInputType.emailAddress),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity, height: 50,
@@ -176,7 +155,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
               decoration: BoxDecoration(
                 color: AppEstilos.inputOscuro,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: esCasillaEnfocada ? AppEstilos.verdeBoton : (char.isNotEmpty ? AppEstilos.verdeBoton.withOpacity(0.5) : AppEstilos.bordeOscuro), width: esCasillaEnfocada ? 1.5 : 1),
+                border: Border.all(color: esCasillaEnfocada ? AppEstilos.verdeBoton : (char.isNotEmpty ? AppEstilos.verdeBoton.withValues(alpha: 0.5) : AppEstilos.bordeOscuro), width: esCasillaEnfocada ? 1.5 : 1),
               ),
               child: Text(char, style: const TextStyle(color: AppEstilos.colorDorado, fontSize: 16, fontWeight: FontWeight.bold)),
             );
@@ -188,6 +167,7 @@ class _RecuperarContrasenaPageState extends State<RecuperarContrasenaPage> {
           maxLength: 6,
           enabled: _codigoEnviadoExitosamente,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: const TextStyle(color: Colors.transparent),
           cursorColor: Colors.transparent,
           decoration: const InputDecoration(counterText: '', border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, filled: true, fillColor: Colors.transparent),

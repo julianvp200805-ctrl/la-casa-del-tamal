@@ -26,8 +26,8 @@ export const crearPedidoMesero = async (req, res) => {
     let total = 0;
     for (const it of items) {
       const cantidad = Number(it.cantidad);
-      if (!it.menu_id || !Number.isInteger(cantidad) || cantidad <= 0) {
-        return res.status(400).json({ error: 'Plato o cantidad inválida' });
+      if (!it.menu_id || !Number.isInteger(cantidad) || cantidad <= 0 || cantidad > 99) {
+        return res.status(400).json({ error: 'Plato o cantidad inválida (entre 1 y 99)' });
       }
       const { data: plato, error } = await obtenerPlato(it.menu_id);
       if (error || !plato) return res.status(400).json({ error: 'Un plato del pedido ya no existe en el menú' });
@@ -130,7 +130,9 @@ export const reporteRango = async (req, res) => {
     const { data, error } = await obtenerPedidosPorRango(desde, hasta);
     if (error) return res.status(500).json({ error: 'Error al obtener el reporte' });
 
-    const pedidosValidos = data.filter(p => p.estado !== 'cancelado');
+    // Solo los pedidos entregados son ventas: los pendientes, en proceso,
+    // listos y cancelados no cuentan hasta que el mesero entregue.
+    const pedidosValidos = data.filter(p => p.estado === 'entregado');
     const totalVentas = pedidosValidos.reduce((acc, p) => acc + Number(p.total || 0), 0);
 
     const { data: itemsRaw, error: errorItems } = await obtenerItemsPorRango(desde, hasta);

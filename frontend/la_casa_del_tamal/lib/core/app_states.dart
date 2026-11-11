@@ -16,14 +16,29 @@ class AppErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 40),
-            const SizedBox(height: 12),
-            Text(mensaje, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppEstilos.rojoVencido.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.wifi_off_rounded, color: AppEstilos.rojoVencido, size: 34),
+            ),
+            const SizedBox(height: 14),
+            Text(mensaje, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4)),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
               onPressed: onReintentar,
-              style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.colorDorado),
-              child: const Text('Reintentar', style: TextStyle(color: Colors.black87)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppEstilos.colorDorado,
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Reintentar', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -32,14 +47,35 @@ class AppErrorState extends StatelessWidget {
   }
 }
 
-/// Estado vacío reutilizable: solo un texto centrado.
+/// Estado vacío reutilizable: ícono en un círculo + texto centrado.
 class AppEmptyState extends StatelessWidget {
   final String mensaje;
-  const AppEmptyState({super.key, required this.mensaje});
+  final IconData icono;
+  const AppEmptyState({super.key, required this.mensaje, this.icono = Icons.inbox_outlined});
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(mensaje, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)));
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icono, color: Colors.white38, size: 34),
+            ),
+            const SizedBox(height: 14),
+            Text(mensaje, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, fontSize: 14, height: 1.4)),
+          ],
+        ),
+      ),
+    );
   }
 }
 

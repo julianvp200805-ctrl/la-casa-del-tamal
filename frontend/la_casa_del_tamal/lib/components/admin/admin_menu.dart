@@ -7,7 +7,7 @@ import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
 
-/// Modificar menu (solo admin): lista de platos, agregar, editar y eliminar.
+/// Modificar menú (solo admin): lista de platos, agregar, editar y eliminar.
 class AdminMenuPage extends StatefulWidget {
   static const String routeName = '/admin-menu';
   const AdminMenuPage({super.key});
@@ -145,7 +145,7 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
         child: Column(
           children: [
             const AdminTopBar(),
-            const VentaTituloRow(titulo: 'Modificar menu'),
+            const VentaTituloRow(titulo: 'Modificar menú'),
             Expanded(
               child: FutureBuilder<List<MenuItem>>(
                 future: _futuro,
@@ -155,6 +155,9 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                   }
                   if (snap.hasError) {
                     return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
+                  }
+                  if (snap.data!.isEmpty) {
+                    return const AppEmptyState(mensaje: 'Aún no hay platos en el menú', icono: Icons.restaurant_menu_outlined);
                   }
                   return RefreshIndicator(
                     onRefresh: () async => _recargar(),

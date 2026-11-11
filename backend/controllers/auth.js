@@ -46,7 +46,7 @@ export const registro = async (req, res) => {
 
         if (nombre.length < 3 || nombre.length > 100) return res.status(400).json({ error: 'Escribe tu nombre completo' });
         if (!TIPOS_DOCUMENTO.includes(tipo_documento)) return res.status(400).json({ error: 'Tipo de documento no válido' });
-        if (!/^[A-Za-z0-9]{5,20}$/.test(numero_documento)) return res.status(400).json({ error: 'Número de documento no válido' });
+        if (!/^[0-9]{5,20}$/.test(numero_documento)) return res.status(400).json({ error: 'El número de documento solo acepta números (entre 5 y 20 dígitos)' });
         if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Correo no válido' });
         if (!fechaValida(fecha_nacimiento)) return res.status(400).json({ error: 'Fecha de nacimiento no válida (usa el formato 2005-12-31)' });
         if (contrasena.length < 8 || contrasena.length > 72) return res.status(400).json({ error: 'La contraseña debe tener entre 8 y 72 caracteres' });

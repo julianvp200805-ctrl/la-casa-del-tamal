@@ -57,7 +57,7 @@ class ProductoDetallePage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 6, 24, 14),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(plato.nombre, style: const TextStyle(color: Colors.white70, fontSize: 24, fontFamily: 'serif')),
+                child: Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 25, fontFamily: 'serif', fontWeight: FontWeight.bold)),
               ),
             ),
             Expanded(
@@ -73,7 +73,7 @@ class ProductoDetallePage extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
-                              ? Image.network(plato.imagenUrl!, width: 130, height: 130, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback())
+                              ? Image.network(plato.imagenUrl!, width: 130, height: 130, fit: BoxFit.cover, errorBuilder: (_, _, _) => _fallback())
                               : _fallback(),
                         ),
                       ),
@@ -90,7 +90,7 @@ class ProductoDetallePage extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text((plato.categoria ?? 'General'),
+                                    Text(_etiquetaCategoria(plato.categoria),
                                         style: const TextStyle(color: AppEstilos.verdeBoton, fontSize: 13, fontStyle: FontStyle.italic)),
                                     const SizedBox(height: 6),
                                     Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'serif')),
@@ -121,7 +121,7 @@ class ProductoDetallePage extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          const Text('ingredientes principales', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          const Text('Ingredientes principales', style: TextStyle(color: Colors.white70, fontSize: 14)),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
@@ -146,6 +146,14 @@ class ProductoDetallePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _etiquetaCategoria(String? cat) {
+    final c = (cat ?? '').trim();
+    if (c.isEmpty) return 'General';
+    final n = c.toLowerCase().replaceAll('á', 'a');
+    if (n.contains('rapida')) return 'Comida rápida';
+    return c[0].toUpperCase() + c.substring(1);
   }
 
   Widget _buildChip(String texto) {

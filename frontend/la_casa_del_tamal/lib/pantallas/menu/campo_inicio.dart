@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 
-/// Campo del login: fondo sutil, borde claro y borde verde al enfocarlo.
-/// Si es contraseña trae el ojito para mostrarla u ocultarla.
+/// Campo de texto de los formularios: fondo sutil, borde claro y borde
+/// verde al enfocarlo. Si es contraseña trae el ojito para mostrarla.
+/// El teclado, los formateadores y la capitalización se ajustan por campo.
 class CampoInicio extends StatefulWidget {
   final TextEditingController controller;
   final String hint;
   final IconData icono;
   final bool esPassword;
-  final String? Function(String?)? validator; // ✅ Sintaxis correcta y opcional
+  final String? Function(String?)? validator;
+  final TextInputType teclado;
+  final List<TextInputFormatter>? formateadores;
+  final TextCapitalization capitalizacion;
+  final int? maxLength;
 
   const CampoInicio({
     super.key,
@@ -16,7 +22,11 @@ class CampoInicio extends StatefulWidget {
     required this.hint,
     required this.icono,
     this.esPassword = false,
-    this.validator, // ✅ Agregado correctamente al constructor
+    this.validator,
+    this.teclado = TextInputType.text,
+    this.formateadores,
+    this.capitalizacion = TextCapitalization.none,
+    this.maxLength,
   });
 
   @override
@@ -30,15 +40,17 @@ class _CampoInicioState extends State<CampoInicio> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
-      validator: widget.validator, // ✅ Asignado al TextFormField
-      keyboardType: widget.esPassword
-          ? TextInputType.text
-          : TextInputType.emailAddress,
+      validator: widget.validator,
+      keyboardType: widget.esPassword ? TextInputType.text : widget.teclado,
+      inputFormatters: widget.formateadores,
+      textCapitalization: widget.capitalizacion,
+      maxLength: widget.maxLength,
       obscureText: widget.esPassword && _oculto,
       style: const TextStyle(color: Colors.white, fontSize: 16),
       decoration: InputDecoration(
         hintText: widget.hint,
         hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+        counterText: '',
         prefixIcon: Icon(widget.icono, color: AppEstilos.verdeBoton),
         suffixIcon: widget.esPassword
             ? IconButton(

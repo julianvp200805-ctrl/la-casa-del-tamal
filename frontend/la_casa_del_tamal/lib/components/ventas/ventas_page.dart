@@ -18,8 +18,7 @@ class VentasPage extends StatefulWidget {
 }
 
 class _VentasPageState extends State<VentasPage> {
-  // Los títulos son los de cada maqueta, incluido 'semana' en minúscula.
-  static const List<String> _titulos = ['Ventas diarias', 'semana', 'Mes'];
+  static const List<String> _titulos = ['Ventas diarias', 'Semana', 'Mes'];
   int _vista = 0;
 
   @override

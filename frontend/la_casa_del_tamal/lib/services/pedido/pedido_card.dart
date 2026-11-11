@@ -68,7 +68,7 @@ class PedidoCard extends StatelessWidget {
             child: TextButton(
               onPressed: onDetalle,
               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(0, 30)),
-              child: const Text('ver detalle', style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 12)),
+              child: const Text('Ver detalle', style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 12)),
             ),
           ),
         ],

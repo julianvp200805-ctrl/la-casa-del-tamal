@@ -59,23 +59,26 @@ class BarraNavegacion extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 40,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            width: 44,
             height: 27,
             decoration: BoxDecoration(
               color: activa ? colorActivo.withValues(alpha: 0.16) : Colors.transparent,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(pestana.icono, color: color, size: 20),
           ),
           const SizedBox(height: 3),
-          Text(
-            pestana.texto,
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 220),
             style: TextStyle(
               color: color,
               fontSize: 11,
               fontWeight: activa ? FontWeight.w700 : FontWeight.w500,
             ),
+            child: Text(pestana.texto),
           ),
         ],
       ),

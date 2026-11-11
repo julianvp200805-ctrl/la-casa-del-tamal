@@ -19,6 +19,8 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
   int _categoria = 1;
   List<MenuItem> _platos = [];
   bool _cargando = true;
+  bool _ocupado = false;
+  String? _error;
 
   // Quita acentos para comparar "Comida Rápida" con 'rapida'.
   String _normaliza(String s) {
@@ -38,18 +40,34 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
   }
 
   Future<void> _cargarDatos() async {
+    if (_ocupado) return;
+    _ocupado = true;
+    if (mounted && _platos.isEmpty) setState(() => _cargando = true);
     try {
       final res = await _menuService.obtenerMenu();
-      if (mounted) setState(() => _platos = res);
-    } catch (_) {}
-    if (mounted) setState(() => _cargando = false);
+      if (mounted) setState(() { _platos = res; _error = null; _cargando = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _cargando = false; });
+    } finally {
+      _ocupado = false;
+    }
+  }
+
+  String _etiquetaCategoria(String? cat) {
+    final n = _normaliza(cat ?? '');
+    if (n.contains('desayuno')) return 'Desayuno';
+    if (n.contains('almuerzo')) return 'Almuerzo';
+    if (n.contains('rapida')) return 'Comida rápida';
+    if (n.contains('bebida')) return 'Bebida';
+    if (cat == null || cat.isEmpty) return 'Típico';
+    return cat[0].toUpperCase() + cat.substring(1);
   }
 
   List<String> _obtenerChips(String? desc) {
     if (desc == null || desc.isEmpty) return ['General'];
-    final m = desc.toLowerCase();
-    final k = ['pollo', 'cerdo', 'tocino', 'arroz', 'arveja', 'huevo', 'papa', 'zanahoria', 'maiz'];
-    final f = k.where((i) => m.contains(i)).map((i) => i.toUpperCase() + i.substring(1)).toList();
+    final m = _normaliza(desc);
+    const k = ['pollo', 'cerdo', 'tocino', 'arroz', 'arveja', 'huevo', 'papa', 'zanahoria', 'maiz'];
+    final f = k.where((i) => m.contains(i)).map((i) => i[0].toUpperCase() + i.substring(1)).toList();
     return f.isEmpty ? ['General'] : f;
   }
 
@@ -64,7 +82,7 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
           children: [
             const CocinaTopBar(),
             const TituloCocina(texto: 'Comida'),
-            CategoriaTabs(seleccionada: _categoria, onChanged: (i) => setState(() => _categoria = i)),
+            CategoriaTabs(seleccionada: _categoria, onChanged: (i) => setState(() => _categoria = i), colorActivo: AppEstilos.acentoCocina),
             Expanded(child: _buildLista(_visibles)),
           ],
         ),
@@ -73,28 +91,44 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
   }
 
   Widget _buildLista(List<MenuItem> items) {
-    if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
-    if (items.isEmpty) return const Center(child: Text('No hay registros en esta sección.', style: TextStyle(color: Colors.white38)));
+    if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.acentoCocina));
+    if (_error != null && _platos.isEmpty) return AppErrorState(mensaje: _error!, onReintentar: _cargarDatos);
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      itemCount: items.length,
-      itemBuilder: (context, idx) => _tarjeta(items[idx]),
+    return RefreshIndicator(
+      onRefresh: _cargarDatos,
+      color: AppEstilos.acentoCocina,
+      child: items.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 90),
+                AppEmptyState(mensaje: 'No hay platos en esta sección', icono: Icons.restaurant_menu_outlined),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              itemCount: items.length,
+              itemBuilder: (context, idx) => _tarjeta(items[idx]),
+            ),
     );
   }
 
-  // Banda superior con etiqueta y foto centrada; abajo nombre, ingredientes,
-  // "ver platillo" y el botón redondo de flecha (maqueta 31).
   Widget _tarjeta(MenuItem p) {
     final hayImagen = p.imagenUrl != null && p.imagenUrl!.isNotEmpty;
-    final tipo = (p.categoria ?? 'Típico');
-    final etiqueta = tipo[0].toUpperCase() + tipo.substring(1);
+    final etiqueta = _etiquetaCategoria(p.categoria);
     final verde = _normaliza(etiqueta).startsWith('t');
+
+    void abrirDetalle() => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductoDetallePage(plato: p, ingredientes: _obtenerChips(p.descripcion), deCocina: true)));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: AppEstilos.platoMesero, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: AppEstilos.platoMesero,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppEstilos.bordeOscuro),
+      ),
       child: Column(
         children: [
           Container(
@@ -118,7 +152,7 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: hayImagen
-                        ? Image.network(p.imagenUrl!, width: 76, height: 76, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback())
+                        ? Image.network(p.imagenUrl!, width: 76, height: 76, fit: BoxFit.cover, errorBuilder: (_, _, _) => _fallback())
                         : _fallback(),
                   ),
                 ),
@@ -134,20 +168,20 @@ class _CocinaComidaPageState extends State<CocinaComidaPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(p.nombre, style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'serif')),
+                      Text(p.nombre, style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                       const SizedBox(height: 3),
                       Text(p.descripcion ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
                       const SizedBox(height: 4),
                       GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductoDetallePage(plato: p, ingredientes: _obtenerChips(p.descripcion), deCocina: true))),
-                        child: const Text('ver platillo', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: 12)),
+                        onTap: abrirDetalle,
+                        child: const Text('Ver platillo', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: 12, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 InkWell(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductoDetallePage(plato: p, ingredientes: _obtenerChips(p.descripcion), deCocina: true))),
+                  onTap: abrirDetalle,
                   customBorder: const CircleBorder(),
                   child: Container(
                     width: 34,

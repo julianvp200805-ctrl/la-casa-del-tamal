@@ -11,9 +11,9 @@ class CocinaTitulo extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Cocina', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: tamano, fontFamily: 'serif')),
-          const SizedBox(width: 3),
-          Icon(Icons.undo, color: AppEstilos.acentoCocina, size: 14),
+          Text('Cocina', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: tamano, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          Icon(Icons.soup_kitchen_outlined, color: AppEstilos.acentoCocina, size: 15),
         ],
       );
 }
@@ -69,7 +69,7 @@ class CocinaTopBar extends StatelessWidget {
       );
 }
 
-/// Título serif de las pantallas de cocina ("Bandeja Pedidos", "Comida").
+/// Título serif de las pantallas de cocina ("Bandeja de pedidos", "Comida").
 class TituloCocina extends StatelessWidget {
   final String texto;
   const TituloCocina({super.key, required this.texto});
@@ -79,7 +79,7 @@ class TituloCocina extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(24, 14, 24, 16),
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Text(texto, style: const TextStyle(color: Colors.white70, fontSize: 24, fontFamily: 'serif')),
+          child: Text(texto, style: const TextStyle(color: Colors.white, fontSize: 25, fontFamily: 'serif', fontWeight: FontWeight.bold)),
         ),
       );
 }

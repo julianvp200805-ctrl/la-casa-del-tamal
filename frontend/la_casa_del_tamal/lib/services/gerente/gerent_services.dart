@@ -1,43 +1,28 @@
-import 'dart:convert';
 import 'package:frontend/models/gerent.dart';
-import 'package:frontend/services/api_response.dart';
-import 'package:http/http.dart' as http;
+import 'package:frontend/services/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/api_config.dart';
 
 class UserService {
   Future<UserModel> login(String email, String contrasena) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
+    final data = await ApiClient.I.postJson(
+      '/auth/login',
+      {'email': email, 'contrasena': contrasena},
+      defecto: 'Credenciales inválidas',
+    );
 
-    try {
-      final response = await http.post(
-        url,
-        headers: ApiConfig.headers,
-        body: jsonEncode({'email': email, 'contrasena': contrasena}),
-      );
+    final String token = data['token'] ?? '';
+    final usuario = UserModel.fromJson(data['usuario'] ?? {});
 
-      final Map<String, dynamic> data = decodeApiResponse(response);
+    // Guardamos la sesión localmente para que AdminHomePage y las
+    // demás pantallas puedan leerla sin volver a pedir login.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('user_id', usuario.id ?? '');
+    await prefs.setString('user_name', usuario.nombre ?? '');
+    await prefs.setString('user_email', usuario.email ?? '');
+    await prefs.setString('user_rol', usuario.rol ?? 'usuario');
 
-      if (response.statusCode == 200) {
-        final String token = data['token'] ?? '';
-        final usuario = UserModel.fromJson(data['usuario'] ?? {});
-
-        // Guardamos la sesión localmente para que AdminHomePage y las
-        // demás pantallas puedan leerla sin volver a pedir login.
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
-        await prefs.setString('user_id', usuario.id ?? '');
-        await prefs.setString('user_name', usuario.nombre ?? '');
-        await prefs.setString('user_email', usuario.email ?? '');
-        await prefs.setString('user_rol', usuario.rol ?? 'usuario');
-
-        return usuario;
-      } else {
-        throw Exception(data['error'] ?? 'Credenciales inválidas');
-      }
-    } catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
-    }
+    return usuario;
   }
 
   Future<void> cerrarSesion() async {
@@ -46,61 +31,32 @@ class UserService {
   }
 
   // RECUPERAR CONTRASEÑA - paso 1: enviar código de 6 dígitos al correo
-  // POST /user/forgot-password  { email }
-  
+  // POST /auth/forgot-password  { email }
   Future<String> enviarCodigoRecuperacion(String email) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: ApiConfig.headers,
-        body: jsonEncode({'email': email}),
-      );
-
-      final Map<String, dynamic> data = decodeApiResponse(response);
-
-      if (response.statusCode == 200) {
-        return data['message'] ?? 'Código enviado';
-      } else {
-        throw Exception(data['error'] ?? 'No se pudo enviar el código');
-      }
-    } catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
-    }
+    final data = await ApiClient.I.postJson(
+      '/auth/forgot-password',
+      {'email': email},
+      defecto: 'No se pudo enviar el código',
+    );
+    return data['message'] ?? 'Código enviado';
   }
 
- 
-  // RECUPERAR CONTRASEÑA - único paso real del backend: verifica el
-  // código Y cambia la contraseña en la misma petición.
-  // POST /user/verify-code  { email, codigo, newPassword }
+  // RECUPERAR CONTRASEÑA - verifica el código Y cambia la contraseña
+  // en la misma petición. POST /auth/verify-code  { email, codigo, newPassword }
   Future<String> confirmarRecuperacion({
     required String email,
     required String codigo,
     required String nuevaContrasena,
   }) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/auth/verify-code');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: ApiConfig.headers,
-        body: jsonEncode({
-          'email': email,
-          'codigo': codigo,
-          'newPassword': nuevaContrasena,
-        }),
-      );
-
-      final Map<String, dynamic> data = decodeApiResponse(response);
-
-      if (response.statusCode == 200) {
-        return data['message'] ?? 'Contraseña actualizada';
-      } else {
-        throw Exception(data['error'] ?? 'Código inválido o expirado');
-      }
-    } catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
-    }
+    final data = await ApiClient.I.postJson(
+      '/auth/verify-code',
+      {
+        'email': email,
+        'codigo': codigo,
+        'newPassword': nuevaContrasena,
+      },
+      defecto: 'Código inválido o expirado',
+    );
+    return data['message'] ?? 'Contraseña actualizada';
   }
 }

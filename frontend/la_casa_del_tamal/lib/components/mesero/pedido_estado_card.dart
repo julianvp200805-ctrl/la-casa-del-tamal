@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/core/mesas.dart';
+import 'package:frontend/services/pedido/pedido_card.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
-const Color _verde = Color(0xFF4ADE60);
-
-/// Tarjeta del diseño: Mesa + chip de estado, cupo de la mesa, platos con su
-/// nota y "ver detalle".
+/// Tarjeta de un pedido del mesero: mesa, estado, hora, platos con su nota,
+/// total siempre visible y el botón "Entregar pedido" cuando la cocina lo
+/// deja listo. Entregar es lo que registra la venta.
 class PedidoEstadoCard extends StatefulWidget {
   final PedidoProceso pedido;
   final VoidCallback onEntregar;
-  const PedidoEstadoCard({super.key, required this.pedido, required this.onEntregar});
+  final bool entregando;
+  const PedidoEstadoCard({super.key, required this.pedido, required this.onEntregar, this.entregando = false});
 
   @override
   State<PedidoEstadoCard> createState() => _PedidoEstadoCardState();
@@ -27,77 +28,137 @@ class _PedidoEstadoCardState extends State<PedidoEstadoCard> {
     // El cupo no viaja en el pedido: es el fijo de esa mesa del salón.
     final numero = mesaNumero(p.numero);
     final cupo = numero == null ? null : cupoMesa(numero);
-    final total = p.total;
     final listo = p.estado == 'listo';
-    final etiqueta = {'listo': 'Listo', 'en_proceso': 'En proceso'}[p.estado] ?? 'Pendiente';
+    final (fondoEstado, textoEstadoColor) = coloresEstado(p.estado);
     final visibles = _abierto ? items : items.take(2).toList();
+    final extra = items.length - visibles.length;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppEstilos.tablaInventario,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppEstilos.bordeOscuro),
+        border: Border.all(color: listo ? AppEstilos.pillFresco : AppEstilos.bordeOscuro, width: listo ? 1.4 : 1),
+        boxShadow: listo
+            ? [BoxShadow(color: AppEstilos.pillFresco.withValues(alpha: 0.18), blurRadius: 12, offset: const Offset(0, 4))]
+            : [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text('${p.cabecera} ${p.numero}', style: const TextStyle(color: Colors.white, fontSize: 15)),
-              const Spacer(),
-              Container(
-                width: 118,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: listo ? const Color(0xFF45B458) : const Color(0xFF7D6B35),
-                  borderRadius: BorderRadius.circular(11),
+              Icon(Icons.table_restaurant_outlined, color: listo ? AppEstilos.pillFresco : AppEstilos.meseroOliva, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${p.cabecera} ${p.numero}',
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        if (p.hora.isNotEmpty) p.hora,
+                        if (cupo != null) '$cupo personas',
+                      ].join(' · '),
+                      style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ],
                 ),
-                child: Text(etiqueta, style: TextStyle(color: listo ? Colors.white : const Color(0xFFFFD60A), fontSize: 12)),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(color: fondoEstado, borderRadius: BorderRadius.circular(12)),
+                child: Text(textoEstado(p.estado),
+                    style: TextStyle(color: textoEstadoColor, fontSize: 12, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
-          if (cupo != null)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              decoration: BoxDecoration(color: const Color(0xFF1F3A2C), borderRadius: BorderRadius.circular(10)),
-              child: Text('$cupo personas', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-            ),
           const SizedBox(height: 10),
-          for (final i in visibles)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 3),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${i.cantidad} ${i.nombre}', style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                  if (_abierto && i.nota.isNotEmpty)
-                    Text('nota: ${i.nota}',
-                        style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 11, fontStyle: FontStyle.italic)),
-                ],
-              ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final i in visibles)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 28,
+                              child: Text('${i.cantidad}×',
+                                  style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 13, fontWeight: FontWeight.bold)),
+                            ),
+                            Expanded(child: Text(i.nombre, style: const TextStyle(color: Colors.white70, fontSize: 13))),
+                          ],
+                        ),
+                        if (_abierto && i.nota.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 28, top: 1),
+                            child: Text('Nota: ${i.nota}',
+                                style: const TextStyle(color: AppEstilos.meseroOliva, fontSize: 11, fontStyle: FontStyle.italic)),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (extra > 0)
+                  Text('+$extra más', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              ],
             ),
-          if (_abierto) ...[
-            const SizedBox(height: 8),
-            Text('Valor total: ${formatoPesos(total)}', style: const TextStyle(color: _verde, fontSize: 12)),
-          ],
+          ),
+          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (listo)
-                TextButton(onPressed: widget.onEntregar, child: const Text('Entregar', style: TextStyle(color: Color(0xFFFFD60A)))),
+              Text('Total: \$${formatoPesos(p.total)}',
+                  style: const TextStyle(color: Color(0xFFFFD60A), fontSize: 14, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+              const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _abierto = !_abierto),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(_abierto ? 'ocultar' : 'ver detalle', style: const TextStyle(color: _verde, fontSize: 13)),
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    children: [
+                      Text(_abierto ? 'Ocultar' : 'Ver detalle',
+                          style: const TextStyle(color: AppEstilos.verdeBoton, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Icon(_abierto ? Icons.expand_less : Icons.expand_more, color: AppEstilos.verdeBoton, size: 18),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
+          if (listo) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: widget.entregando ? null : widget.onEntregar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppEstilos.pillFresco,
+                  disabledBackgroundColor: AppEstilos.pillFresco.withValues(alpha: 0.5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: widget.entregando
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.delivery_dining, size: 20),
+                label: Text(widget.entregando ? 'Entregando...' : 'Entregar pedido',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ],
       ),
     );

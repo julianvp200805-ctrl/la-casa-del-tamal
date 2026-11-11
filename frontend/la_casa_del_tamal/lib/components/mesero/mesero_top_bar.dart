@@ -10,7 +10,7 @@ class MeseroTitulo extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Mesero', style: TextStyle(color: AppEstilos.meseroOliva, fontSize: tamano, fontFamily: 'serif')),
+          Text('Mesero', style: TextStyle(color: AppEstilos.meseroOliva, fontSize: tamano, fontFamily: 'serif', fontWeight: FontWeight.bold)),
           const SizedBox(width: 4),
           Icon(Icons.receipt_long, color: AppEstilos.meseroOliva, size: tamano * 0.6),
         ],

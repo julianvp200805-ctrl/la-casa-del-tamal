@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/menu/campo_inicio.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:frontend/services/config/api_config.dart';
+import 'package:frontend/services/api_client.dart';
 
 class RegistroPage extends StatefulWidget {
   const RegistroPage({super.key});
@@ -72,14 +70,13 @@ class _RegistroPageState extends State<RegistroPage> {
       _rolDelCodigo = null;
     });
     try {
-      final res = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/verificar-codigo-registro'),
-        headers: ApiConfig.headers,
-        body: jsonEncode({'codigo': codigo}),
+      final data = await ApiClient.I.postJson(
+        '/auth/verificar-codigo-registro',
+        {'codigo': codigo},
+        defecto: 'El código no es válido',
       );
-      final data = jsonDecode(res.body);
       if (!mounted) return;
-      if (res.statusCode == 200 && data['valid'] == true) {
+      if (data['valid'] == true) {
         setState(() {
           _rolDelCodigo = (data['rol_asignado'] ?? '').toString();
           _verificandoCodigo = false;
@@ -90,10 +87,10 @@ class _RegistroPageState extends State<RegistroPage> {
           _verificandoCodigo = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorCodigo = 'No se pudo verificar el código. Revisa tu conexión.';
+        _errorCodigo = e.toString();
         _verificandoCodigo = false;
       });
     }
@@ -131,47 +128,31 @@ class _RegistroPageState extends State<RegistroPage> {
 
     setState(() => _cargando = true);
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/auth/registro');
-
-      // Limpieza estricta de espacios y caracteres invisibles o de retroceso (\u0008)
+      // Limpieza estricta de espacios y caracteres invisibles o de retroceso (\x08)
       final emailLimpio = _emailCtrl.text
           .trim()
           .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
 
       // El rol NO se envía: lo impone el código en el backend.
-      final bodyData = {
-        'nombre': _nombreCtrl.text.trim(),
-        'tipo_documento': _tipoDoc,
-        'numero_documento': _docCtrl.text.trim(),
-        'email': emailLimpio,
-        'fecha_nacimiento': _fechaIso,
-        'contrasena': _passCtrl.text,
-        'codigo': codigo,
-      };
-
-      final res = await http.post(
-        url,
-        headers: ApiConfig.headers,
-        body: jsonEncode(bodyData),
+      await ApiClient.I.postJson(
+        '/auth/registro',
+        {
+          'nombre': _nombreCtrl.text.trim(),
+          'tipo_documento': _tipoDoc,
+          'numero_documento': _docCtrl.text.trim(),
+          'email': emailLimpio,
+          'fecha_nacimiento': _fechaIso,
+          'contrasena': _passCtrl.text,
+          'codigo': codigo,
+        },
+        defecto: 'Error al registrar',
       );
 
       if (!mounted) return;
-
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        _msg('Cuenta registrada con éxito', false);
-        Navigator.pop(context);
-      } else {
-        String errorMessage = 'Error al registrar';
-        try {
-          final decoded = jsonDecode(res.body);
-          errorMessage = decoded['error'] ?? decoded['message'] ?? res.body;
-        } catch (_) {
-          errorMessage = res.body;
-        }
-        throw Exception(errorMessage);
-      }
+      _msg('Cuenta registrada con éxito', false);
+      Navigator.pop(context);
     } catch (e) {
-      _msg(e.toString().replaceAll('Exception: ', ''), true);
+      if (mounted) _msg(e.toString(), true);
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -218,7 +199,9 @@ class _RegistroPageState extends State<RegistroPage> {
                   controller: _nombreCtrl,
                   hint: 'Nombre y apellidos',
                   icono: Icons.person_outline,
-                  validator: (val) => val == null || val.isEmpty ? 'Ingrese su nombre' : null,
+                  teclado: TextInputType.name,
+                  capitalizacion: TextCapitalization.words,
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Ingrese su nombre' : null,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -236,16 +219,19 @@ class _RegistroPageState extends State<RegistroPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _lbl('Numero de documento'),
+                          _lbl('Número de documento'),
                           CampoInicio(
                             controller: _docCtrl,
-                            hint: 'Número',
+                            hint: 'Solo números',
                             icono: Icons.badge_outlined,
+                            teclado: TextInputType.number,
+                            maxLength: 20,
+                            formateadores: [FilteringTextInputFormatter.digitsOnly],
                             validator: (val) {
                               final t = (val ?? '').trim();
                               if (t.isEmpty) return 'Ingrese documento';
-                              if (!RegExp(r'^[A-Za-z0-9]{5,20}$').hasMatch(t)) {
-                                return 'Entre 5 y 20 letras o números';
+                              if (!RegExp(r'^[0-9]{5,20}$').hasMatch(t)) {
+                                return 'Solo números, entre 5 y 20 dígitos';
                               }
                               return null;
                             },
@@ -261,6 +247,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   controller: _emailCtrl,
                   hint: 'Correo electrónico',
                   icono: Icons.mail_outline,
+                  teclado: TextInputType.emailAddress,
                   validator: (val) {
                     final t = (val ?? '').trim();
                     if (t.isEmpty) return 'Ingrese el correo';
@@ -288,7 +275,7 @@ class _RegistroPageState extends State<RegistroPage> {
                 const SizedBox(height: 10),
                 _buildRequisitos(),
                 const SizedBox(height: 16),
-                _lbl('Codigo interno'),
+                _lbl('Código interno'),
                 _buildCodigoInternoCompleto(),
                 _buildEstadoCodigo(),
                 const SizedBox(height: 24),
@@ -530,7 +517,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   color: esCasillaEnfocada && !esGuion
                       ? AppEstilos.verdeBoton
                       : (char.isNotEmpty && !esGuion
-                          ? AppEstilos.verdeBoton.withOpacity(0.5)
+                          ? AppEstilos.verdeBoton.withValues(alpha: 0.5)
                           : AppEstilos.bordeOscuro),
                   width: esCasillaEnfocada ? 1.5 : 1,
                 ),

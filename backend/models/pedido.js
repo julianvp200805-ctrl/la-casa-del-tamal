@@ -38,12 +38,21 @@ export const obtenerPedidosAbiertosPorUsuario = async (usuarioId) => {
   return { data, error };
 };
 
-// Cambia el estado de un pedido. Si tu tabla no tiene la columna
-// "actualizado_en", reintenta solo con "estado".
+// Cambia el estado de un pedido. Al entregarlo se guarda fecha_entrega:
+// la venta cuenta cuando el mesero entrega, no cuando se crea el pedido.
+// Si faltan columnas en la base, reintenta quitándolas una a una.
 export const actualizarEstadoPedido = async (id, estado) => {
-  let r = await supabase.from('pedidos').update({ estado, actualizado_en: new Date() }).eq('id', id).select();
+  const cambios = { estado, actualizado_en: new Date() };
+  if (estado === 'entregado') cambios.fecha_entrega = new Date();
+
+  let r = await supabase.from('pedidos').update(cambios).eq('id', id).select();
+  if (r.error && /fecha_entrega/.test(r.error.message || '')) {
+    delete cambios.fecha_entrega;
+    r = await supabase.from('pedidos').update(cambios).eq('id', id).select();
+  }
   if (r.error && /actualizado_en/.test(r.error.message || '')) {
-    r = await supabase.from('pedidos').update({ estado }).eq('id', id).select();
+    delete cambios.actualizado_en;
+    r = await supabase.from('pedidos').update(cambios).eq('id', id).select();
   }
   return { data: r.data, error: r.error };
 };
@@ -73,14 +82,22 @@ export const crearDetallePedido = async (detalleData) => {
   return { data, error };
 };
 
+// Ventas del rango: SOLO pedidos entregados, ubicados por la fecha en que
+// se entregaron. Si la base aún no tiene fecha_entrega, usa actualizado_en
+// y, como último recurso, fecha_pedido (pedidos antiguos sin migrar).
 export const obtenerPedidosPorRango = async (fechaInicioISO, fechaFinISO) => {
-  const { data, error } = await supabase
+  const consultar = (columnaFecha) => supabase
     .from('pedidos')
     .select('id, usuario_id, total, estado, fecha_pedido')
-    .gte('fecha_pedido', fechaInicioISO)
-    .lte('fecha_pedido', fechaFinISO)
-    .order('fecha_pedido', { ascending: false });
-  return { data, error };
+    .eq('estado', 'entregado')
+    .gte(columnaFecha, fechaInicioISO)
+    .lte(columnaFecha, fechaFinISO)
+    .order(columnaFecha, { ascending: false });
+
+  let r = await consultar('fecha_entrega');
+  if (r.error && /fecha_entrega/.test(r.error.message || '')) r = await consultar('actualizado_en');
+  if (r.error && /actualizado_en/.test(r.error.message || '')) r = await consultar('fecha_pedido');
+  return { data: r.data, error: r.error };
 };
 
 // NUEVO: trae el detalle (producto, cantidad, subtotal) de los pedidos
@@ -91,7 +108,7 @@ export const obtenerItemsPorRango = async (fechaInicioISO, fechaFinISO) => {
   const { data: pedidos, error: errorPedidos } = await obtenerPedidosPorRango(fechaInicioISO, fechaFinISO);
   if (errorPedidos) return { data: null, error: errorPedidos };
 
-  const idsValidos = (pedidos || []).filter(p => p.estado !== 'cancelado').map(p => p.id);
+  const idsValidos = (pedidos || []).map(p => p.id);
   if (idsValidos.length === 0) return { data: [], error: null };
 
   const { data, error } = await supabase

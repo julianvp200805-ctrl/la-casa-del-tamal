@@ -61,7 +61,7 @@ class AppEncabezado extends StatelessWidget {
                     ? Image.asset(
                         logoAssetPath,
                         height: 60,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, _, _) => const Icon(
                           Icons.house,
                           size: 40,
                           color: Colors.white,

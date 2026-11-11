@@ -99,8 +99,18 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
   Widget _miniatura() {
     final actual = widget.plato?.imagenUrl;
     if (_vistaPrevia != null) return Image.memory(_vistaPrevia!, width: 44, height: 44, fit: BoxFit.cover);
-    if (_esEdicion && actual != null && actual.isNotEmpty) return Image.network(actual, width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.photo_camera_outlined, color: Colors.white));
+    if (_esEdicion && actual != null && actual.isNotEmpty) return Image.network(actual, width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.photo_camera_outlined, color: Colors.white));
     return const Icon(Icons.photo_camera_outlined, color: Colors.white, size: 26);
+  }
+
+  String _etiquetaCategoria(String c) {
+    switch (c) {
+      case 'desayuno': return 'Desayuno';
+      case 'almuerzo': return 'Almuerzo';
+      case 'comida rapida': return 'Comida rápida';
+      case 'bebidas': return 'Bebidas';
+    }
+    return c.isEmpty ? c : c[0].toUpperCase() + c.substring(1);
   }
 
   @override
@@ -110,10 +120,10 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
       titulo: _esEdicion ? 'Editar producto' : 'Agregar producto',
       child: Column(
         children: [
-          CampoHoja(controller: _nombre, hint: 'nombre'),
-          CampoHoja(controller: _precio, hint: 'precio', teclado: TextInputType.number),
-          CampoHoja(controller: _descripcion, hint: 'descripción', lineas: 2),
-          CampoHoja(controller: _ingredientes, hint: 'ingredientes, separados por coma', lineas: 2),
+          CampoHoja(controller: _nombre, hint: 'Nombre'),
+          CampoHoja(controller: _precio, hint: 'Precio', teclado: TextInputType.number),
+          CampoHoja(controller: _descripcion, hint: 'Descripción', lineas: 2),
+          CampoHoja(controller: _ingredientes, hint: 'Ingredientes, separados por coma', lineas: 2),
           CajaHoja(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
@@ -123,7 +133,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
                 dropdownColor: AppEstilos.inputOscuro,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                items: _categoriasList.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: _categoriasList.map((c) => DropdownMenuItem(value: c, child: Text(_etiquetaCategoria(c)))).toList(),
                 onChanged: _guardando ? null : (v) => setState(() => _categoria = v!),
               ),
             ),
@@ -135,7 +145,7 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
               children: [
                 ClipRRect(borderRadius: BorderRadius.circular(6), child: _miniatura()),
                 const SizedBox(width: 12),
-                Text(conFoto ? 'foto lista, toca para cambiar' : (_esEdicion ? 'cambiar foto' : 'subir foto'), style: const TextStyle(color: Colors.white, fontSize: 13)),
+                Text(conFoto ? 'Foto lista, toca para cambiar' : (_esEdicion ? 'Cambiar foto' : 'Subir foto'), style: const TextStyle(color: Colors.white, fontSize: 13)),
               ],
             ),
           ),

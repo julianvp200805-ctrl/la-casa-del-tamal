@@ -114,7 +114,7 @@ class _FilaSemana extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('semana $numero', style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'serif'))),
+              Expanded(child: Text('Semana $numero', style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'serif'))),
               Text('\$${formatoMoneda(total)}', style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'serif')),
             ],
           ),

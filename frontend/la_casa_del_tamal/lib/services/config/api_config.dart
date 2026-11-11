@@ -1,17 +1,16 @@
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static const bool useRemote = true;
 
-  // Base para endpoints de usuario (login, forgot-password, verify-code...)
+  // Backend desplegado en Render (producción, también para la Play Store).
   static const String _remoteUrl = "https://la-casa-del-tamal.onrender.com";
-  // Base sin "/user", para /pedido, /menu, /producto, /tipoProducto
+
   static String get baseUrl {
-    if (useRemote) {
-      return _remoteUrl;
-    }
-    if (Platform.isIOS) {
-      return "http://localhost:3000";
+    if (useRemote) return _remoteUrl;
+    // Desarrollo local: el emulador de Android llega al host por 10.0.2.2.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return "http://10.0.2.2:3000";
     }
     return "http://localhost:3000";
   }

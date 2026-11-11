@@ -39,7 +39,6 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
 
   void _alternar(String ingrediente) {
     final texto = _controlador.text.trim();
-    final frase = 'sin $ingrediente';
     if (_lleva(ingrediente)) {
       final restante = texto
           .split(RegExp(r',\s*'))
@@ -48,6 +47,7 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
       _controlador.text = restante;
       _controlador.selection = TextSelection.collapsed(offset: restante.length);
     } else {
+      final frase = texto.isEmpty ? 'Sin $ingrediente' : 'sin $ingrediente';
       final nuevo = texto.isEmpty ? frase : '$texto, $frase';
       _controlador.text = nuevo.length > 200 ? nuevo.substring(0, 200) : nuevo;
       _controlador.selection = TextSelection.collapsed(offset: _controlador.text.length);
@@ -98,6 +98,7 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
               maxLines: 3,
               maxLength: 200,
               autofocus: ingredientes.isEmpty,
+              textCapitalization: TextCapitalization.sentences,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Escribe la indicación para cocina',
@@ -150,7 +151,7 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
           border: Border.all(color: activo ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro),
         ),
         child: Text(
-          'sin $ingrediente',
+          'Sin $ingrediente',
           style: TextStyle(color: activo ? Colors.black87 : Colors.white70, fontSize: 12),
         ),
       ),

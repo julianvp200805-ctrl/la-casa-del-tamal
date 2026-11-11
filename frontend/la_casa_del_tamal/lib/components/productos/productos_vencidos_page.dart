@@ -81,7 +81,7 @@ class _VencidosVistaState extends State<VencidosVista> {
             children: [
               const Icon(Icons.warning_rounded, color: AppEstilos.rojoVencido, size: 20),
               const SizedBox(width: 10),
-              Text('productos vencidos ${vencidos.length}', style: const TextStyle(color: AppEstilos.rojoVencido, fontSize: 13, fontWeight: FontWeight.bold)),
+              Text('Productos vencidos: ${vencidos.length}', style: const TextStyle(color: AppEstilos.rojoVencido, fontSize: 13, fontWeight: FontWeight.bold)),
             ],
           ),
         ),

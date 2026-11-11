@@ -19,14 +19,15 @@ class SelectorMesa extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
       child: Row(
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
             width: 150,
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: AppEstilos.platoMesero,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: mesa == null ? AppEstilos.bordeOscuro : AppEstilos.meseroOliva),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: mesa == null ? AppEstilos.bordeOscuro : AppEstilos.meseroOliva, width: mesa == null ? 1 : 1.3),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -71,7 +72,7 @@ class SelectorMesa extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFF1F3A2C),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppEstilos.bordeOscuro),
               ),
               child: Row(

@@ -21,7 +21,7 @@ class _VentasDiariasVistaState extends State<VentasDiariasVista> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: ReporteResultado(futuro: _futuro, etiqueta: 'ventas de hoy', onReintentar: _recargar),
+      child: ReporteResultado(futuro: _futuro, etiqueta: 'Ventas de hoy', onReintentar: _recargar),
     );
   }
 }

@@ -22,7 +22,7 @@ class EncabezadoInicio extends StatelessWidget {
           child: Image.asset(
             'assets/image/logo.png',
             height: 120,
-            errorBuilder: (_, __, ___) => const Icon(
+            errorBuilder: (_, _, _) => const Icon(
               Icons.house,
               size: 90,
               color: AppEstilos.verdeBoton,

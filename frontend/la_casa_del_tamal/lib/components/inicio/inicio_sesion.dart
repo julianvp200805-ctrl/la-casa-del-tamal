@@ -62,7 +62,7 @@ class _InicioSesionState extends State<InicioSesion> {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => destino));
     } catch (e) {
       _mensaje(e.toString(), esError: true);
-    } finally { // <--- CORREGIDO AQUÍ (Antes decía final)
+    } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -89,9 +89,9 @@ class _InicioSesionState extends State<InicioSesion> {
             children: [
               const EncabezadoInicio(),
               const SizedBox(height: 28),
-              CampoInicio(controller: _emailController, hint: 'correo', icono: Icons.mail_outline),
+              CampoInicio(controller: _emailController, hint: 'Correo electrónico', icono: Icons.mail_outline, teclado: TextInputType.emailAddress),
               const SizedBox(height: 20),
-              CampoInicio(controller: _passwordController, hint: 'Ingresé su contraseña', icono: Icons.lock_outline, esPassword: true),
+              CampoInicio(controller: _passwordController, hint: 'Ingrese su contraseña', icono: Icons.lock_outline, esPassword: true),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
@@ -111,7 +111,7 @@ class _InicioSesionState extends State<InicioSesion> {
               const Row(
                 children: [
                   Expanded(child: Divider(color: Colors.white24, thickness: 1, endIndent: 10)),
-                  Text('¿Aun no tienes cuenta?', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                  Text('¿Aún no tienes cuenta?', style: TextStyle(color: Colors.white60, fontSize: 13)),
                   Expanded(child: Divider(color: Colors.white24, thickness: 1, indent: 10)),
                 ],
               ),

@@ -18,20 +18,27 @@ class _HomeScreenState extends State<HomeScreen> {
   String _categoriaActiva = 'almuerzo';
   List<MenuItem> _platosBackend = [];
   bool _cargando = true;
+  bool _sondeando = false;
   String? _errorMsg;
   String? _versionMenu;
   Timer? _sondeo;
 
   static const Duration _intervaloSondeo = Duration(seconds: 15);
 
-  // En minúscula porque así los dibuja la maqueta; el filtro compara normalizados
-  // (sin acentos ni mayúsculas), así que sigue casando con 'Comida Rápida' del backend.
+  // Claves en minúscula para filtrar; la etiqueta visible va capitalizada.
   final List<String> _categorias = const [
     'desayuno',
     'almuerzo',
     'comida rapida',
     'bebidas'
   ];
+
+  static const Map<String, String> _etiquetasCategorias = {
+    'desayuno': 'Desayuno',
+    'almuerzo': 'Almuerzo',
+    'comida rapida': 'Comida rápida',
+    'bebidas': 'Bebidas',
+  };
 
   @override
   void initState() {
@@ -78,7 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Sondeo ligero: pide solo la huella del menú y recarga la lista si cambió.
   Future<void> _comprobarSiHayCambios() async {
-    if (!mounted) return;
+    if (!mounted || _sondeando) return;
+    _sondeando = true;
     try {
       final version = await _menuService.obtenerVersion();
       if (!mounted || version == null) return;
@@ -92,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (_) {
       // Si falla el sondeo la lista visible sigue sirviendo.
+    } finally {
+      _sondeando = false;
     }
   }
 
@@ -187,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1.2),
                   ),
                   Text(
-                    'en cada tamal.',
+                    'En cada tamal.',
                     style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, height: 1.2),
                   ),
                 ],
@@ -221,12 +231,12 @@ class _HomeScreenState extends State<HomeScreen> {
             'assets/image/logo.png',
             width: 120,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(Icons.restaurant, color: AppEstilos.verdeBoton, size: 32),
+            errorBuilder: (_, _, _) => const Icon(Icons.restaurant, color: AppEstilos.verdeBoton, size: 32),
           ),
           OutlinedButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InicioSesion())),
             icon: const Icon(Icons.person_outline, color: AppEstilos.verdePildora, size: 18),
-            label: const Text('Iniciar sesion', style: TextStyle(color: AppEstilos.verdePildora, fontSize: 13, fontWeight: FontWeight.w600)),
+            label: const Text('Iniciar sesión', style: TextStyle(color: AppEstilos.verdePildora, fontSize: 13, fontWeight: FontWeight.w600)),
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppEstilos.verdePildora, width: 1.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -251,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
-              label: Text(c),
+              label: Text(_etiquetasCategorias[c] ?? c),
               selected: esActivo,
               onSelected: (_) => setState(() => _categoriaActiva = c),
               selectedColor: AppEstilos.verdeBoton,
@@ -269,17 +279,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildListaContenido(List<MenuItem> items) {
     if (_cargando) return const Center(child: CircularProgressIndicator(color: AppEstilos.verdeBoton));
     if (_errorMsg != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: $_errorMsg', style: const TextStyle(color: Colors.white70)),
-            TextButton(onPressed: _obtenerDatosDeRender, child: const Text('Reintentar', style: TextStyle(color: AppEstilos.verdeBoton))),
+      return AppErrorState(mensaje: _errorMsg!, onReintentar: _obtenerDatosDeRender);
+    }
+    if (items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _recargarEnSilencio,
+        color: AppEstilos.verdeBoton,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 60),
+            AppEmptyState(mensaje: 'No hay platos disponibles en esta categoría', icono: Icons.restaurant_menu_outlined),
           ],
         ),
       );
     }
-    if (items.isEmpty) return const Center(child: Text('No hay platos disponibles en esta categoría.', style: TextStyle(color: Colors.white38)));
 
     return RefreshIndicator(
       onRefresh: _recargarEnSilencio,
@@ -304,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
-                        ? Image.network(plato.imagenUrl!, width: 85, height: 85, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallbackImg())
+                        ? Image.network(plato.imagenUrl!, width: 85, height: 85, fit: BoxFit.cover, errorBuilder: (_, _, _) => _fallbackImg())
                         : _fallbackImg(),
                   ),
                   const SizedBox(width: 14),

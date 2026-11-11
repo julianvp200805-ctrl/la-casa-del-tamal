@@ -73,7 +73,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
                   IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.of(context).maybePop()),
                   const SizedBox(width: 6),
                   const Flexible(
-                    child: Text('Tamalin - Asistente', style: TextStyle(color: AppEstilos.verdeAccion, fontSize: 16), overflow: TextOverflow.ellipsis),
+                    child: Text('Tamalín - Asistente', style: TextStyle(color: AppEstilos.verdeAccion, fontSize: 16), overflow: TextOverflow.ellipsis),
                   ),
                 ],
               ),
@@ -82,7 +82,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
               child: Stack(
                 children: [
                   Center(
-                    child: Image.asset('assets/image/logo.png', width: 200, errorBuilder: (_, __, ___) => const Icon(Icons.house, size: 100, color: AppEstilos.verdeBoton)),
+                    child: Image.asset('assets/image/logo.png', width: 200, errorBuilder: (_, _, _) => const Icon(Icons.house, size: 100, color: AppEstilos.verdeBoton)),
                   ),
                   ListView.builder(
                     controller: _scroll,

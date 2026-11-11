@@ -14,17 +14,26 @@ class AvisoListos extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF4A9849),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: const Color(0xFF4A9849).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 3))],
       ),
-      child: Text(
-        listos == 1
-            ? 'Tienes 1 pedido listo para recoger'
-            : 'Tienes $listos pedidos listos para recoger',
-        style: const TextStyle(
-          color: AppEstilos.fondoOscuro,
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
+      child: Row(
+        children: [
+          const Icon(Icons.notifications_active, color: AppEstilos.fondoOscuro, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              listos == 1
+                  ? 'Tienes 1 pedido listo para recoger'
+                  : 'Tienes $listos pedidos listos para recoger',
+              style: const TextStyle(
+                color: AppEstilos.fondoOscuro,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

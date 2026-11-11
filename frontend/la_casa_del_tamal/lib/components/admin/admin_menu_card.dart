@@ -3,7 +3,7 @@ import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
 
-/// Tarjeta de un plato en "Modificar menu": foto, nombre, descripción y los
+/// Tarjeta de un plato en "Modificar menú": foto, nombre, descripción y los
 /// íconos de eliminar (arriba) y editar (abajo). El disco verde de la esquina
 /// es el interruptor de disponibilidad: "-" agota el plato y "+" lo reactiva.
 class AdminMenuCard extends StatelessWidget {
@@ -41,7 +41,7 @@ class AdminMenuCard extends StatelessWidget {
                 child: Opacity(
                   opacity: agotado ? 0.35 : 1,
                   child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
-                      ? Image.network(plato.imagenUrl!, width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _vacia())
+                      ? Image.network(plato.imagenUrl!, width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (_, _, _) => _vacia())
                       : _vacia(),
                 ),
               ),
