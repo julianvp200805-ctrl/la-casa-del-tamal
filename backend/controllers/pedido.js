@@ -56,7 +56,8 @@ export const crearPedidoMesero = async (req, res) => {
       usuario_id: req.usuario.id,
       direccion_entrega: `Mesa ${String(mesa).replace(/^mesa\s*/i, '')}`,
       total,
-      estado: 'pendiente'
+      estado: 'pendiente',
+      fecha_pedido: new Date().toISOString(),
     });
     if (errorPedido || !pedido) {
       console.error('Error Supabase (crearPedido):', errorPedido);

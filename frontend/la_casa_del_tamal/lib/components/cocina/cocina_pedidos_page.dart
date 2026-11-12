@@ -46,7 +46,9 @@ class _CocinaPedidosPageState extends State<CocinaPedidosPage> {
   // en salir).
   int _tiempoMs(PedidoProceso p) {
     final d = DateTime.tryParse(p.fecha ?? '');
-    return d == null ? 0 : d.millisecondsSinceEpoch;
+    if (d == null) return 0;
+    final utc = d.isUtc ? d : DateTime.utc(d.year, d.month, d.day, d.hour, d.minute, d.second, d.millisecond);
+    return utc.millisecondsSinceEpoch;
   }
 
   Future<void> _cargarPedidos({bool silencioso = false}) async {
