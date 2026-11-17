@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/principal/pantalla_cargas.dart';
+import 'package:frontend/services/notificaciones/notificaciones_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Inicializa las notificaciones locales (en la bandeja del celular).
+  // No requiere Firebase ni servicios externos.
+  try {
+    await NotificacionesService.init();
+  } catch (_) {}
   runApp(const MainApp());
 }
 

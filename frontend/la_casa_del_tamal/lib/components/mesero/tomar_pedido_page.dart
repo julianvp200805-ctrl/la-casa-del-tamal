@@ -157,12 +157,12 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
     });
   }
 
-  void _mensaje(String t, {bool esError = false, String? accion, VoidCallback? alAccionar}) =>
+  void _mensaje(String t, {bool esError = false, String? accion, VoidCallback? alAccionar, Duration duracion = const Duration(seconds: 3)}) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(t),
         backgroundColor: esError ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
+        duration: duracion,
         action: accion != null
             ? SnackBarAction(label: accion, textColor: Colors.white, onPressed: alAccionar ?? () {})
             : null,
@@ -220,6 +220,7 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
         'Pedido de la mesa $_mesa enviado a cocina',
         accion: 'Ver pedidos',
         alAccionar: () => pestanaMeseroActiva.value = 1,
+        duracion: const Duration(milliseconds: 1500),
       );
       setState(() {
         _mesasOcupadas.add(_mesa!);

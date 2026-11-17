@@ -6,6 +6,7 @@ import 'package:frontend/components/mesero/pedido_controles.dart';
 import 'package:frontend/components/mesero/pedido_estado_card.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/mesero/mesero.dart';
+import 'package:frontend/services/notificaciones/notificaciones_service.dart';
 import 'package:frontend/services/pedido/pedido_proceso.dart';
 
 /// Se refresca solo cada 15 segundos para ver cuándo la cocina deja un pedido "listo".
@@ -25,6 +26,7 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
   String? _entregandoId;
   String? _error;
   Timer? _timer;
+  final Set<String> _listosPrevios = {};
 
   @override
   void initState() {
@@ -53,6 +55,18 @@ class _EstadosPedidosPageState extends State<EstadosPedidosPage> {
           return c != 0 ? c : a.key.compareTo(b.key);
         });
       if (!mounted) return;
+      // Aviso en la bandeja del celular cuando aparece un pedido nuevo "listo".
+      for (final p in lista) {
+        if (p.estado == 'listo' && !_listosPrevios.contains(p.id)) {
+          NotificacionesService.mostrar(
+            titulo: 'Pedido listo para entregar',
+            cuerpo: '${p.cabecera} ${p.numero} está listo. ¡Entrega cuando puedas!',
+          );
+        }
+      }
+      _listosPrevios
+        ..clear()
+        ..addAll(lista.where((p) => p.estado == 'listo').map((p) => p.id));
       setState(() { _pedidos = ordenada.map((e) => e.value).toList(); _error = null; _cargando = false; });
     } catch (e) {
       if (mounted && !silencioso) setState(() { _error = e.toString(); _cargando = false; });

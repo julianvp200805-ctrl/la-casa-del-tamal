@@ -67,11 +67,10 @@ export const actualizarUsuario = async (id, campos) => {
 
 // eliminar un usuario
 export const eliminarUsuario = async (id) => {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .delete()
-        .eq('id', id)
-        .select(PUBLICAS);
-
-    return { data, error };
+  const { data, error } = await supabase
+    .from('usuarios')
+    .delete()
+    .eq('id', id)
+    .select(PUBLICAS);
+  return { data, error };
 };
