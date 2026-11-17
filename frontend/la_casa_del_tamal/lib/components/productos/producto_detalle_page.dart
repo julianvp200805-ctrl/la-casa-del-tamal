@@ -95,6 +95,25 @@ class ProductoDetallePage extends StatelessWidget {
                               ),
                             ),
                           ),
+                          // Degradado superior (espejo del inferior) para fundir
+                          // la parte alta de la imagen con la pantalla.
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    AppEstilos.fondoOscuro,
+                                    AppEstilos.fondoOscuro.withValues(alpha: 0.6),
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                  ],
+                                  stops: const [0.0, 0.2, 0.5, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
                           Positioned(
                             left: 24,
                             right: 24,

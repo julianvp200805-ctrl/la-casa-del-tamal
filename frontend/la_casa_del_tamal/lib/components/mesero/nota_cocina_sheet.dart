@@ -27,34 +27,6 @@ class _NotaCocinaSheet extends StatefulWidget {
 class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
   late final TextEditingController _controlador = TextEditingController(text: widget.notaInicial);
 
-  // "maíz, cerdo, papa" -> ['maíz', 'cerdo', 'papa']
-  List<String> get _ingredientes => (widget.plato.ingredientes ?? '')
-      .split(RegExp(r'[,;\n]'))
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .take(8)
-      .toList();
-
-  bool _lleva(String ingrediente) => _controlador.text.toLowerCase().contains(ingrediente.toLowerCase());
-
-  void _alternar(String ingrediente) {
-    final texto = _controlador.text.trim();
-    if (_lleva(ingrediente)) {
-      final restante = texto
-          .split(RegExp(r',\s*'))
-          .where((p) => !p.trim().toLowerCase().contains(ingrediente.toLowerCase()))
-          .join(', ');
-      _controlador.text = restante;
-      _controlador.selection = TextSelection.collapsed(offset: restante.length);
-    } else {
-      final frase = texto.isEmpty ? 'Sin $ingrediente' : 'sin $ingrediente';
-      final nuevo = texto.isEmpty ? frase : '$texto, $frase';
-      _controlador.text = nuevo.length > 200 ? nuevo.substring(0, 200) : nuevo;
-      _controlador.selection = TextSelection.collapsed(offset: _controlador.text.length);
-    }
-    setState(() {});
-  }
-
   @override
   void dispose() {
     _controlador.dispose();
@@ -63,7 +35,6 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final ingredientes = _ingredientes;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
@@ -83,21 +54,11 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
             const SizedBox(height: 2),
             const Text('Nota para cocina', style: TextStyle(color: AppEstilos.meseroOliva, fontSize: 12, fontStyle: FontStyle.italic)),
             const SizedBox(height: 14),
-            if (ingredientes.isNotEmpty) ...[
-              const Text('El cliente se deja:', style: TextStyle(color: Colors.white54, fontSize: 12)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [for (final ing in ingredientes) _chip(ing)],
-              ),
-              const SizedBox(height: 14),
-            ],
             TextField(
               controller: _controlador,
               maxLines: 3,
               maxLength: 200,
-              autofocus: ingredientes.isEmpty,
+              autofocus: true,
               textCapitalization: TextCapitalization.sentences,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
@@ -134,25 +95,6 @@ class _NotaCocinaSheetState extends State<_NotaCocinaSheet> {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String ingrediente) {
-    final activo = _lleva(ingrediente);
-    return GestureDetector(
-      onTap: () => _alternar(ingrediente),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: activo ? AppEstilos.meseroOliva : AppEstilos.fondoOscuro,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: activo ? AppEstilos.meseroOliva : AppEstilos.bordeOscuro),
-        ),
-        child: Text(
-          'Sin $ingrediente',
-          style: TextStyle(color: activo ? Colors.black87 : Colors.white70, fontSize: 12),
         ),
       ),
     );
