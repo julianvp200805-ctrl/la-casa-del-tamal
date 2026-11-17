@@ -18,7 +18,21 @@ class AdminMenuPage extends StatefulWidget {
 
 class _AdminMenuPageState extends State<AdminMenuPage> {
   final MenuService _menuService = MenuService();
+  final TextEditingController _busqueda = TextEditingController();
   late Future<List<MenuItem>> _futuro = _menuService.obtenerMenu();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _busqueda.addListener(() => setState(() => _query = _busqueda.text.trim().toLowerCase()));
+  }
+
+  @override
+  void dispose() {
+    _busqueda.dispose();
+    super.dispose();
+  }
 
   void _recargar() {
     // setState exige un callback void: con la flecha (=>) la asignación
@@ -141,6 +155,24 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
           children: [
             const AdminTopBar(),
             const VentaTituloRow(titulo: 'Modificar menú'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+              child: TextField(
+                controller: _busqueda,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Buscar plato...',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  prefixIcon: const Icon(Icons.search, color: AppEstilos.verdeBoton),
+                  filled: true,
+                  fillColor: AppEstilos.inputOscuro,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppEstilos.bordeOscuro)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppEstilos.bordeOscuro)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppEstilos.verdeBoton, width: 1.5)),
+                ),
+              ),
+            ),
             Expanded(
               child: FutureBuilder<List<MenuItem>>(
                 future: _futuro,
@@ -151,8 +183,12 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                   if (snap.hasError) {
                     return AppErrorState(mensaje: snap.error.toString().replaceAll('Exception: ', ''), onReintentar: _recargar);
                   }
-                  if (snap.data!.isEmpty) {
-                    return const AppEmptyState(mensaje: 'Aún no hay platos en el menú', icono: Icons.restaurant_menu_outlined);
+                  final todos = snap.data!;
+                  final filtrados = _query.isEmpty
+                      ? todos
+                      : todos.where((p) => p.nombre.toLowerCase().contains(_query)).toList();
+                  if (filtrados.isEmpty) {
+                    return const AppEmptyState(mensaje: 'No hay platos que coincidan', icono: Icons.search_off);
                   }
                   return RefreshIndicator(
                     onRefresh: () async => _recargar(),
@@ -161,7 +197,7 @@ class _AdminMenuPageState extends State<AdminMenuPage> {
                       // los dos FAB apilados (Agregar producto + Tamalín).
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 168),
                       children: [
-                        for (final p in snap.data!)
+                        for (final p in filtrados)
                           AdminMenuCard(
                             plato: p,
                             onEditar: () => _abrirFormulario(plato: p),

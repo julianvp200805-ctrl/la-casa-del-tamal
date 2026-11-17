@@ -172,6 +172,46 @@ class _TomarPedidoPageState extends State<TomarPedidoPage> {
     if (_mesa == null) return _mensaje('Elige la mesa del pedido', esError: true);
     if (_totalItems == 0) return _mensaje('Agrega al menos un plato', esError: true);
     if (_mesasOcupadas.contains(_mesa!)) return _mensaje('La mesa $_mesa ya tiene un pedido en curso', esError: true);
+
+    // Confirmación: muestra todo lo pedido antes de enviar a cocina.
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppEstilos.tablaInventario,
+        title: Text('Confirmar pedido — Mesa $_mesa', style: const TextStyle(color: Colors.white, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final p in _platos.where((pl) => (_cant[pl.id] ?? 0) > 0))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${_cant[p.id]} × ${p.nombre}   \$${formatoPesos(p.precio * (_cant[p.id] ?? 0))}',
+                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ),
+                const Divider(color: Colors.white24),
+                Text('Total: \$${formatoPesos(_total)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppEstilos.botonMesero, foregroundColor: Colors.black87),
+            child: const Text('Pedir', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
     setState(() => _enviando = true);
     try {
       await _meseroService.crearPedido(mesa: '$_mesa', cantidades: _cant, notas: _notas);

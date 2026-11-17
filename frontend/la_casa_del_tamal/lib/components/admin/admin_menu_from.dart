@@ -44,6 +44,31 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
         _categoria = catLimpia;
       }
     }
+    _precio.addListener(_formatearPrecio);
+  }
+
+  // Formatea el precio con separador de miles mientras se escribe (ej. 10.000).
+  void _formatearPrecio() {
+    final text = _precio.text;
+    final digitos = text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitos.isEmpty) return;
+    final formateado = _formatoMiles(digitos);
+    if (formateado != text) {
+      _precio.value = TextEditingValue(
+        text: formateado,
+        selection: TextSelection.collapsed(offset: formateado.length),
+      );
+    }
+  }
+
+  String _formatoMiles(String digitos) {
+    final buf = StringBuffer();
+    int n = digitos.length;
+    for (int i = 0; i < n; i++) {
+      if (i > 0 && (n - i) % 3 == 0) buf.write('.');
+      buf.write(digitos[i]);
+    }
+    return buf.toString();
   }
 
   @override

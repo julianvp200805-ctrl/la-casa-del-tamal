@@ -1,20 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerente/gerent_services.dart';
 
-class MeseroTitulo extends StatelessWidget {
+class MeseroTitulo extends StatefulWidget {
   final double tamano;
   const MeseroTitulo({super.key, this.tamano = 20});
 
   @override
-  Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Mesero', style: TextStyle(color: AppEstilos.meseroOliva, fontSize: tamano, fontFamily: 'serif', fontWeight: FontWeight.bold)),
-          const SizedBox(width: 4),
-          Icon(Icons.receipt_long, color: AppEstilos.meseroOliva, size: tamano * 0.6),
-        ],
-      );
+  State<MeseroTitulo> createState() => _MeseroTituloState();
+}
+
+class _MeseroTituloState extends State<MeseroTitulo> {
+  String _nombre = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarNombre();
+  }
+
+  Future<void> _cargarNombre() async {
+    final prefs = await SharedPreferences.getInstance();
+    final n = prefs.getString('user_name') ?? '';
+    if (mounted) setState(() => _nombre = n);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final texto = _nombre.isNotEmpty ? 'Hola, $_nombre' : 'Mesero';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(texto, style: TextStyle(color: AppEstilos.meseroOliva, fontSize: widget.tamano, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+        const SizedBox(width: 4),
+        Icon(Icons.receipt_long, color: AppEstilos.meseroOliva, size: widget.tamano * 0.6),
+      ],
+    );
+  }
 }
 
 class MeseroPerfil extends StatelessWidget {
@@ -53,7 +76,7 @@ class MeseroTopBar extends StatelessWidget {
               onTap: () => Navigator.of(context).maybePop(),
               child: const Padding(
                 padding: EdgeInsets.all(4),
-                child: Icon(Icons.subdirectory_arrow_left, color: Colors.white70, size: 28),
+                child: Icon(Icons.arrow_back, color: Colors.white70, size: 28),
               ),
             ),
             const Spacer(),

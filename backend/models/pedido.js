@@ -118,3 +118,50 @@ export const obtenerItemsPorRango = async (fechaInicioISO, fechaFinISO) => {
 
   return { data, error };
 };
+
+// Ranking de meseros por mesas atendidas en el mes en curso. Se calcula desde
+// los pedidos del mes (fecha_pedido) y se reinicia solo al cambiar de mes.
+export const obtenerRankingMeserosMes = async () => {
+  const ahora = new Date();
+  const inicio = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 1));
+  const fin = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() + 1, 1));
+
+  const { data: pedidos, error } = await supabase
+    .from('pedidos')
+    .select('usuario_id, direccion_entrega')
+    .gte('fecha_pedido', inicio.toISOString())
+    .lt('fecha_pedido', fin.toISOString());
+
+  if (error) return { data: null, error };
+
+  const mapa = {};
+  for (const p of (pedidos || [])) {
+    const uid = p.usuario_id;
+    if (uid == null) continue;
+    if (!mapa[uid]) mapa[uid] = new Set();
+    const m = String(p.direccion_entrega || '').match(/Mesa\s*(\d+)/i);
+    if (m) mapa[uid].add(m[1]);
+  }
+
+  const ids = Object.keys(mapa);
+  if (ids.length === 0) return { data: [], error: null };
+
+  const { data: users, error: uerr } = await supabase
+    .from('usuarios')
+    .select('id, nombre, rol')
+    .in('id', ids);
+
+  if (uerr) return { data: null, error: uerr };
+
+  const userMap = Object.fromEntries((users || []).map((u) => [String(u.id), u]));
+  const ranking = ids
+    .map((uid) => ({
+      id: uid,
+      nombre: userMap[uid]?.nombre || 'Desconocido',
+      rol: userMap[uid]?.rol || '',
+      mesas: mapa[uid].size,
+    }))
+    .sort((a, b) => b.mesas - a.mesas);
+
+  return { data: ranking, error: null };
+};

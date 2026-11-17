@@ -6,7 +6,8 @@ import {
   obtenerItemsPorRango,
   obtenerPedidosEnProceso,
   obtenerPedidosAbiertosPorUsuario,
-  actualizarEstadoPedido
+  actualizarEstadoPedido,
+  obtenerRankingMeserosMes
 } from "../models/pedido.js";
 import { obtenerPorId as obtenerPlato } from "../models/menu.js";
 
@@ -227,6 +228,18 @@ export const entregarPedido = async (req, res) => {
     return res.status(200).json({ message: 'Pedido entregado', pedido: data?.[0] });
   } catch (error) {
     console.error('Error en entregarPedido:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /pedido/ranking-mes (admin): meseros que más mesas atendieron este mes.
+export const rankingMeserosMes = async (req, res) => {
+  try {
+    const { data, error } = await obtenerRankingMeserosMes();
+    if (error) return res.status(500).json({ error: 'No se pudo obtener el ranking', detalle: error.message });
+    return res.status(200).json({ ranking: data || [] });
+  } catch (error) {
+    console.error('Error en rankingMeserosMes:', error);
     return res.status(500).json({ error: error.message });
   }
 };

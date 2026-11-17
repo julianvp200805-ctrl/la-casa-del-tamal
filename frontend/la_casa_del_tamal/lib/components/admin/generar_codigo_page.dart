@@ -89,7 +89,7 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.subdirectory_arrow_left, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () => Navigator.pop(context),
                       ),
                       // Cierre de sesión disponible desde la pantalla de generar

@@ -12,7 +12,7 @@ class EncabezadoInicio extends StatelessWidget {
       children: [
         IconButton(
           icon: const Icon(
-            Icons.subdirectory_arrow_left,
+            Icons.arrow_back,
             color: Colors.white,
           ),
           onPressed: () => Navigator.of(context).maybePop(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/admin/admin_trabajadores_page.dart';
 import 'package:frontend/components/admin/generar_codigo_page.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerente/gerent_services.dart';
@@ -30,7 +31,12 @@ class AdminPerfil extends StatelessWidget {
           side: const BorderSide(color: AppEstilos.bordeOscuro, width: 1),
         ),
         onSelected: (v) {
-          if (v == 'generar_codigo') {
+          if (v == 'trabajadores') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminTrabajadoresPage()),
+            );
+          } else if (v == 'generar_codigo') {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const GenerarCodigoPage()),
@@ -40,6 +46,17 @@ class AdminPerfil extends StatelessWidget {
           }
         },
         itemBuilder: (BuildContext context) => [
+          const PopupMenuItem<String>(
+            value: 'trabajadores',
+            child: Row(
+              children: [
+                Icon(Icons.people_outline, color: AppEstilos.verdeBoton, size: 16),
+                SizedBox(width: 10),
+                Text('Trabajadores', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(color: Colors.white10),
           const PopupMenuItem<String>(
             value: 'generar_codigo',
             child: Row(
@@ -96,7 +113,7 @@ class AdminTopBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
-            icon: const Icon(Icons.subdirectory_arrow_left, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           const Spacer(),

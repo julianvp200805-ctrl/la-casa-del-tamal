@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/menu/campo_inicio.dart';
@@ -25,6 +26,7 @@ class _RegistroPageState extends State<RegistroPage> {
   String _tipoDoc = 'C.C.';
   bool _cargando = false;
   bool _has8Char = false, _hasUpper = false, _hasNumber = false;
+  bool _aceptoTerminos = false;
 
   // Rol impuesto por el código de registro (lo genera el admin).
   String? _rolDelCodigo;
@@ -60,6 +62,38 @@ class _RegistroPageState extends State<RegistroPage> {
   }
 
   String _tituloRol(String rol) => rol == 'cocina' ? 'Cocina' : 'Mesero';
+
+  // Capitaliza la primera letra de cada palabra (nombres propios).
+  String _capitalizar(String s) => s.split(' ').map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ');
+
+  void _mostrarTerminos() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppEstilos.tablaInventario,
+        title: const Text('Términos y condiciones', style: TextStyle(color: Colors.white)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Al aceptar los términos y condiciones, usted autoriza el tratamiento '
+            'de sus datos personales (nombre, documento, correo electrónico, fecha '
+            'de nacimiento) conforme a la Ley 1581 de 2012 y el Decreto 1377 de '
+            '2013, con la finalidad de gestionar su registro, acceso y uso de la '
+            'aplicación. Sus datos serán almacenados de forma segura y no serán '
+            'compartidos con terceros sin su consentimiento, salvo obligación legal. '
+            'Puede ejercer sus derechos de acceso, rectificación, cancelación y '
+            'oposición en cualquier momento.',
+            style: TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar', style: TextStyle(color: AppEstilos.verdeBoton)),
+          ),
+        ],
+      ),
+    );
+  }
 
   // POST /auth/verificar-codigo-registro: confirma que el código existe,
   // no está vencido ni usado, y devuelve el rol asignado por el admin.
@@ -98,11 +132,13 @@ class _RegistroPageState extends State<RegistroPage> {
 
   Future<void> _elegirFecha() async {
     final hoy = DateTime.now();
+    // Solo mayores de 18: la fecha máxima seleccionable es hoy - 18 años.
+    final maxFecha = DateTime(hoy.year - 18, hoy.month, hoy.day);
     final seleccion = await showDatePicker(
       context: context,
-      initialDate: DateTime(hoy.year - 20),
+      initialDate: DateTime(hoy.year - 20, hoy.month, hoy.day),
       firstDate: DateTime(1900),
-      lastDate: hoy,
+      lastDate: maxFecha,
       helpText: 'Fecha de nacimiento',
     );
     if (seleccion == null) return;
@@ -124,6 +160,12 @@ class _RegistroPageState extends State<RegistroPage> {
       return _msg('La contraseña no cumple los requisitos', true);
     }
     if (_fechaIso == null) return _msg('Selecciona tu fecha de nacimiento', true);
+    // Solo mayores de 18 años.
+    final nac = DateTime.tryParse(_fechaIso!);
+    if (nac == null || DateTime.now().difference(nac).inDays < 18 * 365) {
+      return _msg('Debes ser mayor de 18 años', true);
+    }
+    if (!_aceptoTerminos) return _msg('Debes aceptar los términos y condiciones', true);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _cargando = true);
@@ -137,7 +179,7 @@ class _RegistroPageState extends State<RegistroPage> {
       await ApiClient.I.postJson(
         '/auth/registro',
         {
-          'nombre': _nombreCtrl.text.trim(),
+          'nombre': _capitalizar(_nombreCtrl.text.trim()),
           'tipo_documento': _tipoDoc,
           'numero_documento': _docCtrl.text.trim(),
           'email': emailLimpio,
@@ -279,7 +321,43 @@ class _RegistroPageState extends State<RegistroPage> {
                 _lbl('Código interno'),
                 _buildCodigoInternoCompleto(),
                 _buildEstadoCodigo(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                // Aceptación de términos y condiciones (obligatoria).
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: _aceptoTerminos,
+                      onChanged: (v) => setState(() => _aceptoTerminos = v ?? false),
+                      activeColor: AppEstilos.verdeBoton,
+                      side: const BorderSide(color: Colors.white54),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text.rich(
+                          TextSpan(
+                            text: 'Acepto los ',
+                            style: const TextStyle(color: Colors.white70, fontSize: 13),
+                            children: [
+                              TextSpan(
+                                text: 'términos y condiciones',
+                                style: const TextStyle(
+                                  color: AppEstilos.verdeBoton,
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = _mostrarTerminos,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   height: 50,

@@ -6,7 +6,8 @@ import {
   pedidosEnProceso,
   cambiarEstadoPedido,
   entregarPedido,
-  reporteRango
+  reporteRango,
+  rankingMeserosMes
 } from "../controllers/pedido.js";
 import { verificarToken, verificarAdmin, verificarRol } from "../middlewares/userMiddleware.js";
 
@@ -26,6 +27,7 @@ router.get('/cocina/abiertos', verificarRol('cocina', 'admin'), pedidosCocinaAbi
 // --- ADMIN (reportes y bandeja general) ---
 // Deben ir ANTES de /:id para no confundirse con un id.
 router.get('/reporte-rango', verificarAdmin, reporteRango);
+router.get('/ranking-mes', verificarAdmin, rankingMeserosMes);
 router.get('/en-proceso', verificarAdmin, pedidosEnProceso);
 
 // --- COCINA Y ADMIN ---
