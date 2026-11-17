@@ -53,33 +53,62 @@ class ProductoDetallePage extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 6, 24, 14),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(plato.nombre, style: const TextStyle(color: Colors.white, fontSize: 25, fontFamily: 'serif', fontWeight: FontWeight.bold)),
-              ),
-            ),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 150,
+                    // Imagen grande del plato con degradado abajo que se funde
+                    // con el fondo de la pantalla.
+                    SizedBox(
+                      height: 300,
                       width: double.infinity,
-                      color: const Color(0xFF2E4A3C),
-                      child: Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
-                              ? Image.network(plato.imagenUrl!, width: 130, height: 130, fit: BoxFit.cover, errorBuilder: (_, _, _) => _fallback())
-                              : _fallback(),
-                        ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            color: const Color(0xFF2E4A3C),
+                            child: Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.zero,
+                                child: plato.imagenUrl != null && plato.imagenUrl!.isNotEmpty
+                                    ? Image.network(plato.imagenUrl!, width: double.infinity, height: 300, fit: BoxFit.cover, errorBuilder: (_, _, _) => _fallback())
+                                    : _fallback(),
+                              ),
+                            ),
+                          ),
+                          // Degradado inferior que se funde con el fondo oscuro.
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                    AppEstilos.fondoOscuro.withValues(alpha: 0.6),
+                                    AppEstilos.fondoOscuro,
+                                  ],
+                                  stops: const [0.0, 0.5, 0.8, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 24,
+                            right: 24,
+                            bottom: 16,
+                            child: Text(
+                              plato.nombre,
+                              style: const TextStyle(color: Colors.white, fontSize: 26, fontFamily: 'serif', fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black54, blurRadius: 8)]),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -173,10 +202,10 @@ class ProductoDetallePage extends StatelessWidget {
 
   Widget _fallback() {
     return Container(
-      width: 130,
-      height: 130,
+      width: double.infinity,
+      height: 300,
       color: AppEstilos.bordeOscuro,
-      child: const Icon(Icons.fastfood, size: 50, color: Colors.white24),
+      child: const Icon(Icons.fastfood, size: 80, color: Colors.white24),
     );
   }
 }
