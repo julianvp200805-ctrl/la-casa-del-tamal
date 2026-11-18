@@ -19,18 +19,50 @@ class AdminDrawer extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getString('user_id') ?? '';
     if (!context.mounted) return;
+    final controlador = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppEstilos.tablaInventario,
-        title: const Text('Eliminar cuenta', style: TextStyle(color: Colors.white)),
-        content: const Text('¿Seguro que quieres eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.', style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar', style: TextStyle(color: AppEstilos.rojoVencido, fontWeight: FontWeight.bold))),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) {
+          bool habilitado = false;
+          return AlertDialog(
+            backgroundColor: AppEstilos.tablaInventario,
+            title: const Text('Eliminar cuenta', style: TextStyle(color: Colors.white)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('¿Seguro que quieres eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.', style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 12),
+                const Text('Escribe ELIMINAR para confirmar:', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controlador,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'ELIMINAR',
+                    hintStyle: const TextStyle(color: Colors.white38),
+                    filled: true,
+                    fillColor: AppEstilos.fondoOscuro,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  ),
+                  onChanged: (v) => setSt(() => habilitado = v.trim().toUpperCase() == 'ELIMINAR'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+              TextButton(
+                onPressed: habilitado ? () => Navigator.pop(ctx, true) : null,
+                child: Text('Eliminar', style: TextStyle(color: habilitado ? AppEstilos.rojoVencido : Colors.white24, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
       ),
     );
+    controlador.dispose();
     if (ok != true) return;
     try {
       if (id.isNotEmpty) await UserService().eliminarTrabajador(id);
