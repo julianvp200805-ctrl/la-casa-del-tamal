@@ -44,7 +44,7 @@ class MeseroPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => Scaffold.of(context).openEndDrawer(),
+        onTap: () => shellScaffoldKey.currentState?.openEndDrawer(),
         child: const Icon(Icons.account_circle_outlined, color: AppEstilos.meseroOliva, size: 38),
       );
 }

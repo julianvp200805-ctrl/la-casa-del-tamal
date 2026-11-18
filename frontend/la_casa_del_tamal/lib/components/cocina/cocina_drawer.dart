@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/components/drawer_perfil_header.dart';
+import 'package:frontend/components/ayuda/manual_usuario_page.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerente/gerent_services.dart';
 
@@ -81,10 +83,18 @@ class CocinaDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 12),
-            const Text('COCINA', style: TextStyle(color: AppEstilos.acentoCocina, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+            DrawerPerfilHeader(color: AppEstilos.acentoCocina, rolLabel: 'COCINA'),
             const Divider(color: Colors.white24),
             const Spacer(),
+            const Divider(color: Colors.white24),
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: AppEstilos.acentoCocina),
+              title: const Text('Ayuda / Manual de usuario', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ManualUsuarioPage()));
+              },
+            ),
             const Divider(color: Colors.white24),
             ListTile(
               leading: const Icon(Icons.logout_outlined, color: AppEstilos.colorDorado),

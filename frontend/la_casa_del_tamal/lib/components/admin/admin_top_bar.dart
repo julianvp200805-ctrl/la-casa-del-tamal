@@ -10,7 +10,7 @@ class AdminPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => Scaffold.of(context).openEndDrawer(),
+      onTap: () => shellScaffoldKey.currentState?.openEndDrawer(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

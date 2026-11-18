@@ -38,6 +38,7 @@ dependencies:
   shared_preferences: ^2.3.3
   image_picker: ^1.1.2
   flutter_local_notifications: ^17.2.3
+  flutter_pdfview: ^1.3.4
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +63,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/image/
+    - assets/manuales/manual_usuario.pdf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

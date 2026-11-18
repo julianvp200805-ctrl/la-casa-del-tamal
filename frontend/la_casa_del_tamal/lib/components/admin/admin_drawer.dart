@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/components/ayuda/manual_usuario_page.dart';
+import 'package:frontend/components/drawer_perfil_header.dart';
 import 'package:frontend/components/admin/admin_trabajadores_page.dart';
 import 'package:frontend/components/admin/generar_codigo_page.dart';
 import 'package:frontend/core/colores.dart';
@@ -83,8 +85,7 @@ class AdminDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 12),
-            const Text('ADMIN', style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+            DrawerPerfilHeader(color: AppEstilos.verdeBoton, rolLabel: 'ADMIN'),
             const Divider(color: Colors.white24),
             ListTile(
               leading: const Icon(Icons.people_outline, color: AppEstilos.verdeBoton),
@@ -103,6 +104,15 @@ class AdminDrawer extends StatelessWidget {
               },
             ),
             const Spacer(),
+            const Divider(color: Colors.white24),
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: AppEstilos.verdeBoton),
+              title: const Text('Ayuda / Manual de usuario', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ManualUsuarioPage()));
+              },
+            ),
             const Divider(color: Colors.white24),
             ListTile(
               leading: const Icon(Icons.logout_outlined, color: AppEstilos.colorDorado),

@@ -86,7 +86,9 @@ class BarraNavegacion extends StatelessWidget {
   }
 }
 
-/// Scaffold que comparten los tres roles: fondo, FAB opcional y la barra fija.
+/// Clave global del Scaffold del shell (para abrir el drawer lateral desde
+/// las barras superiores, que están dentro de Scaffolds anidados).
+final GlobalKey<ScaffoldState> shellScaffoldKey = GlobalKey<ScaffoldState>();
 /// Las pantallas de cada pestaña van sin su propio Scaffold ni FAB.
 class ShellConBarra extends StatefulWidget {
   final List<PestanaNav> pestanas;
@@ -189,6 +191,7 @@ class _ShellConBarraState extends State<ShellConBarra> with SingleTickerProvider
   Widget build(BuildContext context) {
     final deslizable = widget.pestanas.length > 1;
     return Scaffold(
+      key: shellScaffoldKey,
       backgroundColor: AppEstilos.fondoOscuro,
       floatingActionButton: widget.botonFlotante,
       bottomNavigationBar: BarraNavegacion(

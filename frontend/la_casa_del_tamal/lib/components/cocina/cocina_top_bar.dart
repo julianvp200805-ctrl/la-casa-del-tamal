@@ -22,7 +22,7 @@ class CocinaPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => Scaffold.of(context).openEndDrawer(),
+        onTap: () => shellScaffoldKey.currentState?.openEndDrawer(),
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
