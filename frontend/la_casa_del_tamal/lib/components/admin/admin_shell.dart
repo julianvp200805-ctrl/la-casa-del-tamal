@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/admin/admin_drawer.dart';
 import 'package:frontend/components/admin/admin_menu.dart';
 import 'package:frontend/components/chat/chat_fab.dart';
 import 'package:frontend/components/productos/inventario_page.dart';
@@ -31,6 +32,7 @@ class AdminShell extends StatelessWidget {
       controlador: pestanaAdminActiva,
       botonFlotante: const ChatFab(),
       pestanas: pestanasAdmin,
+      endDrawer: const AdminDrawer(),
     );
   }
 }

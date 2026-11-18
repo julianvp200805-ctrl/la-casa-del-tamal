@@ -93,6 +93,7 @@ class ShellConBarra extends StatefulWidget {
   final Color colorActivo;
   final Widget? botonFlotante;
   final int pestanaInicial;
+  final Widget? endDrawer;
 
   /// Permite que una pantalla hija abierta con Navigator salte de pestana
   /// (por ejemplo al volver de "Codigo de acceso" a Pedidos).
@@ -104,6 +105,7 @@ class ShellConBarra extends StatefulWidget {
     this.colorActivo = AppEstilos.verdeBoton,
     this.botonFlotante,
     this.pestanaInicial = 0,
+    this.endDrawer,
     this.controlador,
   });
 
@@ -195,6 +197,7 @@ class _ShellConBarraState extends State<ShellConBarra> with SingleTickerProvider
         onTap: _moverA,
         pestanas: widget.pestanas,
       ),
+      endDrawer: widget.endDrawer,
       // IndexedStack conserva el estado y el scroll de cada pestaña; la que
       // entra se desliza desde el lado que toca en vez de aparecer de golpe.
       body: GestureDetector(

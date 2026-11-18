@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/cocina/cocina_comida_page.dart';
+import 'package:frontend/components/cocina/cocina_drawer.dart';
 import 'package:frontend/components/cocina/cocina_pedidos_page.dart';
 import 'package:frontend/core/colores.dart';
 
@@ -23,6 +24,7 @@ class CocinaShell extends StatelessWidget {
       controlador: pestanaCocinaActiva,
       colorActivo: AppEstilos.acentoCocina,
       pestanas: pestanasCocina,
+      endDrawer: const CocinaDrawer(),
     );
   }
 }

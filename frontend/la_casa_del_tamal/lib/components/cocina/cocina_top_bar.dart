@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/colores.dart';
-import 'package:frontend/services/gerente/gerent_services.dart';
 
 /// "Cocina" en ámbar con su glyph, como en las maquetas 30-32.
 class CocinaTitulo extends StatelessWidget {
@@ -21,21 +20,9 @@ class CocinaTitulo extends StatelessWidget {
 class CocinaPerfil extends StatelessWidget {
   const CocinaPerfil({super.key});
 
-  Future<void> _cerrarSesion(BuildContext context) async {
-    await UserService().cerrarSesion();
-    if (!context.mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
-  Widget build(BuildContext context) => PopupMenuButton<String>(
-        color: AppEstilos.platoMesero,
-        onSelected: (v) {
-          if (v == 'cerrar_sesion') _cerrarSesion(context);
-        },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'cerrar_sesion', child: Text('Cerrar sesión', style: TextStyle(color: Colors.white))),
-        ],
+  Widget build(BuildContext context) => InkWell(
+        onTap: () => Scaffold.of(context).openEndDrawer(),
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,

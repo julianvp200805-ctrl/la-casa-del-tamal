@@ -65,10 +65,6 @@ export const putActualizarUsuario = async (req, res) => {
 //Eliminar un usuario
 export const deleteEliminarUsuario = async (req, res) => {
     const { id } = req.params;
-    // El admin no puede borrar su propia cuenta por accidente
-    if (String(id) === String(req.usuario?.id)) {
-        return res.status(400).json({ error: "No puedes eliminar tu propia cuenta" });
-    }
     try {
         const { data, error } = await eliminarUsuario(id);
         if (error) {

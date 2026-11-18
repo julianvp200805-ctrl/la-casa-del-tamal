@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/core/colores.dart';
-import 'package:frontend/services/gerente/gerent_services.dart';
 
 class MeseroTitulo extends StatefulWidget {
   final double tamano;
@@ -43,21 +42,9 @@ class _MeseroTituloState extends State<MeseroTitulo> {
 class MeseroPerfil extends StatelessWidget {
   const MeseroPerfil({super.key});
 
-  Future<void> _cerrarSesion(BuildContext context) async {
-    await UserService().cerrarSesion();
-    if (!context.mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
-  Widget build(BuildContext context) => PopupMenuButton<String>(
-        color: AppEstilos.platoMesero,
-        onSelected: (v) {
-          if (v == 'cerrar_sesion') _cerrarSesion(context);
-        },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'cerrar_sesion', child: Text('Cerrar sesión', style: TextStyle(color: Colors.white))),
-        ],
+  Widget build(BuildContext context) => InkWell(
+        onTap: () => Scaffold.of(context).openEndDrawer(),
         child: const Icon(Icons.account_circle_outlined, color: AppEstilos.meseroOliva, size: 38),
       );
 }

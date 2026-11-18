@@ -2,9 +2,11 @@
 
     <!-- Permitir que la aplicación se conecte a Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Notificaciones locales (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:label="la casa del tamal"
+        android:label="La Casa del Tamal"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/mesero/mesero_drawer.dart';
 import 'package:frontend/components/mesero/estados_pedido_page.dart';
 import 'package:frontend/components/mesero/tomar_pedido_page.dart';
 import 'package:frontend/core/colores.dart';
@@ -23,6 +24,7 @@ class MeseroShell extends StatelessWidget {
       controlador: pestanaMeseroActiva,
       colorActivo: AppEstilos.meseroOliva,
       pestanas: pestanasMesero,
+      endDrawer: const MeseroDrawer(),
     );
   }
 }
