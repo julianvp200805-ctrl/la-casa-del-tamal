@@ -44,6 +44,10 @@ class _AdminMenuFormState extends State<AdminMenuForm> {
         _categoria = catLimpia;
       }
     }
+    // Formatea el precio inicial con separador de miles.
+    if (widget.plato != null) {
+      _precio.text = _formatoMiles(widget.plato!.precio.toStringAsFixed(0).replaceAll(RegExp(r'[^0-9]'), ''));
+    }
     _precio.addListener(_formatearPrecio);
   }
 

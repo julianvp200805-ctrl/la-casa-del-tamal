@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/mesero/pedido_controles.dart' show formatoPesos;
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/menu/menu_services.dart';
 
@@ -54,6 +55,8 @@ class AdminMenuCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     if ((plato.descripcion ?? '').isNotEmpty)
                       Text(plato.descripcion!, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                    const SizedBox(height: 4),
+                    Text('\$${formatoPesos(plato.precio)}', style: const TextStyle(color: AppEstilos.colorDorado, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'serif')),
                     if (agotado) ...[
                       const SizedBox(height: 6),
                       const _PillAgotado(),

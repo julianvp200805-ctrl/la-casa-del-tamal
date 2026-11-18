@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/core/colores.dart';
+import 'package:frontend/components/admin/admin_drawer.dart';
 import 'package:frontend/components/admin/admin_shell.dart';
 import 'package:frontend/components/chat/chat_fab.dart';
+import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/gerente/gerent_services.dart';
 
 class GenerarCodigoPage extends StatefulWidget {
   const GenerarCodigoPage({super.key});
@@ -54,16 +54,11 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
     _notificar('Código copiado al portapapeles', esError: false);
   }
 
-  Future<void> _cerrarSesion() async {
-    await UserService().cerrarSesion();
-    if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppEstilos.fondoOscuro,
+      endDrawer: const AdminDrawer(),
       floatingActionButton: const ChatFab(),
       // La maqueta 14 muestra la barra del admin sin ninguna pestana activa:
       // esta pantalla es hija del shell y al tocar una pestana se regresa al shell.
@@ -85,28 +80,21 @@ class _GenerarCodigoPageState extends State<GenerarCodigoPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      // Cierre de sesión disponible desde la pantalla de generar
-                      // código, igual que desde el perfil del admin.
-                      IconButton(
-                        icon: const Icon(Icons.logout_outlined, color: AppEstilos.rojoVencido),
-                        onPressed: _cerrarSesion,
-                      ),
-                    ],
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Icon(Icons.account_circle, color: AppEstilos.verdeBoton, size: 30),
-                      Text('ADMIN', style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  )
+                  // Tocar el perfil abre la barra lateral (cerrar sesión, etc.).
+                  InkWell(
+                    onTap: () => Scaffold.of(context).openEndDrawer(),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Icon(Icons.account_circle, color: AppEstilos.verdeBoton, size: 30),
+                        Text('ADMIN', style: TextStyle(color: AppEstilos.verdeBoton, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
