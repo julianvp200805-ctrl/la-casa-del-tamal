@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eliminación de cuenta — La Casa del Tamal</title>
+  <meta name="description" content="Cómo solicitar la eliminación de tu cuenta y de los datos asociados en la app La Casa del Tamal.">
+  <style>
+    :root { --verde: #2f7d1b; --claro: #eef7e9; --texto: #202521; --borde: #d8dfd8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: var(--texto); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    header { background: var(--verde); color: #fff; padding: 34px 20px 28px; }
+    header .c { max-width: 860px; margin: 0 auto; }
+    header h1 { margin: 0; font-size: 1.85rem; line-height: 1.25; }
+    header p { margin: 8px 0 0; opacity: .92; }
+    main { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+    section { margin-bottom: 32px; }
+    h2 { font-size: 1.2rem; color: var(--verde); border-bottom: 2px solid var(--claro); padding-bottom: 6px; }
+    ol, ul { padding-left: 22px; }
+    li { margin-bottom: 8px; }
+    .pasos { background: var(--claro); border-radius: 8px; padding: 16px 22px; }
+    .aviso { border-left: 4px solid var(--verde); background: var(--claro); padding: 12px 16px; border-radius: 4px; }
+    a { color: var(--verde); }
+    code { background: #f2f4f2; padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+    footer { border-top: 1px solid var(--borde); color: #5b655d; font-size: .88rem; text-align: center; padding: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="c">
+      <h1>Eliminación de cuenta</h1>
+      <p>La Casa del Tamal · Sistema de gestión interna del restaurante</p>
+    </div>
+  </header>
+
+  <main>
+    <p class="aviso">Esta página explica cómo borrar tu cuenta de <strong>La Casa del Tamal</strong> y qué información se elimina o se conserva. Está disponible para todos los roles: administrador, mesero y cocina.</p>
+
+    <section>
+      <h2>1. Cómo eliminar tu cuenta desde la app</h2>
+      <div class="pasos">
+        <ol>
+          <li>Abre la app e inicia sesión con tu correo y contraseña.</li>
+          <li>Abre el menú lateral (icono de tres líneas / ☰).</li>
+          <li>Toca <strong>«Eliminar cuenta»</strong>.</li>
+          <li>Escribe la palabra <code>ELIMINAR</code> para confirmar y pulsa <strong>Eliminar</strong>.</li>
+        </ol>
+      </div>
+      <p>La cuenta se borrará de la base de datos y se cerrará la sesión en el dispositivo. No es necesario escribirnos, aunque puedes hacerlo si necesitas ayuda.</p>
+    </section>
+
+    <section>
+      <h2>2. Cómo solicitarlo por correo</h2>
+      <p>Si no puedes entrar a la app, envía un correo a <a href="mailto:julianvp200805@gmail.com?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta">julianvp200805@gmail.com</a> con el asunto <strong>«Solicitud de eliminación de cuenta»</strong> e indica el correo con el que te registraste. Responderemos dentro de los plazos legales (consulta: hasta 10 días hábiles; reclamo: hasta 15 días hábiles).</p>
+    </section>
+
+    <section>
+      <h2>3. Datos que se eliminan</h2>
+      <ul>
+        <li>Nombre completo, tipo y número de documento, correo electrónico y fecha de nacimiento.</li>
+        <li>Contraseña (hash) y rol asignado.</li>
+        <li>Códigos de registro y de recuperación de contraseña asociados a tu cuenta.</li>
+        <li>Token de sesión y datos de perfil guardados en el dispositivo (<code>SharedPreferences</code>).</li>
+        <li>Identificador de usuario asociado a los mensajes del asistente «Tamalin», cuando es posible disociarlo.</li>
+      </ul>
+      <p>La eliminación se aplica de inmediato en la base de datos al confirmar desde la app. Las copias de seguridad del proveedor se purgan según su ciclo habitual (normalmente en menos de 30 días).</p>
+    </section>
+
+    <section>
+      <h2>4. Datos que se conservan y por qué</h2>
+      <ul>
+        <li><strong>Pedidos, ventas e inventario:</strong> se mantienen como registro operativo y contable del negocio hasta 10 años, conforme a obligaciones legales y fiscales en Colombia. Siempre que es posible, se disocian del identificador personal del usuario.</li>
+        <li><strong>Historial del asistente «Tamalin»:</strong> se conserva mientras sea necesario para la auditoría del negocio; puedes pedir su borrado anticipado escribiéndonos.</li>
+        <li><strong>Registros técnicos del servidor</strong> (dirección IP, fecha de la solicitud): se mantienen por un periodo limitado para seguridad y diagnóstico.</li>
+      </ul>
+      <p>En ningún caso conservamos tu contraseña en texto plano ni usamos tus datos para publicidad.</p>
+    </section>
+
+    <section>
+      <h2>5. Más información</h2>
+      <p>Consulta la <a href="../privacidad/">Política de privacidad de La Casa del Tamal</a> para conocer las finalidades del tratamiento, los terceros con los que se comparten tus datos y la forma de ejercer tus derechos de Habeas Data.</p>
+    </section>
+  </main>
+
+  <footer>
+    La Casa del Tamal · Página de eliminación de cuenta · Actualizada el 20 de noviembre de 2026
+  </footer>
+</body>
+</html>

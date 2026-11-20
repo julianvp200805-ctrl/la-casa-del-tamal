@@ -109,8 +109,13 @@ Requiere tener previamente configurado el SDK de **Flutter**.
 
 La política de privacidad es una página HTML estática (no un PDF ni un archivo descargable) publicada con GitHub Pages desde [`docs/privacidad/index.html`](docs/privacidad/index.html):
 
-**URL para la ficha de Play Store:**
+**URL de política de privacidad para la ficha de Play Store:**
 https://julianvp200805-ctrl.github.io/la-casa-del-tamal/privacidad/
+
+**URL de eliminación de cuenta para la ficha de Play Store:**
+https://julianvp200805-ctrl.github.io/la-casa-del-tamal/eliminar-cuenta/
+
+La página de eliminación está en [`docs/eliminar-cuenta/index.html`](docs/eliminar-cuenta/index.html) y explica los pasos dentro de la app, el correo alternativo y los datos eliminados/conservados. La eliminación desde la app funciona para los tres roles: `DELETE /user/eliminar_usuario/:id` permite al usuario borrar su propia cuenta y al administrador borrar cualquier cuenta. Requiere volver a desplegar el backend para que esté activo en Render.
 
 ### Publicar la página
 
