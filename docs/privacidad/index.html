@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de Privacidad — La Casa del Tamal</title>
+  <meta name="description" content="Política de privacidad de la aplicación móvil La Casa del Tamal: datos recopilados, finalidades, terceros, retención y derechos del usuario.">
+  <style>
+    :root {
+      --verde: #2f7d1b;
+      --verde-claro: #eef7e9;
+      --texto: #202521;
+      --muted: #5b655d;
+      --borde: #d8dfd8;
+      --fondo: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--texto);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    header {
+      background: var(--verde);
+      color: #fff;
+      padding: 34px 20px 28px;
+    }
+    header .contenedor { max-width: 900px; margin: 0 auto; }
+    header h1 { margin: 0; font-size: 1.9rem; line-height: 1.25; }
+    header p { margin: 8px 0 0; opacity: .92; }
+    main { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+    .vigencia {
+      background: var(--verde-claro);
+      border-left: 4px solid var(--verde);
+      padding: 12px 16px;
+      margin: 0 0 28px;
+      border-radius: 4px;
+      font-size: .95rem;
+    }
+    section { margin: 0 0 34px; }
+    h2 {
+      font-size: 1.25rem;
+      color: var(--verde);
+      border-bottom: 2px solid var(--verde-claro);
+      padding-bottom: 6px;
+      margin: 0 0 12px;
+    }
+    h3 { font-size: 1.02rem; margin: 20px 0 8px; }
+    p, li { margin: 0 0 10px; }
+    ul, ol { padding-left: 22px; }
+    .tabla { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { border: 1px solid var(--borde); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--verde-claro); color: #1f5415; }
+    a { color: var(--verde); }
+    code { background: #f2f4f2; padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+    .contacto { background: var(--verde-claro); padding: 16px 18px; border-radius: 8px; }
+    footer {
+      border-top: 1px solid var(--borde);
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+      padding: 20px;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      main { padding: 20px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="contenedor">
+      <h1>Política de Privacidad</h1>
+      <p>Aplicación móvil <strong>La Casa del Tamal</strong> · Sistema de gestión interna del restaurante</p>
+    </div>
+  </header>
+
+  <main>
+    <p class="vigencia"><strong>Fecha de vigencia:</strong> 20 de noviembre de 2026. Esta política aplica exclusivamente a la aplicación «La Casa del Tamal» y a su backend, y se actualiza en esta misma dirección.</p>
+
+    <section id="responsable">
+      <h2>1. Responsable del tratamiento</h2>
+      <p>El responsable de la información personal que se recoge en esta aplicación es <strong>La Casa del Tamal</strong>. Para cualquier consulta, solicitud o reclamo relacionado con tus datos puedes escribir a <a href="mailto:julianvp200805@gmail.com">julianvp200805@gmail.com</a>.</p>
+      <p>Esta app es una herramienta de uso interno para el personal del restaurante (administradores, meseros y cocina). No es una app de consumo para clientes finales y no se dirige a menores de edad.</p>
+    </section>
+
+    <section id="datos">
+      <h2>2. Qué datos recopilamos</h2>
+
+      <h3>2.1 Datos que nos entregas al registrarte</h3>
+      <ul>
+        <li>Nombre completo.</li>
+        <li>Tipo de documento (cédula de ciudadanía, cédula de extranjería, tarjeta de identidad o pasaporte) y número de documento.</li>
+        <li>Correo electrónico.</li>
+        <li>Fecha de nacimiento, utilizada únicamente para verificar que eres mayor de 18 años.</li>
+        <li>Contraseña. Se almacena como una huella criptográfica (hash con bcrypt); la app y el servidor nunca guardan tu contraseña en texto plano.</li>
+        <li>Código de registro interno de un solo uso y el rol que el administrador le asigna (administrador, mesero o cocina).</li>
+      </ul>
+
+      <h3>2.2 Datos de acceso y sesión</h3>
+      <ul>
+        <li>Correo y contraseña en cada inicio de sesión.</li>
+        <li>Un token de sesión JWT que contiene tu identificador, nombre, correo y rol, con una vigencia de 12 horas.</li>
+        <li>Datos guardados en tu dispositivo mediante <code>SharedPreferences</code>: identificador de usuario, nombre, correo, rol y token de sesión. Se eliminan al cerrar sesión o al eliminar la cuenta.</li>
+      </ul>
+
+      <h3>2.3 Datos operativos generados por el uso de la app</h3>
+      <ul>
+        <li><strong>Pedidos:</strong> mesa, productos, cantidades, notas para cocina, estado, totales y fechas.</li>
+        <li><strong>Menú e inventario:</strong> productos, descripciones, precios, categorías, disponibilidad y fechas de vencimiento.</li>
+        <li><strong>Ventas y reportes:</strong> histórico de pedidos y consultas de rendimiento del negocio.</li>
+        <li><strong>Imágenes:</strong> fotos de productos que el administrador elige desde la galería del dispositivo; se suben al servicio de almacenamiento de imágenes.</li>
+        <li><strong>Asistente «Tamalin»:</strong> los mensajes que escribes, las respuestas recibidas, el identificador de la conversación y tu identificador de usuario.</li>
+        <li><strong>Recuperación de contraseña:</strong> tu correo, un código de verificación de 6 dígitos válido por 15 minutos y la confirmación del cambio.</li>
+      </ul>
+
+      <h3>2.4 Datos técnicos y permisos del dispositivo</h3>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Permiso o dato</th><th>Para qué se usa</th></tr></thead>
+          <tbody>
+            <tr><td>Acceso a Internet (<code>INTERNET</code>)</td><td>Comunicación con el backend para iniciar sesión, consultar el menú y registrar pedidos.</td></tr>
+            <tr><td>Notificaciones (<code>POST_NOTIFICATIONS</code>, Android 13+)</td><td>Mostrar avisos locales cuando un pedido está listo para entregar. Son notificaciones generadas en el propio dispositivo: no usamos Firebase ni mensajería push de terceros.</td></tr>
+            <tr><td>Galería de imágenes</td><td>Solo cuando el administrador selecciona una foto para un producto del menú. La app no solicita cámara, micrófono ni contactos.</td></tr>
+            <tr><td>Dirección IP, tipo de dispositivo/navegador y fecha de la solicitud</td><td>Registros técnicos del servidor para seguridad, diagnóstico y prevención de abuso.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>No recopilamos</strong> ubicación GPS, contactos, datos biométricos, números de tarjeta ni datos de pago, identificadores publicitarios, ni información de menores. Tampoco incorporamos rastreadores de analítica o publicidad de terceros dentro de la app.</p>
+    </section>
+
+    <section id="finalidades">
+      <h2>3. Para qué usamos tus datos</h2>
+      <ul>
+        <li>Crear y administrar las cuentas del personal, autenticarte y controlar el acceso según tu rol.</li>
+        <li>Registrar pedidos, coordinar la preparación en cocina y llevar el control de mesas e inventario.</li>
+        <li>Generar reportes de ventas y indicadores del negocio para la administración.</li>
+        <li>Enviar por correo los códigos de recuperación de contraseña y las confirmaciones de seguridad.</li>
+        <li>Mostrar avisos locales de pedidos listos en tu dispositivo.</li>
+        <li>Alimentar el asistente «Tamalin» con información operativa del restaurante para que responda consultas del administrador.</li>
+        <li>Proteger la app y la información, detectar accesos no autorizados y cumplir obligaciones legales.</li>
+      </ul>
+      <p>No utilizamos tus datos personales para publicidad, elaboración de perfiles de marketing ni los vendemos o alquilamos a terceros.</p>
+    </section>
+
+    <section id="terceros">
+      <h2>4. Con quién compartimos la información</h2>
+      <p>La app envía información a proveedores de servicios necesarios para funcionar. Cada uno trata los datos conforme a su propia política de privacidad y únicamente para las finalidades descritas:</p>
+      <div class="tabla">
+        <table>
+          <thead><tr><th>Proveedor</th><th>Función</th><th>Datos implicados</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Supabase</strong> (base de datos PostgreSQL)</td><td>Almacenamiento de usuarios, menú, pedidos, códigos y conversaciones del chat.</td><td>Datos de registro, operativos y mensajes del asistente.</td></tr>
+            <tr><td><strong>Render</strong> (alojamiento del backend)</td><td>Ejecución de la API que atiende a la app.</td><td>Datos enviados en cada solicitud y registros técnicos del servidor.</td></tr>
+            <tr><td><strong>Cloudinary</strong></td><td>Almacenamiento y entrega de las imágenes de productos.</td><td>Fotos seleccionadas para el menú.</td></tr>
+            <tr><td><strong>Brevo / Resend</strong></td><td>Envío de correos transaccionales.</td><td>Correo electrónico, nombre y código de recuperación.</td></tr>
+            <tr><td><strong>Groq</strong></td><td>Generación de las respuestas del asistente «Tamalin».</td><td>Mensaje del administrador y un resumen operativo del negocio (ventas, productos y ranking de meseros).</td></tr>
+            <tr><td><strong>Google Play</strong></td><td>Distribución de la aplicación y gestión de la ficha.</td><td>Datos de instalación y diagnóstico gestionados por Google según sus propias políticas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Además, podemos divulgar información cuando lo exija una ley, una orden judicial o sea necesario para proteger la seguridad de las personas o del negocio. No compartimos tus datos con otros terceros para fines propios.</p>
+    </section>
+
+    <section id="retencion">
+      <h2>5. Cuánto tiempo conservamos los datos</h2>
+      <ul>
+        <li>Los datos de la cuenta se conservan mientras sigas usando la app. Puedes eliminar tu cuenta desde el menú lateral «Eliminar cuenta»; el administrador también puede hacerlo.</li>
+        <li>El token de sesión caduca a las 12 horas y los datos guardados en el dispositivo se borran al cerrar sesión.</li>
+        <li>Los códigos de recuperación y de registro vencen a los 15 minutos.</li>
+        <li>Los registros de pedidos, ventas y conversaciones se conservan por el tiempo necesario para la operación y auditoría del negocio, y pueden eliminarse a solicitud del titular.</li>
+        <li>Algunas copias de seguridad pueden permanecer por un periodo limitado antes de su borrado definitivo.</li>
+      </ul>
+    </section>
+
+    <section id="seguridad">
+      <h2>6. Seguridad de la información</h2>
+      <p>El tráfico entre la app y el backend se realiza mediante HTTPS/TLS. Las contraseñas se almacenan como hash con bcrypt, las sesiones usan tokens JWT firmados y el acceso a las funciones de administración está restringido por roles. El acceso a la base de datos y a los servicios externos se realiza con credenciales privadas configuradas en el servidor.</p>
+      <p>Ningún sistema es completamente infalible: si detectas un problema de seguridad, escríbenos a <a href="mailto:julianvp200805@gmail.com">julianvp200805@gmail.com</a>.</p>
+    </section>
+
+    <section id="derechos">
+      <h2>7. Tus derechos</h2>
+      <p>De conformidad con la Ley 1581 de 2012 y el Decreto 1377 de 2013 (Colombia), puedes ejercer los derechos de acceso, rectificación, cancelación, oposición y revocación del consentimiento respecto de tus datos personales.</p>
+      <ul>
+        <li>Envía tu solicitud a <a href="mailto:julianvp200805@gmail.com">julianvp200805@gmail.com</a> con el asunto «Solicitud de derechos de privacidad» e indica el correo con el que te registraste.</li>
+        <li>También puedes eliminar tu cuenta directamente desde la app, en el menú lateral → «Eliminar cuenta».</li>
+        <li>Las consultas se responden dentro de los 10 días hábiles siguientes y los reclamos dentro de los 15 días hábiles, según la ley.</li>
+      </ul>
+    </section>
+
+    <section id="menores">
+      <h2>8. Menores de edad</h2>
+      <p>La aplicación está destinada al personal adulto del restaurante. Durante el registro se verifica la fecha de nacimiento y solo se permiten mayores de 18 años. No recopilamos deliberadamente información de niños y, si tenemos conocimiento de ella, la eliminamos.</p>
+    </section>
+
+    <section id="cambios">
+      <h2>9. Cambios en esta política</h2>
+      <p>Cuando se modifiquen las prácticas de privacidad o los proveedores, actualizaremos esta página y la fecha de vigencia indicada al inicio. Te recomendamos revisarla periódicamente; la versión publicada en esta URL es la aplicable.</p>
+    </section>
+
+    <section id="contacto" class="contacto">
+      <h2>10. Contacto</h2>
+      <p><strong>La Casa del Tamal</strong><br>
+      Correo para privacidad y Habeas Data: <a href="mailto:julianvp200805@gmail.com">julianvp200805@gmail.com</a></p>
+    </section>
+  </main>
+
+  <footer>
+    Política de privacidad de La Casa del Tamal · Última actualización: 20 de noviembre de 2026
+  </footer>
+</body>
+</html>

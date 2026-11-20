@@ -105,6 +105,41 @@ Requiere tener previamente configurado el SDK de **Flutter**.
 
 ---
 
+## 🔒 Política de privacidad (Google Play)
+
+La política de privacidad es una página HTML estática (no un PDF ni un archivo descargable) publicada con GitHub Pages desde [`docs/privacidad/index.html`](docs/privacidad/index.html):
+
+**URL para la ficha de Play Store:**
+https://julianvp200805-ctrl.github.io/la-casa-del-tamal/privacidad/
+
+### Publicar la página
+
+1. En GitHub, entra a **Settings → Pages**.
+2. En *Build and deployment*, elige **Deploy from a branch**.
+3. Selecciona la rama `main` y la carpeta **`/docs`**, y guarda.
+4. Espera unos minutos y comprueba que la URL responda con la página (sin redirecciones a login ni errores 404).
+
+Si cambian el usuario de GitHub o el nombre del repositorio, actualiza la URL en dos lugares:
+
+- `frontend/la_casa_del_tamal/lib/services/config/privacidad_config.dart` (enlace dentro de la app).
+- El campo **Política de privacidad** de la Consola de Play Store.
+
+### Enlace dentro de la app
+
+El enlace aparece en la pantalla de inicio de sesión, en el registro (junto a los términos) y en el menú lateral de los tres roles (admin, mesero y cocina). Se abre con `url_launcher` en el navegador del dispositivo.
+
+### Respuestas sugeridas para «Declaración de datos» de Play Console
+
+| Pregunta | Respuesta |
+| --- | --- |
+| ¿Recopila datos? | Sí: nombre, correo, tipo y número de documento, fecha de nacimiento, contraseña (hash), identificador y rol, pedidos, imágenes de productos y mensajes del asistente. |
+| ¿Comparte datos con terceros? | Sí, como procesadores: Supabase (BD), Render (hosting), Cloudinary (imágenes), Brevo/Resend (correo) y Groq (asistente Tamalin). |
+| ¿Se usan para publicidad o perfiles? | No. Solo para operación de la app, seguridad y cumplimiento legal. |
+| ¿Datos cifrados en tránsito? | Sí, HTTPS/TLS para todas las llamadas al backend. |
+| ¿Se pueden eliminar? | Sí: desde «Eliminar cuenta» en la app o escribiendo a julianvp200805@gmail.com. |
+| ¿Recopila ubicación, contactos o pagos? | No. La app usa Internet y notificaciones locales; la galería solo cuando el admin elige una imagen de producto. |
+| ¿Se dirige a menores? | No, el registro solo permite mayores de 18 años. |
+
 ## 👥 Colaboradores
 * **Eder Ramos Plaza** - [@ederramosplaza7-eng](https://github.com)
 * **Julian** - [@julianvp200805-ctrl](https://github.com)

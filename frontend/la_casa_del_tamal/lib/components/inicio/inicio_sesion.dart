@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/admin/admin_shell.dart';
+import 'package:frontend/components/ayuda/politica_privacidad.dart';
 import 'package:frontend/components/inicio/registro_page.dart'; 
 import 'package:frontend/components/mesero/mesero_shell.dart';
 import 'package:frontend/components/cocina/cocina_shell.dart'; 
@@ -134,6 +135,20 @@ class _InicioSesionState extends State<InicioSesion> {
                       fontSize: 16,
                       fontFamily: 'serif',
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: () => abrirPoliticaPrivacidad(context),
+                  child: const Text(
+                    'Política de privacidad',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),

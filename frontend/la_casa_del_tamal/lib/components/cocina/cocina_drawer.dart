@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/components/drawer_perfil_header.dart';
 import 'package:frontend/components/ayuda/manual_usuario_page.dart';
+import 'package:frontend/components/ayuda/politica_privacidad.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/services/gerente/gerent_services.dart';
 
@@ -95,6 +96,7 @@ class CocinaDrawer extends StatelessWidget {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ManualUsuarioPage()));
               },
             ),
+            listaPoliticaPrivacidad(context, color: AppEstilos.acentoCocina),
             const Divider(color: Colors.white24),
             ListTile(
               leading: const Icon(Icons.logout_outlined, color: AppEstilos.colorDorado),

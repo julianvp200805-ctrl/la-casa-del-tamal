@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/components/ayuda/manual_usuario_page.dart';
+import 'package:frontend/components/ayuda/politica_privacidad.dart';
 import 'package:frontend/components/drawer_perfil_header.dart';
 import 'package:frontend/components/admin/admin_trabajadores_page.dart';
 import 'package:frontend/components/admin/generar_codigo_page.dart';
@@ -113,6 +114,7 @@ class AdminDrawer extends StatelessWidget {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ManualUsuarioPage()));
               },
             ),
+            listaPoliticaPrivacidad(context, color: AppEstilos.verdeBoton),
             const Divider(color: Colors.white24),
             ListTile(
               leading: const Icon(Icons.logout_outlined, color: AppEstilos.colorDorado),

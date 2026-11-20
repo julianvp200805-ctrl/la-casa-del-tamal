@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/components/ayuda/politica_privacidad.dart';
 import 'package:frontend/core/colores.dart';
 import 'package:frontend/pantallas/menu/campo_inicio.dart';
 import 'package:frontend/services/api_client.dart';
@@ -75,13 +76,15 @@ class _RegistroPageState extends State<RegistroPage> {
         content: const SingleChildScrollView(
           child: Text(
             'Al aceptar los términos y condiciones, usted autoriza el tratamiento '
-            'de sus datos personales (nombre, documento, correo electrónico, fecha '
+            'de sus datos personales (nombre, documento, correo electrónico y fecha '
             'de nacimiento) conforme a la Ley 1581 de 2012 y el Decreto 1377 de '
             '2013, con la finalidad de gestionar su registro, acceso y uso de la '
-            'aplicación. Sus datos serán almacenados de forma segura y no serán '
-            'compartidos con terceros sin su consentimiento, salvo obligación legal. '
-            'Puede ejercer sus derechos de acceso, rectificación, cancelación y '
-            'oposición en cualquier momento.',
+            'aplicación. Sus datos se almacenan de forma segura y se comparten '
+            'únicamente con los proveedores necesarios para operar la app '
+            '(almacenamiento, correo y asistente virtual), según se detalla en la '
+            'Política de Privacidad. Puede ejercer sus derechos de acceso, '
+            'rectificación, cancelación y oposición escribiendo a '
+            'julianvp200805@gmail.com.',
             style: TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ),
@@ -349,6 +352,20 @@ class _RegistroPageState extends State<RegistroPage> {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = _mostrarTerminos,
+                              ),
+                              const TextSpan(
+                                text: ' y la ',
+                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                              TextSpan(
+                                text: 'política de privacidad',
+                                style: const TextStyle(
+                                  color: AppEstilos.verdeBoton,
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () => abrirPoliticaPrivacidad(context),
                               ),
                             ],
                           ),
